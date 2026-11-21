@@ -103,6 +103,13 @@ final class Runtime
                             'invoice' => $service->invoice($merchant, $register, $number('order'),$text('paper')?:'a4'),
                             default => throw new DomainException('Invalid register action.', 422),
                         };
+                    } catch (DrawerAlreadyOpen $error) {
+                        /* translators: %d: open drawer session number. */
+                        $message = __('Drawer is already open (session %d). Close it first or continue selling.', 'sfm4u-wholesale');
+                        if (determine_locale() === 'bn_BD' && $message === 'Drawer is already open (session %d). Close it first or continue selling.') {
+                            $message = 'ড্রয়ার আগে থেকেই খোলা আছে (সেশন %d)। আগে ড্রয়ার বন্ধ করুন অথবা বিক্রি চালিয়ে যান।';
+                        }
+                        return new \WP_Error('drawer_already_open', sprintf($message, $error->sessionId), ['status' => 409]);
                     } catch (DomainException $error) {
                         $status = in_array($error->getCode(), [403, 404, 409, 422], true) ? $error->getCode() : 422;
                         // Messages a cashier can act on (card problems, prices) are shown as they are; the rest stay generic.

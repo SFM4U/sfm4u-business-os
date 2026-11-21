@@ -267,7 +267,7 @@ final class CounterSale
                         $before[$line['product']] = (int) $quantity;
                     }
                     wc_reserve_stock_for_order($order);
-                    ManagedOrderStock::reduce($order, static fn() => $order->update_status($cash && !$credit ? 'processing' : 'on-hold'));
+                    ManagedOrderStock::reduce($order, static fn() => $order->update_status($cash && !$credit ? 'completed' : 'on-hold'));
                     wc_release_stock_for_order($order);
                     $movements = [];
                     foreach ($quote['lines'] as $line) {

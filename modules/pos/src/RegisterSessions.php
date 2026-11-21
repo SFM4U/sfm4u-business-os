@@ -6,6 +6,14 @@ namespace SFM4U\POS;
 use DomainException;
 use RuntimeException;
 
+final class DrawerAlreadyOpen extends DomainException
+{
+    public function __construct(public readonly int $sessionId)
+    {
+        parent::__construct('This register is already open.', 409);
+    }
+}
+
 final class RegisterSessions
 {
     private string $registers;
@@ -95,8 +103,9 @@ final class RegisterSessions
     {
         $this->query($this->db->prepare('INSERT INTO %i (merchant,register_code) VALUES (%d,%s) ON DUPLICATE KEY UPDATE merchant=merchant',
             $this->registers, $merchant, $register));
-        if ($this->register($merchant, $register, true)['active_session'] !== null) {
-            throw new DomainException('This register is already open.', 409);
+        $activeSession = $this->register($merchant, $register, true)['active_session'];
+        if ($activeSession !== null) {
+            throw new DrawerAlreadyOpen((int) $activeSession);
         }
         $this->query($this->db->prepare('INSERT INTO %i (merchant,register_code,opened_at,opened_by,opening_minor)
             VALUES (%d,%s,UTC_TIMESTAMP(),%d,%d)', $this->sessions, $merchant, $register, $actor, $opening));
