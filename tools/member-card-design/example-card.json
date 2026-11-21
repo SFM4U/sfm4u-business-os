@@ -1,0 +1,16 @@
+{
+  "member_no": "0012345",
+  "name_en": "RAHIM AHMED",
+  "name_bn": "রহিম আহমেদ",
+  "card_label": "MEMBER CARD",
+  "card_label_bn": "SFM4U সদস্য কার্ড",
+  "level_en": "PREMIUM",
+  "level_bn": "প্রিমিয়াম",
+  "role_en": "Member, SFM4U",
+  "role_bn": "সদস্য, SFM4U",
+  "countries_en": "BANGLADESH",
+  "flags": ["BD"],
+  "services": ["algibazar"],
+  "photo": "example-photo.png",
+  "logos": []
+}
