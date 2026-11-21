@@ -116,14 +116,14 @@ check(array_column($sessionResult['lines'], 'delta') === [-1, -1]
 
 wp_set_current_user(1);
 $native = wc_create_order();
-$native->add_product(wc_get_product($countProductId), 2);
-$native->save();
-wc_reduce_stock_levels($native);
+// Seed an out-of-band physical count mismatch in both standalone and installed fixtures.
+// An installed runtime captures ordinary Woo order stock reductions in valuation.
+wc_update_product_stock(wc_get_product($countProductId), 2, 'decrease');
 check((int) wc_get_product($countProductId)->get_stock_quantity() === 6
-    && $valuation->totals($countProductId)['quantity'] === 8, 'native Woo reduction changes stock independently of warehouse valuation');
+    && $valuation->totals($countProductId)['quantity'] === 8, 'synthetic physical adjustment changes Woo stock without changing warehouse valuation');
 $reconcileRows = [['product' => $countProductId, 'expected' => 8, 'counted' => 6]];
-$reconciliation = $counts->submitSession(wp_generate_uuid4(), 'reconcile', 'Synthetic native order', $reconcileRows, 'Verified native stock reduction');
-$duplicate = $counts->submitSession(wp_generate_uuid4(), 'reconcile', 'Synthetic native order', $reconcileRows, 'Duplicate observation');
+$reconciliation = $counts->submitSession(wp_generate_uuid4(), 'reconcile', 'Synthetic physical stock correction', $reconcileRows, 'Verified stock difference');
+$duplicate = $counts->submitSession(wp_generate_uuid4(), 'reconcile', 'Synthetic physical stock correction', $reconcileRows, 'Duplicate observation');
 wp_set_current_user($reviewerId);
 $reconcileKey = wp_generate_uuid4();
 $posted = $counts->approve($reconcileKey, $reconciliation['id']);

@@ -13,14 +13,16 @@ use SFM4U\Inventory\LossAwareWpdb;
 use SFM4U\Wholesale\Commerce;
 
 global $wpdb;
-$original = $wpdb;
-$wpdb = new LossAwareWpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
-$wpdb->set_prefix($original->base_prefix);
-$wpdb->set_blog_id(get_current_blog_id());
-foreach (get_object_vars($original) as $alias => $value) {
-    if (preg_match('/^[a-z][a-z0-9_]*$/D', $alias) && is_string($value) && str_starts_with($value, $original->prefix)
-        && preg_match('/^[a-zA-Z0-9_]+$/D', $value)) {
-        $wpdb->$alias = $value;
+if (!$wpdb instanceof LossAwareWpdb) {
+    $original = $wpdb;
+    $wpdb = new LossAwareWpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
+    $wpdb->set_prefix($original->base_prefix);
+    $wpdb->set_blog_id(get_current_blog_id());
+    foreach (get_object_vars($original) as $alias => $value) {
+        if (preg_match('/^[a-z][a-z0-9_]*$/D', $alias) && is_string($value) && str_starts_with($value, $original->prefix)
+            && preg_match('/^[a-zA-Z0-9_]+$/D', $value)) {
+            $wpdb->$alias = $value;
+        }
     }
 }
 add_filter('pre_wp_mail', '__return_true');
@@ -58,10 +60,12 @@ Commerce::saveRule($product, ['minor' => 1500, 'min' => 3, 'max' => 20, 'step' =
 
 // The standalone fixture registers the B2B routes without the installed runtime bootstrap.
 $capabilityFilter = [\SFM4U\Wholesale\B2BRuntime::class, 'capabilities'];
-if (!has_filter('user_has_cap', $capabilityFilter)) {
+if (has_filter('user_has_cap', $capabilityFilter)) {
+    $quotes = new \SFM4U\Wholesale\Pro\WooQuotes($wpdb, new \SFM4U\Wholesale\Pro\WooCatalog());
+} else {
     add_filter('user_has_cap', $capabilityFilter, 10, 4);
+    $quotes = sfm4u_b2b_register($wpdb);
 }
-$quotes = sfm4u_b2b_register($wpdb);
 $quotes->install();
 $ledger = $wpdb->prefix . 'sfm4u_b2b_ledger';
 $wpdb->insert($wpdb->prefix . 'sfm4u_b2b_accounts', ['buyer' => $buyer, 'credit_limit' => 6500,
