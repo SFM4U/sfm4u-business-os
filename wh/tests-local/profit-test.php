@@ -15,6 +15,12 @@ foreach (['blackvendor', 'notvendor'] as $login) {
 $v = get_user_by('email', 'blackvendor@example.com'); $vid = $v->ID;
 // VendorProfit::page() is only for sellers (Dokan seller, or the 'seller' capability without Dokan).
 if (function_exists('dokan_is_user_seller')) { $v->set_role('seller'); update_user_meta($vid, 'dokan_enable_selling', 'yes'); } else { $v->add_cap('seller'); }
+// 0.9.9 Owner rule: Business OS seller tools are for Business Black members' stores -> make the fixture a paid Black member.
+\SFM4U\Wholesale\Members\Members::install();
+if (!\SFM4U\Wholesale\Members\Tiers::blackActive($vid)) {
+    if (!array_filter(\SFM4U\Wholesale\Members\Members::cardsOf($vid), fn($c) => $c['tier'] === 'black' && $c['status'] === 'active')) { \SFM4U\Wholesale\Members\Members::issue($vid, 'black', 0, 1, 'main', null, 'Black Vendor'); }
+    \SFM4U\Wholesale\Members\Tiers::recordBlackPayment($vid, 1, 'cash', '', 1);
+}
 $other = get_user_by('email','notvendor@example.com')->ID;
 $mk = function($sku,$author,$price,$cost){ $id = wc_get_product_id_by_sku($sku); if ($id) wp_delete_post($id,true); $pr = new WC_Product_Simple(); $pr->set_name($sku); $pr->set_sku($sku); $pr->set_regular_price((string)$price); $pr->set_status('publish'); $id=$pr->save(); wp_update_post(['ID'=>$id,'post_author'=>$author]); if ($cost!==null) update_post_meta($id,'_sfm_cost',(string)$cost); return $id; };
 $a = $mk('PL-A', $vid, 150, 120); $b = $mk('PL-B', $vid, 50, null); $c = $mk('PL-C', $other, 999, 1);

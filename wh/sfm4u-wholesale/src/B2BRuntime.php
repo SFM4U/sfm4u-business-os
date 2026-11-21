@@ -104,7 +104,8 @@ final class B2BRuntime
             $caps['sfm4u_b2b_buy'] = get_user_meta($user->ID, '_sfmwh_buyer_status', true) === 'approved';
         }
         if (in_array('sfm4u_b2b_offer', $required, true) && function_exists('dokan_is_user_seller')) {
-            $caps['sfm4u_b2b_offer'] = dokan_is_user_seller($user->ID) && dokan_is_seller_enabled($user->ID);
+            $caps['sfm4u_b2b_offer'] = dokan_is_user_seller($user->ID) && dokan_is_seller_enabled($user->ID)
+                && \SFM4U\Wholesale\Members\Tiers::vendorToolsAllowed((int) $user->ID); // Black members' stores only (Owner rule)
         }
         if (in_array('sfm4u_b2b_settle', $required, true) && !empty($caps['manage_options'])) {
             $caps['sfm4u_b2b_settle'] = true;

@@ -28,8 +28,9 @@ final class VendorProfit {
     }
 
     public static function isSeller(int $uid): bool {
-        if (function_exists('dokan_is_user_seller')) { return (bool) dokan_is_user_seller($uid); }
-        return user_can($uid, 'seller');
+        $seller = function_exists('dokan_is_user_seller') ? (bool) dokan_is_user_seller($uid) : user_can($uid, 'seller');
+        // Business OS profit tools are for Business Black members' stores (Owner rule); others keep plain Dokan.
+        return $seller && (!class_exists(\SFM4U\Wholesale\Members\Tiers::class) || \SFM4U\Wholesale\Members\Tiers::vendorToolsAllowed($uid));
     }
 
     public static function menu(array $items): array {

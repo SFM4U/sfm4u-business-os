@@ -84,6 +84,20 @@ final class Tiers {
         return false;
     }
 
+    /* ---------------- Business OS vendor tools (Owner rule 2026-11-21) ---------------- */
+    public const VENDOR_POLICY_OPT = 'sfmwh_vendor_tools_policy'; // black (default) | all
+    public const VENDOR_GRANT_META = '_sfmwh_vendor_tools_grant';  // 'yes' = admin granted (trial/test), without Black
+
+    /**
+     * Business OS seller tools (wholesale offers, POS/stock/profit pages) on a marketplace are for Business Black
+     * members' stores. Regular sellers keep the plain Dokan store. An administrator can grant a store by hand.
+     */
+    public static function vendorToolsAllowed(int $userId): bool {
+        if ($userId < 1) { return false; }
+        if (get_option(self::VENDOR_POLICY_OPT, 'black') === 'all') { return true; }
+        return get_user_meta($userId, self::VENDOR_GRANT_META, true) === 'yes' || self::blackActive($userId);
+    }
+
     /** Staff records a monthly payment. Extends from the later of today or the current end date. */
     public static function recordBlackPayment(int $userId, int $months, string $method, string $ref, int $staff, ?int $now = null): string {
         $months = min(12, max(1, $months));

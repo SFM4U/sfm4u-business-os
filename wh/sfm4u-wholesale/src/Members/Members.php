@@ -321,16 +321,24 @@ final class Members {
         }
         add_option('sfm_wr_member_seq', '0', '', 'no');
         // Compare-and-swap: only one request can move the counter from N to N+1 (works on MySQL/MariaDB and SQLite).
-        $n = 0;
-        for ($try = 0; $try < 25 && $n === 0; $try++) {
-            $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
-            $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) ($cur + 1), 'sfm_wr_member_seq', (string) $cur));
-            if ($done === 1) { $n = $cur + 1; }
+        // 0.9.9: a number already held by someone else (e.g. a central number kept from when this site was a linked
+        // shop) is skipped, so two people never share a member number.
+        $no = '';
+        for ($skip = 0; $skip < 50 && $no === ''; $skip++) {
+            $n = 0;
+            for ($try = 0; $try < 25 && $n === 0; $try++) {
+                $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
+                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) ($cur + 1), 'sfm_wr_member_seq', (string) $cur));
+                if ($done === 1) { $n = $cur + 1; }
+            }
+            wp_cache_delete('sfm_wr_member_seq', 'options');
+            wp_cache_delete('notoptions', 'options');
+            if ($n === 0) { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
+            $candidate = self::formatMemberNo($n);
+            $holder = self::userByMemberNo($candidate);
+            if ($holder === 0 || $holder === $userId) { $no = $candidate; }
         }
-        wp_cache_delete('sfm_wr_member_seq', 'options');
-        wp_cache_delete('notoptions', 'options');
-        if ($n === 0) { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
-        $no = self::formatMemberNo($n);
+        if ($no === '') { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
         if (!add_user_meta($userId, 'sfm_wr_member_no', $no, true)) { return (string) get_user_meta($userId, 'sfm_wr_member_no', true); }
         return $no;
     }
