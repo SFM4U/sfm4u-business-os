@@ -525,29 +525,79 @@ final class Members {
     }
 
     /**
-     * Append a khata row. Locks the customer's last row so two cashiers cannot
-     * write the same balance at once.
+     * Append a khata row in its own transaction, then notify listeners. Locks the customer first, so two cashiers
+     * cannot write the same balance at once (also for a customer's very first entry).
+     * Do NOT call this inside another open transaction (it would commit it): use recordInTransaction() there.
      */
     public static function record(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
         int $staffId, string $direction = 'up', string $store = 'main', string $ref = ''): array {
         global $wpdb;
+        self::checkEntry($kind, $method, $note, $ref);
+        $wpdb->query('START TRANSACTION');
+        try {
+            $row = self::appendLocked($userId, $cardId, $kind, $minor, $method, $note, $staffId, $direction, $store, $ref);
+        } catch (\Throwable $e) {
+            $wpdb->query('ROLLBACK');
+            throw $e;
+        }
+        $wpdb->query('COMMIT');
+        if (empty($row['replayed'])) {
+            self::notifyRecorded($userId, $row);
+        }
+        return $row;
+    }
+
+    /**
+     * Append a khata row inside the CALLER's open transaction (e.g. the POS sale's pinned journal transaction).
+     * No START/COMMIT/ROLLBACK here: if the caller rolls back, the khata row is gone too. On error it throws and the
+     * caller must roll back. Listeners are NOT notified: call notifyRecorded($userId, $row) after the caller commits
+     * (skip it when $row['replayed'] is true).
+     */
+    public static function recordInTransaction(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
+        int $staffId, string $direction = 'up', string $store = 'main', string $ref = ''): array {
+        self::checkEntry($kind, $method, $note, $ref);
+        return self::appendLocked($userId, $cardId, $kind, $minor, $method, $note, $staffId, $direction, $store, $ref);
+    }
+
+    /** Tell listeners a khata row was written (only after its transaction committed). */
+    public static function notifyRecorded(int $userId, array $row): void {
+        do_action('sfm_wr_khata_recorded', $userId, $row);
+    }
+
+    /** Allowed request key: 1-64 chars of letters, digits and . _ : - (never silently cut). */
+    public static function validRef(string $ref): bool {
+        return $ref === '' || (bool) preg_match('/^[A-Za-z0-9._:\-]{1,64}$/', $ref);
+    }
+
+    private static function checkEntry(string $kind, string $method, string $note, string $ref): void {
         if (!in_array($kind, self::KINDS, true) || ($method !== '' && !in_array($method, self::METHODS, true))) {
             throw new DomainException('Invalid khata entry.');
         }
         if ($kind === 'adjust' && trim($note) === '') {
             throw new DomainException(__('Write the reason for a correction.', 'sfm4u-wholesale'));
         }
+        if (!self::validRef($ref)) {
+            throw new DomainException(__('Invalid khata request key.', 'sfm4u-wholesale'), 400);
+        }
+    }
+
+    /** Core insert; caller owns the transaction. Locks the customer's user row (exists even before the first entry). */
+    private static function appendLocked(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
+        int $staffId, string $direction, string $store, string $ref): array {
+        global $wpdb;
         $delta = self::delta($kind, $minor, $direction);
-        $wpdb->query('START TRANSACTION');
+        $locked = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE ID=%d" . self::lockSql(), $userId));
+        if ($locked === null) {
+            throw new DomainException(__('Customer not found.', 'sfm4u-wholesale'), 404);
+        }
         $last = $wpdb->get_var($wpdb->prepare('SELECT balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s ORDER BY id DESC LIMIT 1' . self::lockSql(),
             $userId, $store));
         if ($ref !== '') {
             // Idempotent replay: the same request key (e.g. a POS retry) never writes a second row.
-            // Checked while this customer's last row is locked, so two cashiers cannot both insert it.
+            // Checked while this customer is locked, so two cashiers cannot both insert it.
             $seen = $wpdb->get_row($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s AND ref=%s LIMIT 1',
                 $userId, $store, $ref), ARRAY_A);
             if ($seen) {
-                $wpdb->query('COMMIT');
                 if ($seen['kind'] !== $kind || (int) $seen['amount_minor'] !== $delta) {
                     throw new DomainException(__('This khata request was already used for a different entry.', 'sfm4u-wholesale'), 409);
                 }
@@ -559,24 +609,20 @@ final class Members {
             'user_id' => $userId, 'card_id' => $cardId, 'store' => $store, 'kind' => $kind,
             'amount_minor' => $delta, 'balance_minor' => $balance, 'method' => $method,
             'note' => mb_substr($note, 0, 255), 'staff_id' => $staffId, 'created_at' => current_time('mysql', true),
-            'ref' => mb_substr($ref, 0, 64),
+            'ref' => $ref,
         ], ['%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%s', '%s']);
         if (!$ok) {
-            $wpdb->query('ROLLBACK');
             throw new DomainException(__('The entry was not saved. Try again.', 'sfm4u-wholesale'));
         }
-        $rowId = (int) $wpdb->insert_id;
-        $wpdb->query('COMMIT');
-        $row = ['id' => $rowId, 'balance_minor' => $balance, 'amount_minor' => $delta];
-        do_action('sfm_wr_khata_recorded', $userId, $row);
-        return $row;
+        return ['id' => (int) $wpdb->insert_id, 'balance_minor' => $balance, 'amount_minor' => $delta];
     }
 
     /**
      * What a cashier/shopkeeper needs about one customer's khata at this store: balance (positive = customer owes),
      * since when it is owed (date the balance last went from 0 or less to above 0), last payment, recent rows.
+     * Notes are left out unless $withNotes (manager views): a cashier sees amounts, not free text.
      */
-    public static function dueSummary(int $userId, string $store = 'main', int $rows = 10): array {
+    public static function dueSummary(int $userId, string $store = 'main', int $rows = 10, bool $withNotes = false): array {
         global $wpdb;
         $all = $wpdb->get_results($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor, method, note, created_at FROM ' . self::khata()
             . ' WHERE user_id=%d AND store=%s ORDER BY id ASC', $userId, $store), ARRAY_A) ?: [];
@@ -591,7 +637,8 @@ final class Members {
         $balance = $all ? (int) end($all)['balance_minor'] : 0;
         return ['balance_minor' => $balance, 'due_minor' => max(0, $balance), 'advance_minor' => max(0, -$balance),
             'due_since' => $balance > 0 ? $since : null, 'last_payment' => $lastPay,
-            'recent' => array_reverse(array_slice($all, -$rows))];
+            'recent' => array_map(function ($r) use ($withNotes) { if (!$withNotes) { unset($r['note']); } return $r; },
+                array_reverse(array_slice($all, -$rows)))];
     }
 
     /** Day-by-day khata history (store local dates): charged, paid, corrections and closing balance per day. */

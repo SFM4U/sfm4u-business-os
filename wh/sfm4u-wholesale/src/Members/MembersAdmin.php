@@ -182,7 +182,7 @@ final class MembersAdmin {
                 check_admin_referer('sfm_wr_scan');
                 $m = CardLink::remoteLookup(self::post('sfm_wr_adopt'));
                 if (!$m) { throw new DomainException(__('Card not found here or on the SFM4U account site.', 'sfm4u-wholesale')); }
-                $card = Members::bestCardFor(CardLink::adoptRemote($m), $store) ?: Members::cardsOf(Members::userByMemberNo((string) $m['member_no']))[0] ?? null;
+                $card = Members::bestCardFor(CardLink::adoptRemote($m), $store) ?: Members::cardsOf(Members::userByMemberNo((string) $m['member_no'], Members::isLinkedShop()))[0] ?? null;
                 self::notice(__('Added as a customer of this shop. Khata and points can start now.', 'sfm4u-wholesale'));
             } elseif (isset($_POST['scan'])) {
                 check_admin_referer('sfm_wr_scan');

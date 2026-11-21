@@ -192,7 +192,7 @@ final class MemberPrice {
                 return null;
             }
             $m['source'] = 'remote';
-            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? (int) Members::userByMemberNo((string) $m['member_no']) : 0;
+            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? (int) Members::userByMemberNo((string) $m['member_no'], Members::isLinkedShop()) : 0;
         } else {
             return null;
         }
