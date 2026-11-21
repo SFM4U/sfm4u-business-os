@@ -52,6 +52,9 @@ Candidate under test: plugin 0.9.8-dev, ZIP SHA-256 171956960dd8ca12d3bee0574a09
 ## Owner's checker findings (2026-11-21 15:15 UTC) — handled
 1 user 3 got an automatic REGULAR card (member no 0000002, card id 2; auto-card on sign-up) — now reported. 2 created 14:57:26 UTC (not 15:10). 3 POS steps were run by the Owner's checker; findings F1 -> C-14, F2 (no Add-to-cart button: one search match goes straight into the cart) -> click guide corrected, F3 -> C-15. 4 live changes without backup — admitted; STOP below. 5 temporary VPS SSH key REMOVED (15:11 UTC, login now denied) and Mac `.erp-test-access` folder DELETED. 6 Showroom v2 list moved to previous-versions.
 
+## Owner decisions 2026-11-21 ~15:20 UTC
+1 delete account.sfm4u.com user 3 (+ its auto regular card) — in progress (WPVibe approval). 2 KEEP algibazar Connector 0.8.1 + Nijam Library tools grant. 3 C-15: cash counter sales `completed`.
+
 ## STOP (Owner 2026-11-21 ~15:05 UTC)
 No change on account.sfm4u.com or algibazar.com until the Owner says "go" AND a fresh verified backup exists. Already done before the STOP: algibazar Connector 0.8.1-dev (L-15), Nijam Library tools grant, account.sfm4u.com user ID 3 `nijamlibrary2011` (no card). Showroom C updated to 0.9.9-dev (thenoakhali). Report: Factory 01 REPORT-BusinessOS-0.9.9-showroom-algibazar-account-Claude-2026-11-21.md.
 
