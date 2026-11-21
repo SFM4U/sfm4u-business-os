@@ -39,6 +39,15 @@ $ok(strpos(PA::boxHtml($pid, $biz), 'Wholesale') !== false && strpos(PA::boxHtml
 $ok(strpos(PA::boxHtml($pid, 1), 'Cost price') !== false && strpos(PA::boxHtml($pid, 1), 'only you see this') !== false, 'owner/admin sees the private cost');
 PA::saveSets($pid, $s, ['minor' => $M(80), 'show_to' => ['business']]);
 $ok(strpos(PA::boxHtml($pid, $biz), 'Cost price') !== false && strpos(PA::boxHtml($pid, $pre), 'Cost price') === false, 'shop may publish cost to business members only');
+// staff (cashier) never sees the cost, even when published; manager does
+update_option('sfm_wr_stores', ['main' => ['name' => 'Main']]);
+$cash = $mk('cash'); $man = $mk('man');
+Members::setStaff($cash, 'main', 'cashier'); Members::setStaff($man, 'main', 'manager');
+PA::saveSets($pid, $s, ['minor' => $M(80), 'show_to' => ['public']]);
+$ok(strpos(PA::boxHtml($pid, $cash), 'Cost price') === false, 'cashier never sees the cost (even when published)');
+$ok(strpos(PA::boxHtml($pid, 0), 'Cost price') !== false, 'published cost is visible to the public');
+PA::saveSets($pid, $s, ['minor' => $M(80), 'show_to' => ['only_me']]);
+$ok(strpos(PA::boxHtml($pid, $man), 'Cost price') !== false && strpos(PA::boxHtml($pid, $cash), 'Cost price') === false, 'manager sees the private cost, cashier does not');
 // validation
 $ok($bad(fn() => PA::fromLines("X | public | everyone | 1=100, 3=110 |")), 'price rising with quantity refused');
 $ok($bad(fn() => PA::fromLines("X | friends | everyone | 1=100 |")), 'unknown "who can see" refused');
