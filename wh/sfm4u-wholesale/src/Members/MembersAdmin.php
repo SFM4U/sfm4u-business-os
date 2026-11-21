@@ -530,7 +530,12 @@ final class MembersAdmin {
                 if (!$user) { throw new DomainException(__('No customer with that email. Ask them to create an SFM4U account first.', 'sfm4u-wholesale')); }
                 $no = Members::assignReservedNo($user->ID, absint($_POST['family_no'] ?? 0), get_current_user_id());
                 /* translators: %s: member number */
-                self::notice(sprintf(__('Family number given: %s', 'sfm4u-wholesale'), $no));
+                self::notice(sprintf(__('Member number saved: %s', 'sfm4u-wholesale'), $no));
+            } elseif (isset($_POST['sfm_wr_special_list']) && current_user_can('manage_options')) {
+                check_admin_referer('sfm_wr_special_list');
+                $nums = array_map('intval', preg_split('/[\s,]+/', self::post('special_numbers'), -1, PREG_SPLIT_NO_EMPTY));
+                update_option(Members::SPECIAL_OPTION, array_values(array_filter($nums, fn($n) => $n > Members::RESERVED_MAX)), false);
+                self::notice(__('Special number list saved.', 'sfm4u-wholesale'));
             } elseif (isset($_POST['sfm_wr_auto'])) {
                 check_admin_referer('sfm_wr_auto');
                 update_option(Members::AUTO_OPTION, self::post('auto_on') === '1' ? '1' : '0', false);
@@ -574,13 +579,20 @@ final class MembersAdmin {
             . '<p><button class="button">' . esc_html__('Save plans', 'sfm4u-wholesale') . '</button></p></form>';
 
         if (current_user_can('manage_options') && CardLink::role() !== 'shop') {
-            echo '<h2>' . esc_html__('Family number (1-100, administrator only)', 'sfm4u-wholesale') . '</h2><form method="post">';
+            echo '<h2>' . esc_html__('Member number (administrator only)', 'sfm4u-wholesale') . '</h2>';
+            $free = Members::freeSpecialNumbers();
+            echo '<p>' . esc_html__('Special numbers still free:', 'sfm4u-wholesale') . ' <strong>' . esc_html($free ? implode(', ', $free) : '-') . '</strong></p><form method="post">';
             wp_nonce_field('sfm_wr_family_no');
             echo '<input type="hidden" name="sfm_wr_family_no" value="1"><p><label>' . esc_html__('Customer email', 'sfm4u-wholesale')
                 . ' <input type="email" name="family_customer" required class="regular-text"></label> <label>' . esc_html__('Number', 'sfm4u-wholesale')
-                . ' <input type="number" name="family_no" min="1" max="' . (int) Members::RESERVED_MAX . '" required style="width:90px"></label> '
-                . '<button class="button">' . esc_html__('Give family number', 'sfm4u-wholesale') . '</button></p><p class="description">'
-                . esc_html__('Numbers 1-100 are kept for the family. Everyone else gets the next number from 101 automatically. Change a number only before the card is used at shops.', 'sfm4u-wholesale') . '</p></form>';
+                . ' <input type="number" name="family_no" min="1" max="9999999" required style="width:110px"></label> '
+                . '<button class="button">' . esc_html__('Save member number', 'sfm4u-wholesale') . '</button></p><p class="description">'
+                . esc_html__('1-100 and the special numbers are kept for our own shops and family; only the administrator gives them. Everyone else gets the next normal number automatically when the account is opened. The administrator can change any member number; shops and AlgiBazar follow the change automatically, and the old number is retired (never given to anyone else).', 'sfm4u-wholesale') . '</p></form>';
+            echo '<form method="post">';
+            wp_nonce_field('sfm_wr_special_list');
+            echo '<input type="hidden" name="sfm_wr_special_list" value="1"><p><label>' . esc_html__('Special number list', 'sfm4u-wholesale')
+                . '<br><textarea name="special_numbers" rows="2" class="large-text">' . esc_textarea(implode(', ', Members::specialNumbers())) . '</textarea></label></p>'
+                . '<p><button class="button">' . esc_html__('Save list', 'sfm4u-wholesale') . '</button></p></form>';
         }
         echo '<h2>' . esc_html__('Give a new card', 'sfm4u-wholesale') . '</h2><form method="post" class="sfm-wr-issue">';
         wp_nonce_field('sfm_wr_issue');

@@ -145,7 +145,8 @@ final class MemberPrice {
             }
             if ($reached) {
                 update_user_meta($uid, 'sfmwh_member_checked', time());
-                if (!$m || (string) ($m['member_no'] ?? '') !== $l['member_no']) {
+                $sameKey = $m && ($m['member_key'] ?? '') !== '' && (string) $m['member_key'] === (string) get_user_meta($uid, 'sfm_wr_member_key', true);
+                if (!$m || ((string) ($m['member_no'] ?? '') !== $l['member_no'] && !$sameKey)) {
                     update_user_meta($uid, 'sfmwh_member_ok', 'no');
                     return null;
                 }
@@ -192,7 +193,7 @@ final class MemberPrice {
                 return null;
             }
             $m['source'] = 'remote';
-            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? (int) Members::userByMemberNo((string) $m['member_no'], Members::isLinkedShop()) : 0;
+            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? CardLink::localUserFor($m) : 0;
         } else {
             return null;
         }

@@ -32,14 +32,27 @@ $ok((int) $eno >= 101, 'automatic number after a low counter starts at 101+: ' .
 if ((int) $keepSeq > (int) get_option('sfm_wr_member_seq')) { update_option('sfm_wr_member_seq', $keepSeq, false); }
 // family numbers: admin only, 1-100, not twice
 $famFree = null; for ($i = 100; $i >= 1; $i--) { if (Members::userByMemberNo(Members::formatMemberNo($i)) === 0) { $famFree = $i; break; } }
+if ($famFree === null) {   // a heavily used test DB can have all family numbers taken: free one held by an earlier fixture user
+    $famFree = 99; $old = Members::userByMemberNo(Members::formatMemberNo(99)); delete_user_meta($old, 'sfm_wr_member_no');
+}
 $g = $mk('g');
 $ok($famFree !== null && Members::assignReservedNo($g, $famFree, 1) === Members::formatMemberNo($famFree) && Members::memberNo($g) === Members::formatMemberNo($famFree), 'admin gives family number ' . $famFree);
 $h = $mk('h');
 $ok($bad(fn() => Members::assignReservedNo($h, $famFree, 1), 409), 'same family number for another person refused');
-$ok($bad(fn() => Members::assignReservedNo($h, 101, 1), 422) && $bad(fn() => Members::assignReservedNo($h, 0, 1), 422), 'numbers outside 1-100 refused');
+$ok($bad(fn() => Members::assignReservedNo($h, 0, 1), 422) && $bad(fn() => Members::assignReservedNo($h, 10000000, 1), 422), 'numbers outside 1-9999999 refused');
 $shop = (int) wp_insert_user(['user_login' => "mnshop$r", 'user_pass' => wp_generate_password(20), 'user_email' => "mnshop$r@example.com", 'role' => 'shop_manager']);
 $ok($bad(fn() => Members::assignReservedNo($h, 99, $shop), 403), 'a shop manager (not administrator) cannot give family numbers');
-$ok((string) get_user_meta($e, 'sfm_wr_member_no_prev', true) === '' && Members::assignReservedNo($e, $famFree - 1 >= 1 ? $famFree - 1 : $famFree, 1) !== '' && get_user_meta($e, 'sfm_wr_member_no_prev', true) === $eno, 'changing to a family number keeps the old number in sfm_wr_member_no_prev');
+$ok((string) get_user_meta($e, 'sfm_wr_member_no_prev', true) === '' && Members::assignReservedNo($e, (function () use ($famFree) { for ($i = 100; $i >= 1; $i--) { if ($i !== $famFree && Members::userByMemberNo(Members::formatMemberNo($i)) === 0) { return $i; } } delete_user_meta(Members::userByMemberNo(Members::formatMemberNo(98)), 'sfm_wr_member_no'); return 98; })(), 1) !== '' && get_user_meta($e, 'sfm_wr_member_no_prev', true) === $eno, 'changing to a family number keeps the old number in sfm_wr_member_no_prev');
+$ok(true, 'administrator may change a number again (Owner 2026-11-21, full control)');
+// special numbers: in the stock, skipped by the counter, given by the admin
+$ok(Members::isReservedNumber(777) && Members::isReservedNumber(1000) && Members::isReservedNumber(7777) && !Members::isReservedNumber(101) && !Members::isReservedNumber(778), 'special list: 777, 1000, 7777 reserved; 101, 778 normal');
+$keep2 = get_option('sfm_wr_member_seq'); update_option('sfm_wr_member_seq', '110', false);
+$k = $mk('k'); $kno = (int) Members::memberNo($k);
+$ok($kno !== 111 && $kno > 110, 'counter at 110 skips special 111: got ' . $kno);
+if ((int) $keep2 > (int) get_option('sfm_wr_member_seq')) { update_option('sfm_wr_member_seq', $keep2, false); }
+$spec = Members::freeSpecialNumbers();
+$m = $mk('m');
+$ok($spec && Members::assignReservedNo($m, $spec[0], 1) === Members::formatMemberNo($spec[0]) && !in_array($spec[0], Members::freeSpecialNumbers(), true), 'admin gives special number ' . ($spec[0] ?? '-') . ' and it leaves the free stock');
 update_option(CardLink::OPT_ROLE, 'shop');
 $ok($bad(fn() => Members::assignReservedNo($h, 98, 1), 409), 'linked shop cannot give family numbers (account site does)');
 $oldAuto !== false ? update_option(Members::AUTO_OPTION, $oldAuto) : delete_option(Members::AUTO_OPTION);

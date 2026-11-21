@@ -240,6 +240,8 @@ final class CardLink {
         $nameBn = trim((string) get_user_meta($uid, 'sfm_wr_name_bn', true));
         return [
             'member_no' => Members::memberNo($uid),
+            // stable key: lets shops follow a member-number change made by the administrator
+            'member_key' => Members::memberKey($uid),
             'tier' => (string) $card['tier'],
             'status' => (string) $card['status'],
             'name' => $nameEn !== '' ? $nameEn : ($u ? $u->display_name : ''),
@@ -362,10 +364,29 @@ final class CardLink {
     }
 
     /** Shop: make a central member (found by scan) a customer of this shop, so khata and points can start. */
+    /**
+     * Shop side: the local user for a member answer from the account site. Matches the stable member key first and
+     * follows a number change (old number kept as sfm_wr_member_no_old); then the central member number.
+     */
+    public static function localUserFor(array $m): int {
+        $no = (string) ($m['member_no'] ?? '');
+        $key = (string) ($m['member_key'] ?? '');
+        $uid = $key !== '' ? Members::userByMemberKey($key) : 0;
+        if ($uid) {
+            Members::followNumberChange($uid, $no);
+            return $uid;
+        }
+        $uid = preg_match('/^\d{7}$/', $no) ? Members::userByMemberNo($no, Members::isLinkedShop()) : 0;
+        if ($uid && $key !== '' && preg_match('/^[a-f0-9]{32}$/', $key) && (string) get_user_meta($uid, 'sfm_wr_member_key', true) === '') {
+            update_user_meta($uid, 'sfm_wr_member_key', $key);
+        }
+        return $uid;
+    }
+
     public static function adoptRemote(array $m): int {
         $no = (string) ($m['member_no'] ?? '');
         if (!preg_match('/^\d{7}$/', $no)) { throw new DomainException(__('Card not found.', 'sfm4u-wholesale')); }
-        $uid = Members::userByMemberNo($no, true);
+        $uid = self::localUserFor($m);
         if (!$uid) {
             // Never reuse an existing login: someone could have registered "sfm4u-<number>" to take over a member.
             $login = 'sfm4u-' . $no;
@@ -376,6 +397,7 @@ final class CardLink {
             if (is_wp_error($uid)) { throw new DomainException($uid->get_error_message()); }
             $uid = (int) $uid;
             update_user_meta($uid, 'sfm_wr_member_no', $no);
+            if (preg_match('/^[a-f0-9]{32}$/', (string) ($m['member_key'] ?? ''))) { update_user_meta($uid, 'sfm_wr_member_key', (string) $m['member_key']); }
             if (!empty($m['name_bn'])) { update_user_meta($uid, 'sfm_wr_name_bn', sanitize_text_field((string) $m['name_bn'])); }
             if (!empty($m['name'])) { update_user_meta($uid, 'sfm_wr_name_en', sanitize_text_field((string) $m['name'])); }
             update_user_meta($uid, 'sfm_wr_central', 1);

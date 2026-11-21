@@ -92,9 +92,10 @@ final class StockFeed {
     }
 
     /** Find the member's store owner on this marketplace: member number first, then email. */
-    public static function findVendor(string $memberNo, string $email): int {
-        $uid = 0;
-        if (preg_match('/^\d{7}$/', $memberNo)) {
+    public static function findVendor(string $memberNo, string $email, string $memberKey = ''): int {
+        $uid = $memberKey !== '' ? Members::userByMemberKey($memberKey) : 0;   // follows a member-number change
+        if ($uid) { Members::followNumberChange($uid, $memberNo); }
+        if (!$uid && preg_match('/^\d{7}$/', $memberNo)) {
             $f = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $memberNo, 'number' => 2, 'fields' => 'ID']);
             if (count($f) === 1) { $uid = (int) $f[0]; }
         }
@@ -153,7 +154,7 @@ final class StockFeed {
         $d = json_decode((string) $req->get_body(), true);
         if (!is_array($d) || empty($d['order_ref']) || !is_array($d['items'] ?? null)) { return new \WP_REST_Response(['ok' => false, 'message' => 'Bad request.'], 400); }
         $ref = mb_substr(sanitize_text_field((string) $d['order_ref']), 0, 100);
-        $vendor = self::findVendor((string) ($d['member_no'] ?? ''), (string) ($d['email'] ?? ''));
+        $vendor = self::findVendor((string) ($d['member_no'] ?? ''), (string) ($d['email'] ?? ''), (string) ($d['member_key'] ?? ''));
         if (!$vendor) {
             self::log('No AlgiBazar store for member ' . ($d['member_no'] ?? '?') . ' (' . $ref . ')');
             return new \WP_REST_Response(['ok' => false, 'code' => 'no_store', 'message' => 'This member has no store on this marketplace.'], 404);
@@ -254,6 +255,7 @@ final class StockFeed {
         }
         $uid = self::memberUser($o);
         return ['order_ref' => CardLink::hostOf(home_url('/')) . '#' . $o->get_order_number(), 'member_no' => $uid ? Members::memberNo($uid) : '',
+            'member_key' => $uid ? (string) get_user_meta($uid, 'sfm_wr_member_key', true) : '',
             'email' => (string) $o->get_billing_email(), 'items' => $items];
     }
 

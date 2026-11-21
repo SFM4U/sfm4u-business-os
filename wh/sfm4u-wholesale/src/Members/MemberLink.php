@@ -213,8 +213,11 @@ final class MemberLink {
         $other = array_filter(get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $m['member_no'], 'number' => 20, 'fields' => 'ID', 'exclude' => [$uid]]),
             static fn($id) => !Members::isLinkedShop() || Members::hasCentralNo((int) $id));
         if ($other) { throw new DomainException(__('This SFM4U member is already linked to another account on this site. Contact SFM4U.', 'sfm4u-wholesale')); }
+        $before = (string) get_user_meta($uid, 'sfm_wr_member_no', true);
+        if ($before !== '' && $before !== (string) $m['member_no']) { add_user_meta($uid, 'sfm_wr_member_no_old', $before); }
         update_user_meta($uid, 'sfm_wr_member_no', (string) $m['member_no']);
         update_user_meta($uid, 'sfm_wr_central', 1);
+        if (preg_match('/^[a-f0-9]{32}$/', (string) ($m['member_key'] ?? ''))) { update_user_meta($uid, 'sfm_wr_member_key', (string) $m['member_key']); }
         update_user_meta($uid, 'sfm_wr_link_tier', in_array($m['tier'] ?? '', Members::TIERS, true) ? (string) $m['tier'] : 'regular');
         update_user_meta($uid, 'sfm_wr_link_status', sanitize_key((string) ($m['status'] ?? 'active')));
         update_user_meta($uid, 'sfm_wr_link_name', sanitize_text_field((string) ($m['name'] ?? '')));
