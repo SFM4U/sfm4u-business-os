@@ -24,10 +24,85 @@ final class ProductSheet {
         add_action('admin_enqueue_scripts', static function (string $hook): void {
             if (str_contains($hook, 'sfm-product-sheet')) {
                 wp_enqueue_media();
+                $entry = dirname(__DIR__) . '/sfm4u-wholesale.php';
+                wp_enqueue_script('sfm-wr-qrcode', plugins_url('assets/qrcode.js', $entry), [], '1.4.4', true);
+                wp_enqueue_script('sfm-wr-members', plugins_url('assets/members.js', $entry), ['sfm-wr-qrcode'], '0.5.0', true);
+                wp_enqueue_style('sfm-wr-members', plugins_url('assets/members.css', $entry), [], '0.3.0');
             }
         });
         add_action('post_submitbox_misc_actions', [self::class, 'editLink']);
+        add_action('woocommerce_single_product_summary', [self::class, 'front'], 27);
     }
+
+    public const SECTIONS = ['buy', 'costs', 'wholesale', 'steps', 'offer', 'details', 'delivery', 'label'];
+    public const SHOP_SECTIONS = 'sfm_sheet_shop_sections';
+    public const VIDEO_MAX_SECONDS = 15;
+    public const VIDEO_MAX_BYTES = 25 * 1024 * 1024;
+
+    /** Owner setting: which parts of the sheet a shop (not owner/manager/admin) may use. Default: all. */
+    public static function allowed(string $section, int $uid = 0): bool {
+        $uid = $uid ?: get_current_user_id();
+        if (Purchase::canManage($uid)) {
+            return true;
+        }
+        $o = get_option(self::SHOP_SECTIONS, self::SECTIONS);
+        return in_array($section, is_array($o) ? $o : self::SECTIONS, true);
+    }
+
+    /** Short videos only (server is small): video file, at most 15 seconds and 25 MB. */
+    public static function checkVideo(int $id): void {
+        if ($id <= 0) {
+            return;
+        }
+        if (!str_starts_with((string) get_post_mime_type($id), 'video/')) {
+            throw new DomainException('The video must be a video file. / ভিডিও ফাইল দিন।');
+        }
+        $meta = wp_get_attachment_metadata($id);
+        $len = is_array($meta) && isset($meta['length']) ? (int) $meta['length'] : 0;
+        $file = get_attached_file($id);
+        $size = is_array($meta) && !empty($meta['filesize']) ? (int) $meta['filesize'] : ($file && is_file($file) ? (int) filesize($file) : 0);
+        if ($len > self::VIDEO_MAX_SECONDS) {
+            throw new DomainException(sprintf('Video is %d seconds; at most %d seconds. / ভিডিও %d সেকেন্ড; সর্বোচ্চ %d সেকেন্ড।', $len, self::VIDEO_MAX_SECONDS, $len, self::VIDEO_MAX_SECONDS));
+        }
+        if ($size > self::VIDEO_MAX_BYTES) {
+            throw new DomainException('Video is too big (max 25 MB). / ভিডিও খুব বড় (সর্বোচ্চ ২৫ MB)।');
+        }
+    }
+
+    /** Product page: short video, company, dates, delivery. */
+    public static function front(): void {
+        global $product;
+        if (!$product instanceof \WC_Product) {
+            return;
+        }
+        $id = $product->get_id();
+        $bn = str_starts_with(determine_locale(), 'bn');
+        $v = (int) get_post_meta($id, self::VIDEO, true);
+        $info = json_decode((string) get_post_meta($id, self::INFO, true), true) ?: [];
+        $del = json_decode((string) get_post_meta($id, self::DELIVERY, true), true) ?: [];
+        $h = '';
+        if ($v && ($url = wp_get_attachment_url($v))) {
+            $h .= '<video src="' . esc_url($url) . '" controls muted playsinline preload="none" style="max-width:100%;border-radius:8px"></video>';
+        }
+        $rows = [];
+        if (!empty($info['brand'])) { $rows[] = ($bn ? 'কোম্পানি: ' : 'Company: ') . $info['brand']; }
+        if (!empty($info['exp'])) { $rows[] = ($bn ? 'মেয়াদ শেষ: ' : 'Expiry: ') . $info['exp']; }
+        if (!empty($info['mfg'])) { $rows[] = ($bn ? 'তৈরির তারিখ: ' : 'Made on: ') . $info['mfg']; }
+        $mode = $del['mode'] ?? '';
+        if ($mode !== '') {
+            $rows[] = ['pickup' => $bn ? 'দোকান থেকে নেওয়া যাবে' : 'Store pickup', 'home' => $bn ? 'বাসায় ডেলিভারি' : 'Home delivery', 'both' => $bn ? 'পিকআপ ও বাসায় ডেলিভারি' : 'Pickup and home delivery'][$mode] ?? '';
+        }
+        $rows[] = $bn ? 'AlgiBazar-এ বিক্রি; বিক্রেতা দোকান দায়ী।' : 'Sold on AlgiBazar; the seller shop is responsible.';
+        foreach (array_filter($rows) as $r) {
+            $h .= '<p class="sfm-front-info" style="margin:2px 0">' . esc_html($r) . '</p>';
+        }
+        echo '<div class="sfm-front">' . $h . '</div>'; // phpcs:ignore -- escaped above
+    }
+
+    public const VIDEO = '_sfm_video';
+    public const INFO = '_sfm_info';
+    public const DELIVERY = '_sfm_delivery';
+    public const RECEIVED = '_sfm_received_pieces';
 
     public static function lang(int $uid = 0): string {
         $l = (string) get_user_meta($uid ?: get_current_user_id(), self::LANG, true);
@@ -57,7 +132,19 @@ final class ProductSheet {
             'save' => ['Save product', 'পণ্য সেভ করুন'], 'draft' => ['Save as draft', 'খসড়া রাখুন'], 'saved' => ['Product saved.', 'পণ্য সেভ হয়েছে।'],
             'everyone' => ['Everyone', 'সবাই'], 'regular' => ['Registered customers', 'রেজিস্টার্ড কাস্টমার'], 'premium' => ['Premium members', 'প্রিমিয়াম মেম্বার'],
             'business' => ['Business card members', 'বিজনেস কার্ড মেম্বার'], 'public' => ['Public (all)', 'পাবলিক (সবাই)'], 'vendor' => ['Shops / vendors', 'দোকানদার'],
-            'only_me' => ['Only me', 'শুধু আমি'], 'cost_see' => ['Who can see the buying price (staff never)', 'কেনা দাম কে দেখবে (স্টাফ কখনো না)'],
+            'only_me' => ['Only me', 'শুধু আমি'],
+            'media' => ['Photos and short video', 'ছবি ও ছোট ভিডিও'], 'video' => ['Short video (max 15 seconds)', 'ছোট ভিডিও (সর্বোচ্চ ১৫ সেকেন্ড)'], 'add_video' => ['Add / change video', 'ভিডিও দিন / বদলান'],
+            'details' => ['Product details', 'পণ্যের বিবরণ'], 'brand' => ['Company / brand', 'কোম্পানি / ব্র্যান্ড'], 'category' => ['Category', 'ক্যাটাগরি'],
+            'unit' => ['Sold by', 'কিসে বিক্রি'], 'piece' => ['Piece', 'পিস'], 'kg' => ['Kg', 'কেজি'], 'litre' => ['Litre', 'লিটার'], 'bag' => ['Bag (বস্তা)', 'বস্তা'], 'dozen' => ['Dozen', 'ডজন'],
+            'short' => ['Short description', 'ছোট বিবরণ'], 'desc' => ['Full description', 'পূর্ণ বিবরণ'], 'mfg' => ['Made on', 'তৈরির তারিখ'], 'exp' => ['Expiry date', 'মেয়াদ শেষের তারিখ'], 'batch' => ['Batch / lot', 'ব্যাচ / লট'],
+            'stock' => ['Stock', 'স্টক'], 'received' => ['Received', 'এসেছে'], 'sold' => ['Sold', 'বিক্রি হয়েছে'], 'left' => ['In stock now', 'এখন স্টকে'],
+            'delivery' => ['Delivery', 'ডেলিভারি'], 'pickup' => ['Store pickup', 'দোকান থেকে নেওয়া'], 'home' => ['Home delivery', 'বাসায় ডেলিভারি'], 'both' => ['Both', 'দুটোই'],
+            'weight' => ['Weight of one piece (kg)', 'এক পিসের ওজন (কেজি)'], 'd_note' => ['Delivery note', 'ডেলিভারি নোট'],
+            'sku' => ['Product code (SKU) — empty = made automatically', 'পণ্যের কোড (SKU) — খালি রাখলে নিজে তৈরি হবে'],
+            'label' => ['Label and receipt', 'লেবেল ও রিসিপ্ট'], 'print_label' => ['Print label', 'লেবেল প্রিন্ট'], 'print_receipt' => ['Print receipt sample', 'রিসিপ্টের নমুনা প্রিন্ট'],
+            'status' => ['Status', 'অবস্থা'], 'st_publish' => ['Published (customers see it)', 'প্রকাশিত (কাস্টমার দেখছে)'], 'st_draft' => ['Saved, not published', 'সেভ করা, প্রকাশ হয়নি'],
+            'publish' => ['Save and publish', 'সেভ ও প্রকাশ'], 'just_save' => ['Save only', 'শুধু সেভ'],
+            'shop_sections' => ['Owner setting: which parts shops may use', 'মালিকের সেটিং: দোকানদার কোন অংশ ব্যবহার করতে পারবে'], 'buy_s' => ['Buying', 'কেনা'], 'costs_s' => ['Trip costs', 'আনার খরচ'], 'wholesale_s' => ['Wholesale', 'পাইকারি'], 'steps_s' => ['Customer steps', 'কাস্টমারের ধাপ'], 'offer_s' => ['Offer', 'অফার'], 'details_s' => ['Details', 'বিবরণ'], 'delivery_s' => ['Delivery', 'ডেলিভারি'], 'label_s' => ['Label', 'লেবেল'], 'cost_see' => ['Who can see the buying price (staff never)', 'কেনা দাম কে দেখবে (স্টাফ কখনো না)'],
         ];
         return $L[$key][$lang === 'en' ? 0 : 1] ?? $key;
     }
@@ -105,7 +192,7 @@ final class ProductSheet {
         if ($name === '') {
             throw new DomainException('Write the product name / পণ্যের নাম লিখুন');
         }
-        $pieces = max(1, self::num((string) ($p['pieces'] ?? '1')));
+        $pieces = self::num((string) ($p['pieces'] ?? ''));   // 0 = not given: keep the saved pack size
         $retail = self::minor((string) ($p['retail'] ?? ''));
         if ($retail < 1) {
             throw new DomainException('Write the selling price of one piece / এক পিসের বিক্রির দাম লিখুন');
@@ -161,9 +248,33 @@ final class ProductSheet {
         }
         $photos = array_values(array_filter(array_map('absint', explode(',', (string) ($p['photos'] ?? '')))));
         $costSee = array_values(array_intersect((array) ($p['cost_see'] ?? ['only_me']), PriceAudience::SHOW)) ?: ['only_me'];
+        $date = static function ($v): string {
+            $v = trim((string) $v);
+            if ($v === '') { return ''; }
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) || !strtotime($v)) { throw new DomainException('Write dates like 2026-12-31. / তারিখ লিখুন যেমন 2026-12-31'); }
+            return $v;
+        };
+        $mfg = $date($p['mfg'] ?? ''); $exp = $date($p['exp'] ?? '');
+        if ($mfg !== '' && $exp !== '' && $exp < $mfg) {
+            throw new DomainException('Expiry date is before the made-on date. / মেয়াদ তৈরির তারিখের আগে হতে পারে না।');
+        }
+        $sku = trim(sanitize_text_field((string) ($p['sku'] ?? '')));
+        if ($sku !== '' && !preg_match('/^[A-Za-z0-9._-]{1,40}$/', $sku)) {
+            throw new DomainException('Product code: letters, numbers, dot, dash only. / কোডে শুধু অক্ষর, সংখ্যা, ডট, ড্যাশ।');
+        }
+        $weight = trim(strtr((string) ($p['weight'] ?? ''), ['০' => '0', '১' => '1', '২' => '2', '৩' => '3', '৪' => '4', '৫' => '5', '৬' => '6', '৭' => '7', '৮' => '8', '৯' => '9']));
+        if ($weight !== '' && !preg_match('/^[0-9]{1,5}(\.[0-9]{1,3})?$/', $weight)) {
+            throw new DomainException('Weight like 0.25 (kg). / ওজন লিখুন যেমন 0.25 (কেজি)।');
+        }
         return ['name' => $name, 'pack_name' => sanitize_text_field((string) ($p['pack_name'] ?? '')) ?: 'case', 'pieces' => $pieces, 'packs' => $packs,
             'pack_cost' => $packCost, 'expenses' => $expenses, 'supplier' => sanitize_text_field((string) ($p['supplier'] ?? '')), 'retail' => $retail,
-            'singles' => !empty($p['singles']), 'sets' => $sets, 'photos' => $photos, 'cost_see' => $costSee, 'status' => !empty($p['draft']) ? 'draft' : 'publish'];
+            'singles' => !empty($p['singles']), 'sets' => $sets, 'photos' => $photos, 'cost_see' => $costSee,
+            'status' => !empty($p['publish']) ? 'publish' : (!empty($p['draft']) || !empty($p['just_save']) ? 'keep' : 'publish'),
+            'video' => absint($p['video'] ?? 0), 'category' => absint($p['category'] ?? 0),
+            'info' => ['brand' => sanitize_text_field((string) ($p['brand'] ?? '')), 'unit' => in_array($p['unit'] ?? '', ['piece', 'kg', 'litre', 'bag', 'dozen'], true) ? (string) $p['unit'] : 'piece',
+                'mfg' => $mfg, 'exp' => $exp, 'batch' => sanitize_text_field((string) ($p['batch'] ?? ''))],
+            'short' => wp_kses_post((string) ($p['short'] ?? '')), 'desc' => wp_kses_post((string) ($p['desc'] ?? '')), 'sku' => $sku, 'weight' => $weight,
+            'delivery' => ['mode' => in_array($p['delivery_mode'] ?? '', ['pickup', 'home', 'both'], true) ? (string) $p['delivery_mode'] : 'pickup', 'note' => sanitize_text_field((string) ($p['delivery_note'] ?? ''))]];
     }
 
     public static function save(array $d, int $productId, int $author): int {
@@ -174,8 +285,24 @@ final class ProductSheet {
         if (!$prod) {
             $prod = new \WC_Product_Simple();
         }
+        self::checkVideo((int) ($d['video'] ?? 0));
+        if ((int) $d['pieces'] < 1) {
+            $old = $productId > 0 ? (json_decode((string) get_post_meta($productId, self::PACK, true), true) ?: []) : [];
+            $d['pieces'] = max(1, (int) ($old['pieces'] ?? 1));
+            if (($d['pack_name'] ?? 'case') === 'case' && !empty($old['name'])) { $d['pack_name'] = (string) $old['name']; }
+        }
         $prod->set_name($d['name']);
-        $prod->set_status($d['status']);
+        $status = $d['status'] === 'keep' ? ($productId > 0 ? $prod->get_status() : 'draft') : $d['status'];
+        $prod->set_status($status);
+        if (isset($d['short'])) { $prod->set_short_description($d['short']); }
+        if (isset($d['desc'])) { $prod->set_description($d['desc']); }
+        if (!empty($d['weight'])) { $prod->set_weight($d['weight']); }
+        if (!empty($d['category'])) { $prod->set_category_ids([(int) $d['category']]); }
+        if (!empty($d['sku']) && $d['sku'] !== $prod->get_sku()) {
+            $other = wc_get_product_id_by_sku($d['sku']);
+            if ($other && $other !== $productId) { throw new DomainException('This product code is used by another product. / এই কোড অন্য পণ্যে আছে।'); }
+            $prod->set_sku($d['sku']);
+        }
         $prod->set_regular_price(wc_format_decimal($d['retail'] / (10 ** wc_get_price_decimals()), wc_get_price_decimals()));
         if ($d['packs'] > 0) {
             $prod->set_manage_stock(true);
@@ -190,6 +317,14 @@ final class ProductSheet {
             wp_update_post(['ID' => $id, 'post_author' => $author]);
         }
         update_post_meta($id, self::PACK, wp_slash(wp_json_encode(['name' => $d['pack_name'], 'pieces' => $d['pieces'], 'singles' => $d['singles']])));
+        if ($prod->get_sku() === '') {   // automatic product code for the QR / barcode label and POS scanning
+            $code = 'AB' . str_pad((string) $id, 6, '0', STR_PAD_LEFT);
+            if (!wc_get_product_id_by_sku($code)) { $prod->set_sku($code); $prod->save(); }
+        }
+        if (isset($d['info'])) { update_post_meta($id, self::INFO, wp_slash(wp_json_encode($d['info']))); }
+        if (isset($d['delivery'])) { update_post_meta($id, self::DELIVERY, wp_slash(wp_json_encode($d['delivery']))); }
+        if (array_key_exists('video', $d)) { $d['video'] ? update_post_meta($id, self::VIDEO, (int) $d['video']) : delete_post_meta($id, self::VIDEO); }
+        if ($d['packs'] > 0) { update_post_meta($id, self::RECEIVED, (int) get_post_meta($id, self::RECEIVED, true) + $d['packs'] * $d['pieces']); }
         PriceAudience::saveSets($id, $d['sets'], null);
         if ($d['packs'] > 0 && $d['pack_cost'] > 0) {
             $calc = Purchase::calculate([['product_id' => $id, 'name' => $d['name'], 'packs' => $d['packs'], 'pieces' => $d['pieces'], 'pack_minor' => $d['pack_cost']]], $d['expenses']);
@@ -222,7 +357,12 @@ final class ProductSheet {
             if ($pid && !current_user_can('edit_post', $pid)) {
                 throw new DomainException('You cannot edit this product.');
             }
-            $id = self::save(self::fromPost(wp_unslash($_POST)), $pid, get_current_user_id());
+            if (!empty($_POST['sfm_shop_sections_save']) && current_user_can('manage_options')) {
+                self::saveShopSections(array_map('sanitize_key', (array) wp_unslash($_POST['shop_sections'] ?? [])));
+                wp_safe_redirect(admin_url('admin.php?page=sfm-product-sheet' . ($pid ? '&product=' . $pid : '') . '&saved=1'));
+                exit;
+            }
+            $id = self::save(self::restrict(self::fromPost(wp_unslash($_POST)), $pid, get_current_user_id()), $pid, get_current_user_id());
             wp_safe_redirect(admin_url('admin.php?page=sfm-product-sheet&product=' . $id . '&saved=1'));
             exit;
         } catch (DomainException $e) {
@@ -231,6 +371,40 @@ final class ProductSheet {
     }
 
     /* ---------------- page ---------------- */
+
+    /** Stock picture of one product: received, sold, now (pieces) and in packs. */
+    public static function stockInfo(int $id): array {
+        $p = wc_get_product($id);
+        $pack = json_decode((string) get_post_meta($id, self::PACK, true), true) ?: [];
+        $per = max(1, (int) ($pack['pieces'] ?? 1));
+        $now = $p && $p->managing_stock() ? (int) $p->get_stock_quantity() : 0;
+        $rec = (int) get_post_meta($id, self::RECEIVED, true);
+        return ['received' => $rec, 'now' => $now, 'sold' => max(0, $rec - $now), 'per' => $per, 'now_packs' => intdiv(max(0, $now), $per), 'now_loose' => max(0, $now) % $per];
+    }
+
+    /** A shop user may only change the parts the owner allowed; the rest keeps its saved values. */
+    public static function restrict(array $d, int $pid, int $uid): array {
+        if (Purchase::canManage($uid)) {
+            return $d;
+        }
+        if (!self::allowed('buy', $uid)) { $d['packs'] = 0; $d['pack_cost'] = 0; }
+        if (!self::allowed('costs', $uid)) { $d['expenses'] = []; }
+        if (!self::allowed('details', $uid)) { unset($d['info'], $d['short'], $d['desc'], $d['category'], $d['sku']); }
+        if (!self::allowed('delivery', $uid)) { unset($d['delivery'], $d['weight']); }
+        $keep = [];
+        foreach (['wholesale' => ['Wholesale', 'Wholesale qty'], 'steps' => ['Customer price', 'Member price', 'Premium price', 'Business price'], 'offer' => ['Offer']] as $sec => $labels) {
+            if (!self::allowed($sec, $uid)) { $keep = array_merge($keep, $labels); }
+        }
+        if ($keep) {
+            $old = $pid ? array_values(array_filter(PriceAudience::sets($pid), fn($s) => in_array($s['label'], $keep, true))) : [];
+            $d['sets'] = PriceAudience::normalize(array_merge(array_values(array_filter($d['sets'], fn($s) => !in_array($s['label'], $keep, true))), $old));
+        }
+        return $d;
+    }
+
+    public static function saveShopSections(array $sections): void {
+        update_option(self::SHOP_SECTIONS, array_values(array_intersect($sections, self::SECTIONS)), false);
+    }
 
     public static function page(): void {
         $lang = self::lang();
@@ -250,6 +424,13 @@ final class ProductSheet {
         $wmin = isset($byLabel['Wholesale qty']) ? (string) array_key_first($byLabel['Wholesale qty']['ladder']) : '';
         $wsee = isset($byLabel['Wholesale']) ? $byLabel['Wholesale']['show_to'] : ['business', 'vendor'];
         $landed = $pid ? json_decode((string) get_post_meta($pid, Purchase::LANDED, true), true) : null;
+        $video = $pid ? (int) get_post_meta($pid, self::VIDEO, true) : 0;
+        $info = $pid ? (json_decode((string) get_post_meta($pid, self::INFO, true), true) ?: []) : [];
+        $del = $pid ? (json_decode((string) get_post_meta($pid, self::DELIVERY, true), true) ?: []) : [];
+        $cat = $prod ? (int) (($prod->get_category_ids()[0] ?? 0)) : 0;
+        $st = $pid ? self::stockInfo($pid) : null;
+        $code = $prod ? Members\MembersAdmin::productCode($prod) : '';
+        $A = fn(string $s): bool => self::allowed($s);
         $cost = $pid ? json_decode((string) get_post_meta($pid, PriceAudience::COST, true), true) : null;
         if (!empty($_GET['saved'])) {
             echo '<div class="notice notice-success"><p>' . $T('saved') . '</p></div>';
@@ -279,6 +460,14 @@ final class ProductSheet {
             echo wp_get_attachment_image($ph, [60, 60], false, ['style' => 'margin-right:6px']);
         }
         echo '</span><input type="hidden" name="photos" id="sfm-photos" value="' . esc_attr(implode(',', $photos)) . '"> <button type="button" class="button" id="sfm-photo-btn">' . $T('add_photos') . '</button></p>'
+            . '<p><strong>' . $T('video') . '</strong><br><span id="sfm-video-name">' . esc_html($video ? (string) basename((string) get_attached_file($video)) : '') . '</span><input type="hidden" name="video" id="sfm-video" value="' . (int) $video . '"> <button type="button" class="button" id="sfm-video-btn">' . $T('add_video') . '</button></p>'
+            . ($A('details') ? '<h2>' . $T('details') . '</h2><table class="form-table"><tr><th>' . $T('brand') . '</th><td><input name="brand" class="regular-text" value="' . esc_attr((string) ($info['brand'] ?? '')) . '"></td></tr>'
+                . '<tr><th>' . $T('category') . '</th><td>' . wp_dropdown_categories(['taxonomy' => 'product_cat', 'name' => 'category', 'hide_empty' => false, 'show_option_none' => '—', 'option_none_value' => '0', 'selected' => $cat, 'echo' => false]) . '</td></tr>'
+                . '<tr><th>' . $T('unit') . '</th><td><select name="unit">' . $opt(['piece', 'kg', 'litre', 'bag', 'dozen'], (string) ($info['unit'] ?? 'piece')) . '</select></td></tr>'
+                . '<tr><th>' . $T('sku') . '</th><td><input name="sku" value="' . esc_attr($prod ? $prod->get_sku() : '') . '"></td></tr>'
+                . '<tr><th>' . $T('mfg') . '</th><td><input type="date" name="mfg" value="' . esc_attr((string) ($info['mfg'] ?? '')) . '"> ' . $T('exp') . ' <input type="date" name="exp" value="' . esc_attr((string) ($info['exp'] ?? '')) . '"> ' . $T('batch') . ' <input name="batch" style="width:120px" value="' . esc_attr((string) ($info['batch'] ?? '')) . '"></td></tr>'
+                . '<tr><th>' . $T('short') . '</th><td><textarea name="short" rows="2" class="large-text">' . esc_textarea($prod ? $prod->get_short_description() : '') . '</textarea></td></tr>'
+                . '<tr><th>' . $T('desc') . '</th><td><textarea name="desc" rows="4" class="large-text">' . esc_textarea($prod ? $prod->get_description() : '') . '</textarea></td></tr></table>' : '')
             . '<h2>1. ' . $T('buy') . '</h2><table class="form-table"><tr><th>' . $T('pack_name') . '</th><td><input name="pack_name" value="' . esc_attr($pack['name'] ?? '') . '" placeholder="case / কেস"></td></tr>'
             . '<tr><th>' . $T('pieces') . '</th><td><input name="pieces" id="sfm-pieces" inputmode="numeric" value="' . esc_attr((string) ($pack['pieces'] ?? '')) . '"></td></tr>'
             . '<tr><th>' . $T('packs') . '</th><td><input name="packs" id="sfm-packs" inputmode="numeric"></td></tr>'
@@ -316,10 +505,31 @@ final class ProductSheet {
         }
         echo '</tbody></table><h3>' . $T('offer') . '</h3><p>' . $T('offer_buy') . ' <input name="offer_buy" inputmode="numeric" style="width:70px" value="' . esc_attr((string) ($promo['buy'] ?? '')) . '"> · <input name="offer_off" inputmode="numeric" style="width:70px" value="' . esc_attr((string) ($promo['off'] ?? '')) . '"> ' . $T('offer_off')
             . ' · ' . $T('for') . ' <select name="offer_for">' . $opt(['everyone', 'regular', 'premium', 'business'], $promoFor) . '</select></p>'; // phpcs:ignore
-        echo '<p><button class="button button-primary button-hero">' . $T('save') . '</button> <button class="button" name="draft" value="1">' . $T('draft') . '</button></p></div>'
-            . '<div style="flex:1;min-width:260px"><div class="postbox" style="padding:12px;position:sticky;top:40px"><h2>' . $T('calc') . '</h2>'
+        if ($A('delivery')) {
+            echo '<h2>' . $T('delivery') . '</h2><table class="form-table"><tr><th>' . $T('delivery') . '</th><td><select name="delivery_mode">' . $opt(['pickup', 'home', 'both'], (string) ($del['mode'] ?? 'pickup')) . '</select></td></tr>'
+                . '<tr><th>' . $T('weight') . '</th><td><input name="weight" inputmode="decimal" value="' . esc_attr($prod ? (string) $prod->get_weight() : '') . '"></td></tr>'
+                . '<tr><th>' . $T('d_note') . '</th><td><input name="delivery_note" class="regular-text" value="' . esc_attr((string) ($del['note'] ?? '')) . '"></td></tr></table>'; // phpcs:ignore -- escaped parts
+        }
+        echo '<p><button class="button button-primary button-hero" name="publish" value="1">' . $T('publish') . '</button> <button class="button button-hero" name="just_save" value="1">' . $T('just_save') . '</button></p></div>'
+            . '<div style="flex:1;min-width:260px">'
+            . ($prod ? '<div class="postbox" style="padding:12px"><h2>' . $T('status') . '</h2><p><strong style="color:' . ($prod->get_status() === 'publish' ? '#1a7f37' : '#9a6700') . '">' . $T($prod->get_status() === 'publish' ? 'st_publish' : 'st_draft') . '</strong></p>'
+                . '<h3>' . $T('stock') . '</h3><p>' . $T('received') . ': ' . (int) $st['received'] . ' · ' . $T('sold') . ': ' . (int) $st['sold'] . ' · ' . $T('left') . ': <strong>' . (int) $st['now'] . '</strong> (' . (int) $st['now_packs'] . ' ' . esc_html((string) ($pack['name'] ?? '')) . ' + ' . (int) $st['now_loose'] . ')</p></div>' : '')
+            . ($prod && $A('label') ? '<div class="postbox" style="padding:12px"><h2>' . $T('label') . '</h2><div id="sfm-label" class="sfm-wr-labels sfm-wr-labels-small"><div class="sfm-wr-label"><div class="sfm-wr-qr" data-qr="' . esc_attr($code) . '"></div><div><b>' . esc_html($prod->get_name()) . '</b><span>৳' . esc_html((string) $prod->get_regular_price()) . '</span><small>' . esc_html($code) . '</small></div></div></div>'
+                . '<div style="margin:6px 0">' . Members\Barcode::code128Svg($code) . '</div>'
+                . '<p><button type="button" class="button" id="sfm-print-label">' . $T('print_label') . '</button> <button type="button" class="button" id="sfm-print-receipt">' . $T('print_receipt') . '</button></p>'
+                . '<div id="sfm-receipt" style="display:none"><div style="width:72mm;font:12px/1.4 Arial,\'Noto Sans Bengali\',sans-serif"><b>' . esc_html(get_bloginfo('name')) . '</b><br>' . esc_html(current_time('Y-m-d H:i')) . '<hr>' . esc_html($prod->get_name()) . '<br>1 × ৳' . esc_html((string) $prod->get_regular_price()) . '<span style="float:right">৳' . esc_html((string) $prod->get_regular_price()) . '</span><hr><small>' . esc_html($code) . '</small></div></div></div>' : '')
+            . '<div class="postbox" style="padding:12px;position:sticky;top:40px"><h2>' . $T('calc') . '</h2>'
             . '<p>' . $T('cost_pack') . ': <strong id="sfm-c-pack">—</strong></p><p>' . $T('cost_piece') . ': <strong id="sfm-c-piece">' . esc_html(is_array($landed) ? self::dec((int) $landed['piece_minor']) : '—') . '</strong></p>'
-            . '<p>' . $T('retail') . ' → ' . $T('profit') . ': <strong id="sfm-p-retail">—</strong></p><p>' . $T('w_piece') . ' → ' . $T('profit') . ': <strong id="sfm-p-w">—</strong></p><div id="sfm-p-steps"></div></div></div></div></form></div>';
+            . '<p>' . $T('retail') . ' → ' . $T('profit') . ': <strong id="sfm-p-retail">—</strong></p><p>' . $T('w_piece') . ' → ' . $T('profit') . ': <strong id="sfm-p-w">—</strong></p><div id="sfm-p-steps"></div></div></div></div></form>';
+        if (current_user_can('manage_options')) {
+            $cur = get_option(self::SHOP_SECTIONS, self::SECTIONS);
+            echo '<form method="post" class="postbox" style="padding:12px;margin-top:16px">' . wp_nonce_field('sfm_sheet', '_wpnonce', true, false) . '<input type="hidden" name="sfm_sheet" value="1"><input type="hidden" name="sfm_shop_sections_save" value="1"><input type="hidden" name="product" value="' . (int) $pid . '"><h2>' . $T('shop_sections') . '</h2><p>';
+            foreach (self::SECTIONS as $s) {
+                echo '<label style="margin-right:12px"><input type="checkbox" name="shop_sections[]" value="' . esc_attr($s) . '"' . checked(in_array($s, is_array($cur) ? $cur : self::SECTIONS, true), true, false) . '> ' . $T($s . '_s') . '</label>';
+            }
+            echo '</p><p><button class="button">' . $T('just_save') . '</button></p></form>';
+        }
+        echo '</div>';
         $known = is_array($landed) ? (int) $landed['piece_minor'] / (10 ** $dec) : 0;
         ?>
 <script>
@@ -345,6 +555,16 @@ final class ProductSheet {
       f.state().get('selection').each(a=>{ids.push(a.id); const u=(a.attributes.sizes&&a.attributes.sizes.thumbnail)?a.attributes.sizes.thumbnail.url:a.attributes.url; const i=document.createElement('img'); i.src=u; i.width=60; i.height=60; i.style.marginRight='6px'; list.appendChild(i);});
       $('sfm-photos').value=ids.join(',');});
     f.open();});
+  const vb=$('sfm-video-btn'); if(vb) vb.addEventListener('click',function(e){e.preventDefault(); if(!window.wp||!wp.media)return;
+    const f=wp.media({title:<?php echo wp_json_encode(self::t('video', $lang)); ?>,multiple:false,library:{type:'video'}});
+    f.on('select',function(){const a=f.state().get('selection').first(); if(!a)return; const len=parseInt(a.attributes.fileLength?(a.attributes.fileLength.split(':').reduce((s,x)=>s*60+(+x),0)):0,10);
+      if(len>15){alert(<?php echo wp_json_encode('Video max 15 seconds / ভিডিও সর্বোচ্চ ১৫ সেকেন্ড'); ?>);return;}
+      $('sfm-video').value=a.id; $('sfm-video-name').textContent=a.attributes.filename||('#'+a.id);});
+    f.open();});
+  const pr=(id)=>{const el=$(id); if(!el)return; const w=window.open('','sfmprint','width=420,height=600'); if(!w)return;
+    w.document.write('<html><head><meta charset="utf-8"><title>Print</title><style>body{font-family:Arial,\'Noto Sans Bengali\',sans-serif}.sfm-wr-label{display:flex;gap:2mm;align-items:center;width:50mm;height:30mm;padding:1.5mm;box-sizing:border-box;font:8pt/1.2 Arial}.sfm-wr-label b,.sfm-wr-label span,.sfm-wr-label small{display:block}.sfm-wr-qr svg{width:24mm;height:24mm}'+(id==='sfm-label'?'@page{size:50mm 30mm;margin:0}':'@page{size:80mm auto;margin:3mm}')+'</style></head><body style="margin:0">'+el.innerHTML.replace('display:none','')+'</body></html>'); w.document.close(); w.focus(); setTimeout(()=>w.print(),300);};
+  const pl=$('sfm-print-label'); if(pl) pl.addEventListener('click',()=>pr('sfm-label'));
+  const prc=$('sfm-print-receipt'); if(prc) prc.addEventListener('click',()=>pr('sfm-receipt'));
 })();
 </script>
         <?php
