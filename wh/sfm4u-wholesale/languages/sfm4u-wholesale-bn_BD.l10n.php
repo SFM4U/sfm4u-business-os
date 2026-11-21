@@ -980,4 +980,6 @@ return ['language' => 'bn_BD', 'messages' => [
     'Paid toward previous due' => 'আগের বাকি পরিশোধ',
     'Sale on credit' => 'বাকিতে বিক্রি',
     'New due' => 'নতুন বাকি',
+    'Cash account' => 'নগদ অ্যাকাউন্ট',
+    'ERPNext account that receives POS cash and khata payments (Payment Entry). Payments wait until this is set.' => 'POS-এর নগদ ও খাতার জমা যে ERPNext অ্যাকাউন্টে যাবে (Payment Entry)। এটি না দেওয়া পর্যন্ত পেমেন্ট ERP-তে যাবে না, অপেক্ষায় থাকবে।',
 ]];

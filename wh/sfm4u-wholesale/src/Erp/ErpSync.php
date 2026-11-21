@@ -33,6 +33,74 @@ final class ErpSync {
         add_action('woocommerce_refund_created', [self::class, 'onRefundCreated'], 5, 2);
         add_action('woocommerce_order_refunded', [self::class, 'onRefunded'], 30, 2);
         add_action(self::JOB_REFUND, [self::class, 'runRefundJob']);
+        // L-12 (Owner 2026-11-21): khata credit sales (on-hold) and due-only payments reach ERPNext too.
+        add_action('woocommerce_order_status_on-hold', [self::class, 'onCreditSale'], 30);
+        add_action('sfm_wr_khata_recorded', [self::class, 'onKhataRecorded'], 20, 2);
+        add_action(self::JOB_DUE, [self::class, 'runDueJob']);
+    }
+
+    public const JOB_DUE = 'sfmwh_erp_export_due';
+    public const OPT_CASH = 'sfmwh_erp_cash_account';
+    public const META_CUSTOMER = '_sfmwh_erp_customer';
+
+    public static function onCreditSale($orderId): void {
+        if (!self::ordersOn()) { return; }
+        $order = wc_get_order((int) $orderId);
+        if ($order && \SFM4U\Wholesale\Ops\StockFeed::isPosKhataCredit($order)) { self::later(self::JOB_ORDER, $order->get_id()); }
+    }
+
+    /** A khata payment row was committed: due-only POS payments (ref pos-due:...) become ERPNext Payment Entries. */
+    public static function onKhataRecorded($userId, $row): void {
+        if (!self::ordersOn() || !is_array($row) || (int) ($row['amount_minor'] ?? 0) >= 0 || empty($row['id'])) { return; }
+        self::later(self::JOB_DUE, (int) $row['id']);
+    }
+
+    /** ERPNext Customer for a khata member: masked number + short tag, created once and remembered (no phone/NID). */
+    public static function khataCustomer(ErpNextClient $client, int $userId): string {
+        $known = (string) get_user_meta($userId, self::META_CUSTOMER, true);
+        if ($known !== '') { return $known; }
+        $no = \SFM4U\Wholesale\Members\Members::memberNo($userId);
+        $name = 'SFM4U ' . \SFM4U\Wholesale\MemberPrice::mask($no) . ' #' . substr(hash('sha256', 'sfm4u-khata|' . $userId . '|' . $no), 0, 6);
+        $name = $client->ensureCustomer($name);
+        update_user_meta($userId, self::META_CUSTOMER, $name);
+        return $name;
+    }
+
+    /** Payment Entry document (cash). Receive = money in from the customer, Pay = cash refund to the customer. */
+    public static function paymentDoc(string $type, string $company, string $customer, int $minor, int $scale, string $ref, string $date, array $allocations = []): array {
+        $cash = (string) get_option(self::OPT_CASH, '');
+        if ($cash === '') { throw new DomainException('Set the ERPNext cash account on the ERP link page before payments are sent.'); }
+        if ($minor < 1 || $company === '' || $customer === '') { throw new DomainException('Invalid payment for ERPNext.'); }
+        $amount = round($minor / (10 ** $scale), $scale);
+        $doc = ['doctype' => 'Payment Entry', 'docstatus' => 1, 'payment_type' => $type, 'company' => $company, 'posting_date' => $date,
+            'mode_of_payment' => 'Cash', 'party_type' => 'Customer', 'party' => $customer, 'paid_amount' => $amount, 'received_amount' => $amount,
+            'source_exchange_rate' => 1, 'target_exchange_rate' => 1, 'reference_no' => $ref, 'reference_date' => $date,
+            ($type === 'Receive' ? 'paid_to' : 'paid_from') => $cash];
+        foreach ($allocations as [$invoice, $allocMinor]) {
+            if ($allocMinor > 0) { $doc['references'][] = ['reference_doctype' => 'Sales Invoice', 'reference_name' => $invoice, 'allocated_amount' => round($allocMinor / (10 ** $scale), $scale)]; }
+        }
+        return $doc;
+    }
+
+    public static function runDueJob($rowId): void {
+        if (!self::ordersOn()) { return; }
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare('SELECT id, user_id, kind, amount_minor, ref, created_at FROM ' . \SFM4U\Wholesale\Members\Members::khata() . ' WHERE id=%d', (int) $rowId), ARRAY_A);
+        if (!$row || $row['kind'] !== 'payment' || !str_starts_with((string) $row['ref'], 'pos-due:')) { return; }
+        try {
+            $client = self::client();
+            $ref = 'KHATA-' . (int) $row['id'];
+            if ($client->paymentEntryByReference($ref) !== '') { return; }
+            $company = $client->warehouseCompany((string) self::settings()['warehouse']);
+            $client->paymentEntry(self::paymentDoc('Receive', $company, self::khataCustomer($client, (int) $row['user_id']), abs((int) $row['amount_minor']),
+                wc_get_price_decimals(), $ref, substr((string) $row['created_at'], 0, 10)));
+        } catch (\Throwable $e) {
+            self::log('khata payment ' . (int) $row['id'] . ': ' . $e->getMessage());
+            $tries = get_option('sfmwh_erp_due_tries', []); $tries = is_array($tries) ? $tries : [];
+            $n = (int) ($tries[(int) $row['id']] ?? 0) + 1; $tries[(int) $row['id']] = $n;
+            update_option('sfmwh_erp_due_tries', array_slice($tries, -200, null, true), false);
+            if ($n < 24) { self::later(self::JOB_DUE, (int) $row['id'], 300 * $n); }
+        }
     }
 
     public const JOB_ORDER = 'sfmwh_erp_export_order';
@@ -58,8 +126,19 @@ final class ErpSync {
     public static function runOrderJob($orderId): void {
         if (!self::ordersOn()) { return; }
         $order = wc_get_order((int) $orderId);
-        if (!$order || !in_array($order->get_status(), ['processing', 'completed'], true)) { return; }
-        self::exportNow($order);
+        if (!$order) { return; }
+        $done = in_array($order->get_status(), ['processing', 'completed'], true)
+            || ($order->get_status() === 'on-hold' && \SFM4U\Wholesale\Ops\StockFeed::isPosKhataCredit($order));
+        if (!$done) { return; }
+        try {
+            self::exportOrder($order);
+        } catch (\Throwable $e) {
+            $order->add_order_note('ERPNext: ' . mb_substr($e->getMessage(), 0, 200));
+            self::log('order ' . $order->get_id() . ': ' . $e->getMessage());
+            $tries = (int) $order->get_meta('_sfmwh_erp_order_tries') + 1;
+            $order->update_meta_data('_sfmwh_erp_order_tries', $tries); $order->save();
+            if ($tries < 24) { self::later(self::JOB_ORDER, $order->get_id(), 300 * $tries); }
+        }
     }
 
     private static function exportNow(\WC_Order $order): void {
@@ -294,20 +373,52 @@ final class ErpSync {
     /** Send one order to ERPNext once. Returns the invoice name (existing one if already sent). */
     public static function exportOrder(\WC_Order $order, ?ErpNextClient $client = null, ?array $map = null): string {
         $done = (string) $order->get_meta('_sfmwh_erp_invoice');
-        if ($done !== '') { return $done; }
+        $o = self::orderData($order);
+        $pos = $o['source'] === 'pos';
+        if ($done !== '' && (!$pos || (string) $order->get_meta('_sfmwh_erp_payment') !== '')) { return $done; }
         $s = self::settings();
         $client = $client ?? self::client();
-        $o = self::orderData($order);
-        $map = $map ?? (array) json_decode((string) get_option('sfmwh_erp_branch_map', '{}'), true);
-        $warehouse = self::branchFor($map, $o['source'], $o['register'], (string) $s['warehouse']);
-        $company = $client->warehouseCompany($warehouse);
-        $name = $client->salesInvoice(self::invoiceDoc($o, $company, $warehouse, (string) get_option('sfmwh_erp_customer', 'Walk-in Customer')));
-        if ($name === '') { throw new DomainException('ERPNext did not return an invoice number.'); }
-        $order->update_meta_data('_sfmwh_erp_invoice', $name);
-        $order->update_meta_data('_sfmwh_erp_company', $company);
-        $order->update_meta_data('_sfmwh_erp_warehouse', $warehouse);
-        $order->save();
-        return $name;
+        // L-12: a khata sale is billed to the member's own ERPNext customer, so ERP outstanding = khata due.
+        $khata = $order->get_meta('_sfm4u_pos_khata');
+        $khata = is_array($khata) ? $khata : [];
+        $customer = (string) get_option('sfmwh_erp_customer', 'Walk-in Customer');
+        if ($khata) {
+            $uid = (int) $order->get_meta('_sfmwh_member_user');
+            if ($uid < 1) { throw new DomainException('Khata sale without a linked member; ERP export waits.'); }
+            $customer = self::khataCustomer($client, $uid);
+        }
+        if ($done === '') {
+            $map = $map ?? (array) json_decode((string) get_option('sfmwh_erp_branch_map', '{}'), true);
+            $warehouse = self::branchFor($map, $o['source'], $o['register'], (string) $s['warehouse']);
+            $company = $client->warehouseCompany($warehouse);
+            $doc = self::invoiceDoc($o, $company, $warehouse, $customer);
+            if ($pos) {
+                // L-12: POS sales are normal invoices + a cash Payment Entry (ERPNext POS invoices need a POS Profile and payment rows).
+                $doc['is_pos'] = 0;
+                if ($khata) { $doc['remarks'] .= sprintf('; khata: on credit %d, old due paid %d (minor units)', (int) ($khata['credit_minor'] ?? 0), (int) ($khata['due_payment_minor'] ?? 0)); }
+            }
+            $done = $client->salesInvoice($doc);
+            if ($done === '') { throw new DomainException('ERPNext did not return an invoice number.'); }
+            $order->update_meta_data('_sfmwh_erp_invoice', $done);
+            $order->update_meta_data('_sfmwh_erp_company', $company);
+            $order->update_meta_data('_sfmwh_erp_warehouse', $warehouse);
+            $order->save();
+        }
+        if ($pos && $order->get_payment_method() === 'sfm4u_counter_cash') {
+            $scale = (int) $o['scale'];
+            $total = (int) round((float) $order->get_total() * (10 ** $scale));
+            $credit = (int) ($khata['credit_minor'] ?? 0);
+            $cash = $total - $credit + (int) ($khata['due_payment_minor'] ?? 0);
+            $ref = 'WC-PAY-' . $order->get_id();
+            $pe = $client->paymentEntryByReference($ref);
+            if ($pe === '' && $cash > 0) {
+                $pe = $client->paymentEntry(self::paymentDoc('Receive', (string) $order->get_meta('_sfmwh_erp_company'), $customer, $cash, $scale, $ref,
+                    (string) $o['date'], [[$done, min($cash, $total - $credit)]]));
+            }
+            $order->update_meta_data('_sfmwh_erp_payment', $pe !== '' ? $pe : 'none');
+            $order->save();
+        }
+        return $done;
     }
 
     /* ---------- 0.9.9: refunds / returns -> ERPNext return Sales Invoice (credit note) ---------- */
@@ -358,12 +469,15 @@ final class ErpSync {
     /** Send one refund once. The original order must already be in ERPNext (else it throws and the job retries). */
     public static function exportRefund(\WC_Order_Refund $refund, ?ErpNextClient $client = null): string {
         $done = (string) $refund->get_meta('_sfmwh_erp_return');
-        if ($done !== '') { return $done; }
         $order = wc_get_order($refund->get_parent_id());
         if (!$order) { throw new DomainException('Original order not found.'); }
+        $scale = wc_get_price_decimals();
+        if ($done !== '') {
+            if ((string) $refund->get_meta('_sfmwh_erp_refund_payment') === '') { self::refundPayment($refund, $order, $client ?? self::client(), $done, $scale); }
+            return $done;
+        }
         $against = (string) $order->get_meta('_sfmwh_erp_invoice');
         if ($against === '') { throw new DomainException('Original order is not in ERPNext yet; will retry.'); }
-        $scale = wc_get_price_decimals();
         $lines = [];
         foreach ($refund->get_items() as $item) {
             if (!$item instanceof \WC_Order_Item_Product || (int) $item->get_quantity() === 0) { continue; }
@@ -375,12 +489,35 @@ final class ErpSync {
             'rounding_minor' => self::roundingFeeMinor($refund, $scale), 'round_off_account' => (string) get_option(self::OPT_ROUND_OFF, ''),
             'restock' => (string) $refund->get_meta(self::META_RESTOCK)];
         $client = $client ?? self::client();
-        $name = $client->salesInvoice(self::returnDoc($r, $against, (string) $order->get_meta('_sfmwh_erp_company'),
-            (string) $order->get_meta('_sfmwh_erp_warehouse'), (string) get_option('sfmwh_erp_customer', 'Walk-in Customer')));
+        $doc = self::returnDoc($r, $against, (string) $order->get_meta('_sfmwh_erp_company'), (string) $order->get_meta('_sfmwh_erp_warehouse'), self::orderCustomer($client, $order));
+        if ($o['source'] === 'pos') { $doc['is_pos'] = 0; }   // L-12: POS invoices are exported as normal invoices; their returns too
+        $name = $client->salesInvoice($doc);
         if ($name === '') { throw new DomainException('ERPNext did not return a credit note number.'); }
         $refund->update_meta_data('_sfmwh_erp_return', $name);
         $refund->save();
+        self::refundPayment($refund, $order, $client, $name, $scale);
         return $name;
+    }
+
+    /** The ERPNext customer an order was billed to (khata member or the walk-in customer). */
+    private static function orderCustomer(ErpNextClient $client, \WC_Order $order): string {
+        $uid = (int) $order->get_meta('_sfmwh_member_user');
+        if (is_array($order->get_meta('_sfm4u_pos_khata')) && $order->get_meta('_sfm4u_pos_khata') && $uid > 0) { return self::khataCustomer($client, $uid); }
+        return (string) get_option('sfmwh_erp_customer', 'Walk-in Customer');
+    }
+
+    /** L-12: cash given back for a POS refund -> Payment Entry (Pay), once. */
+    private static function refundPayment(\WC_Order_Refund $refund, \WC_Order $order, ErpNextClient $client, string $creditNote, int $scale): void {
+        if ((string) $refund->get_meta('_sfmwh_erp_refund_payment') !== '' || $order->get_payment_method() !== 'sfm4u_counter_cash'
+            || !str_starts_with((string) $order->get_created_via(), 'sfm4u-pos')) { return; }
+        $minor = (int) round((float) $refund->get_amount() * (10 ** $scale));
+        $ref = 'WC-RPAY-' . $refund->get_id();
+        $pe = $client->paymentEntryByReference($ref);
+        if ($pe === '' && $minor > 0) {
+            $pe = $client->paymentEntry(self::paymentDoc('Pay', (string) $order->get_meta('_sfmwh_erp_company'), self::orderCustomer($client, $order), $minor, $scale, $ref, gmdate('Y-m-d')));
+        }
+        $refund->update_meta_data('_sfmwh_erp_refund_payment', $pe !== '' ? $pe : 'none');
+        $refund->save();
     }
 
     public static function cron(): void {

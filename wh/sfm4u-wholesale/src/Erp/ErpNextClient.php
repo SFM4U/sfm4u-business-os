@@ -94,4 +94,26 @@ final class ErpNextClient {
         $this->request('POST', '/api/resource/Item', [], ['item_code' => $code, 'item_name' => mb_substr($name !== '' ? $name : $code, 0, 140),
             'item_group' => $group, 'stock_uom' => $uom, 'is_stock_item' => 1, 'include_item_in_manufacturing' => 0, 'standard_rate' => $rate, 'valuation_rate' => $rate]);
     }
+
+    /** L-12: make sure a Customer exists (created once, named by us). Returns the customer name. */
+    public function ensureCustomer(string $name, string $group = 'All Customer Groups', string $territory = 'All Territories'): string {
+        $d = $this->request('GET', '/api/resource/Customer', ['fields' => wp_json_encode(['name']), 'filters' => wp_json_encode([['name', '=', $name]]), 'limit_page_length' => 1]);
+        if (!empty($d['data'][0]['name'])) { return (string) $d['data'][0]['name']; }
+        $c = $this->request('POST', '/api/resource/Customer', [], ['customer_name' => $name, 'customer_type' => 'Individual',
+            'customer_group' => $group, 'territory' => $territory]);
+        return (string) ($c['data']['name'] ?? $name);
+    }
+
+    /** L-12: name of a submitted Payment Entry with this reference number ('' if none) — makes payments idempotent at ERPNext. */
+    public function paymentEntryByReference(string $ref): string {
+        $d = $this->request('GET', '/api/resource/Payment Entry', ['fields' => wp_json_encode(['name']),
+            'filters' => wp_json_encode([['reference_no', '=', $ref], ['docstatus', '=', 1]]), 'limit_page_length' => 1]);
+        return (string) ($d['data'][0]['name'] ?? '');
+    }
+
+    /** L-12: create and submit a Payment Entry. Returns its name. */
+    public function paymentEntry(array $doc): string {
+        $d = $this->request('POST', '/api/resource/Payment Entry', [], $doc);
+        return (string) ($d['data']['name'] ?? '');
+    }
 }

@@ -29,7 +29,7 @@ $p2=wc_get_order($pos->get_id());
 $ok($n2!==$n1 && $p2->get_meta('_sfmwh_erp_company')==='SFM4U BD','POS member sale -> SFM4U BD / Stores');
 $st=json_decode(wp_remote_retrieve_body(wp_remote_get('http://127.0.0.1:8897/_state')),true);
 $inv=end($st['invoices']);
-$ok($inv['is_pos']===1 && strpos($inv['remarks'],'765**** (black)')!==false && $inv['items'][0]['warehouse']==='Stores - SFM','mock got POS member invoice in right branch');
+$ok($inv['is_pos']===0 && strpos($inv['remarks'],'765**** (black)')!==false && $inv['items'][0]['warehouse']==='Stores - SFM','mock got POS member invoice in right branch (L-12: normal invoice, is_pos 0; cash goes in a Payment Entry)');
 $ok(count($st['invoices'])>=2,'two invoices stored');
 foreach([$web,$pos] as $o){ $o->delete(true);} $a->delete(true);
 echo "pass $p fail $f\n";

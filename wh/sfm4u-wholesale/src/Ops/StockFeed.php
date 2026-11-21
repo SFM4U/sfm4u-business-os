@@ -37,6 +37,8 @@ final class StockFeed {
         // Counter sales are handed over and paid at once but stay "processing": queue a send AFTER the POS
         // transaction has committed (never call AlgiBazar from inside the sale transaction).
         add_action('woocommerce_order_status_processing', [self::class, 'onPosPaid'], 20);
+        // L-12 (Owner 2026-11-21): a member sale partly on khata (credit) stays on-hold but the goods left the shop: send at once.
+        add_action('woocommerce_order_status_on-hold', [self::class, 'onPosPaid'], 20);
         add_action(self::CRON_POS, [self::class, 'sendPos']);
         add_action(self::CRON, [self::class, 'retry']);
         add_action('init', static function (): void {
@@ -269,16 +271,27 @@ final class StockFeed {
         return $o->get_meta('_sfmwh_member_source') === 'pos' && (int) $o->get_meta(self::META_MEMBER_USER) > 0;
     }
 
+    /** L-12: POS sale with part on khata (credit). WooCommerce keeps it on-hold; the goods were handed over. */
+    public static function isPosKhataCredit(\WC_Order $o): bool {
+        $k = $o->get_meta('_sfm4u_pos_khata');
+        return str_starts_with((string) $o->get_created_via(), 'sfm4u-pos') && is_array($k) && (int) ($k['credit_minor'] ?? 0) > 0;
+    }
+
+    /** Sale counts as done for stock: paid (processing/completed) or an on-hold khata credit sale. */
+    private static function posDone(\WC_Order $o): bool {
+        return in_array($o->get_status(), ['processing', 'completed'], true) || ($o->get_status() === 'on-hold' && self::isPosKhataCredit($o));
+    }
+
     public static function onPosPaid(int $orderId): void {
         $o = wc_get_order($orderId);
-        if (!$o || self::role() !== 'sender' || !self::isPosMemberSale($o)) { return; }
+        if (!$o || self::role() !== 'sender' || !self::isPosMemberSale($o) || !self::posDone($o)) { return; }
         if (!wp_next_scheduled(self::CRON_POS, [$orderId])) { wp_schedule_single_event(time() + 30, self::CRON_POS, [$orderId]); }
     }
 
     /** Runs after the counter sale committed. Re-checks the order still exists and is paid; sends once. */
     public static function sendPos(int $orderId): string {
         $o = wc_get_order($orderId);
-        if (!$o || !self::isPosMemberSale($o) || !in_array($o->get_status(), ['processing', 'completed'], true)) { return 'skip'; }
+        if (!$o || !self::isPosMemberSale($o) || !self::posDone($o)) { return 'skip'; }
         return self::send($o);
     }
 
@@ -310,8 +323,8 @@ final class StockFeed {
 
     public static function retry(): void {
         if (self::role() !== 'sender' || !function_exists('wc_get_orders')) { return; }
-        foreach (wc_get_orders(['limit' => 30, 'status' => ['completed', 'processing'], 'meta_key' => self::META, 'meta_compare' => 'EXISTS', 'date_created' => '>' . (time() - 14 * DAY_IN_SECONDS)]) as $o) {
-            if ($o->get_status() === 'processing' && !self::isPosMemberSale($o)) { continue; }   // online orders wait for "completed"
+        foreach (wc_get_orders(['limit' => 30, 'status' => ['completed', 'processing', 'on-hold'], 'meta_key' => self::META, 'meta_compare' => 'EXISTS', 'date_created' => '>' . (time() - 14 * DAY_IN_SECONDS)]) as $o) {
+            if ($o->get_status() !== 'completed' && !(self::isPosMemberSale($o) && self::posDone($o))) { continue; }   // online orders wait for "completed"
             $m = $o->get_meta(self::META);
             if (is_array($m) && ($m['status'] ?? '') === 'failed' && (int) ($m['tries'] ?? 0) < 24) { self::send($o); }
         }

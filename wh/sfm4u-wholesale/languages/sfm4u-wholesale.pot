@@ -2455,3 +2455,9 @@ msgstr ""
 
 msgid "New due"
 msgstr ""
+
+msgid "Cash account"
+msgstr ""
+
+msgid "ERPNext account that receives POS cash and khata payments (Payment Entry). Payments wait until this is set."
+msgstr ""
