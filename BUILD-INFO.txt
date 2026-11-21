@@ -1,0 +1,1 @@
+AlgiBazar Connector build for algibazar.com. Plugin tree of SFM4U-Stock-Receiver-0.8.1-dev.zip from main f95e592, ZIP SHA-256 7efaecf92838e5f692584451af6729a762dcde031c10e5419d0e301602a164e1.
