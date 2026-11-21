@@ -1,0 +1,10 @@
+#sfm4u-counter .sfc-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; }
+#sfm4u-counter .sfc-grid > section { background: white; border: 1px solid #c3c4c7; border-radius: 8px; padding: 16px; }
+#sfm4u-counter form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; margin-block: 10px; }
+#sfm4u-counter label { display: inline-flex; flex-direction: column; max-width: 100%; }
+#sfm4u-counter input, #sfm4u-counter select { max-width: 100%; min-height: 44px; }
+#sfm4u-counter button { min-height: 44px; white-space: normal; }
+#sfm4u-counter li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; overflow-wrap: anywhere; }
+#sfm4u-counter #sfc-cart input { width: 85px; }
+#sfm4u-counter #sfc-summary dd { margin: 0 0 6px; }
+@media (max-width: 960px) { #sfm4u-counter .sfc-grid { grid-template-columns: minmax(0, 1fr); } }
