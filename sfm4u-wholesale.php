@@ -5,7 +5,7 @@
  * Version: 0.9.9-dev
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
- * Author: SFM for you
+ * Author: SFM4U
  * License: GPL-2.0-or-later
  * Text Domain: sfm4u-wholesale
  */
