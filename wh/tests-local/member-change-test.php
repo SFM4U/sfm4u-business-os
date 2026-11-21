@@ -37,10 +37,12 @@ $ok(CardLink::localUserFor($answer) === $local && Members::memberNo($local) === 
 $ok(in_array('9' . substr(Members::formatMemberNo($n1), 1), get_user_meta($local, 'sfm_wr_member_no_old'), true), 'shop keeps the old number in history');
 $ok($bad(fn() => Members::assignNumber($local, 123456, 1), 409), 'a linked shop cannot change numbers (account site does)');
 // --- AlgiBazar receiver: finds the seller by key and follows the number ---
+if (class_exists(StockFeed::class)) {
 $seller = $mk('seller', 'seller'); update_user_meta($seller, 'sfm_wr_member_no', '7000001'); update_user_meta($seller, 'sfm_wr_member_key', $keyS = bin2hex(random_bytes(16)));
 if (!get_role('seller')) { add_role('seller', 'Seller', ['read' => true]); (new WP_User($seller))->set_role('seller'); }
 $found = StockFeed::findVendor('7000099', '', $keyS);
 $ok($found === $seller && Members::memberNo($seller) === '7000099', 'receiver finds the seller by key and follows the new number');
+} // (the Membership Card plugin alone has no AlgiBazar receiver)
 $oldAuto !== false ? update_option(Members::AUTO_OPTION, $oldAuto) : delete_option(Members::AUTO_OPTION);
 $oldRole !== false ? update_option(CardLink::OPT_ROLE, $oldRole) : delete_option(CardLink::OPT_ROLE);
 echo "pass $p fail $f\n";

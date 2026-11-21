@@ -106,11 +106,21 @@ final class MemberLink {
         $bad = fn (string $m) => new \WP_REST_Response(['ok' => false, 'message' => $m], 422);
         $uid = self::findUser((string) ($d['who'] ?? ''));
         if (!$uid) { return $bad('The code is not correct or has expired. Ask for a new code.'); }
-        $all = get_user_meta($uid, self::META_PENDING, true);
-        $all = is_array($all) ? $all : [];
-        [$ok, $next, $why] = self::check($all[$id] ?? null, (string) ($d['code'] ?? ''), time());
-        if ($next === null) { unset($all[$id]); } else { $all[$id] = $next; }
-        update_user_meta($uid, self::META_PENDING, $all);
+        // One check at a time per member and shop, so a code can be used only once (Codex review 2026-11-21).
+        $lock = 'sfm_wr_link_lock_' . $uid . '_' . md5($id);
+        $held = (int) get_option($lock, 0);
+        if ($held && $held < time() - 30) { delete_option($lock); }
+        if (!add_option($lock, time(), '', 'no')) { return $bad('Please try again in a moment.'); }
+        try {
+            wp_cache_delete($uid, 'user_meta');
+            $all = get_user_meta($uid, self::META_PENDING, true);
+            $all = is_array($all) ? $all : [];
+            [$ok, $next, $why] = self::check($all[$id] ?? null, (string) ($d['code'] ?? ''), time());
+            if ($next === null) { unset($all[$id]); } else { $all[$id] = $next; }
+            update_user_meta($uid, self::META_PENDING, $all);
+        } finally {
+            delete_option($lock);
+        }
         if (!$ok) { return $bad($why === 'too_many' ? 'Too many wrong codes. Ask for a new code.' : 'The code is not correct or has expired. Ask for a new code.'); }
         $card = Members::bestCardFor($uid) ?: (Members::cardsOf($uid)[0] ?? null);
         if (!$card) { return $bad('This member has no card yet.'); }
@@ -200,9 +210,14 @@ final class MemberLink {
     /** Save the link on a local user (the marketplace seller or customer). */
     public static function saveLink(int $uid, array $m): void {
         if (!preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? ''))) { throw new DomainException(__('The SFM4U account site did not give a member number.', 'sfm4u-wholesale')); }
-        $other = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $m['member_no'], 'number' => 2, 'fields' => 'ID', 'exclude' => [$uid]]);
+        $other = array_filter(get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $m['member_no'], 'number' => 20, 'fields' => 'ID', 'exclude' => [$uid]]),
+            static fn($id) => !Members::isLinkedShop() || Members::hasCentralNo((int) $id));
         if ($other) { throw new DomainException(__('This SFM4U member is already linked to another account on this site. Contact SFM4U.', 'sfm4u-wholesale')); }
+        $before = (string) get_user_meta($uid, 'sfm_wr_member_no', true);
+        if ($before !== '' && $before !== (string) $m['member_no']) { add_user_meta($uid, 'sfm_wr_member_no_old', $before); }
         update_user_meta($uid, 'sfm_wr_member_no', (string) $m['member_no']);
+        update_user_meta($uid, 'sfm_wr_central', 1);
+        if (preg_match('/^[a-f0-9]{32}$/', (string) ($m['member_key'] ?? ''))) { update_user_meta($uid, 'sfm_wr_member_key', (string) $m['member_key']); }
         update_user_meta($uid, 'sfm_wr_link_tier', in_array($m['tier'] ?? '', Members::TIERS, true) ? (string) $m['tier'] : 'regular');
         update_user_meta($uid, 'sfm_wr_link_status', sanitize_key((string) ($m['status'] ?? 'active')));
         update_user_meta($uid, 'sfm_wr_link_name', sanitize_text_field((string) ($m['name'] ?? '')));
@@ -210,7 +225,7 @@ final class MemberLink {
     }
 
     public static function unlink(int $uid): void {
-        foreach (['sfm_wr_member_no', 'sfm_wr_link_tier', 'sfm_wr_link_status', 'sfm_wr_link_name', 'sfm_wr_link_time'] as $k) { delete_user_meta($uid, $k); }
+        foreach (['sfm_wr_member_no', 'sfm_wr_link_tier', 'sfm_wr_link_status', 'sfm_wr_link_name', 'sfm_wr_link_time', 'sfm_wr_central'] as $k) { delete_user_meta($uid, $k); }
     }
 
     public static function linked(int $uid): array {

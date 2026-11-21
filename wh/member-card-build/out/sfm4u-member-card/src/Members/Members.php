@@ -13,7 +13,7 @@ use DomainException;
  * All money is in store minor units (taka with 0 decimals = whole taka).
  */
 final class Members {
-    public const SCHEMA = '5';
+    public const SCHEMA = '6'; // 6: khata.ref (idempotency key, 0.9.9-dev)
     public const SCHEMA_OPTION = 'sfm_wr_members_schema';
     public const TIERS = ['regular', 'business', 'premium', 'black'];
     public const KINDS = ['charge', 'payment', 'adjust'];
@@ -38,6 +38,9 @@ final class Members {
 
     public static function register(): void {
         add_action('admin_init', [self::class, 'maybeInstall'], 5);
+        // 0.9.9: also on the first front/REST request after an update (e.g. a POS sale before anyone opens wp-admin),
+        // so new columns (khata.ref) exist before a sale writes to them. Cheap: one cached option check when up to date.
+        add_action('init', [self::class, 'maybeInstall'], 5);
         add_filter('user_has_cap', [self::class, 'grantCap'], 10, 4);
         add_action('user_register', [self::class, 'autoIssue'], 20, 1);
     }
@@ -142,8 +145,10 @@ final class Members {
             note varchar(255) NOT NULL DEFAULT '',
             staff_id bigint(20) unsigned NOT NULL,
             created_at datetime NOT NULL,
+            ref varchar(64) NOT NULL DEFAULT '',
             PRIMARY KEY  (id),
-            KEY user_store (user_id,store,id)
+            KEY user_store (user_id,store,id),
+            KEY store_ref (store,ref)
         ) $charset;");
         Rewards::install();
         if (!get_role('sfm_cashier')) {
@@ -303,6 +308,103 @@ final class Members {
         return str_pad((string) $n, 7, '0', STR_PAD_LEFT);
     }
 
+    /** Member numbers 1..RESERVED_MAX are family numbers: only an administrator gives them, by hand. */
+    public const RESERVED_MAX = 100;
+    /** Special ("beautiful") numbers kept in the administrator's stock (Owner 2026-11-21); editable list. */
+    public const SPECIAL_OPTION = 'sfm_wr_special_numbers';
+    public const SPECIAL_DEFAULT = [111, 222, 333, 444, 555, 666, 777, 888, 999, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+        1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999];
+
+    /** @return int[] special numbers (administrator stock), sorted. */
+    public static function specialNumbers(): array {
+        $v = get_option(self::SPECIAL_OPTION, null);
+        $list = is_array($v) ? $v : self::SPECIAL_DEFAULT;
+        $list = array_values(array_unique(array_filter(array_map('intval', $list), fn($n) => $n > self::RESERVED_MAX && $n <= 9999999)));
+        sort($list);
+        return $list;
+    }
+
+    /** Family (1..100) or special number: never handed out automatically; only an administrator gives it. */
+    public static function isReservedNumber(int $n): bool {
+        return ($n >= 1 && $n <= self::RESERVED_MAX) || in_array($n, self::specialNumbers(), true);
+    }
+
+    public static function isReservedNo(string $no): bool {
+        return (bool) preg_match('/^\d{7}$/', $no) && self::isReservedNumber((int) $no);
+    }
+
+    /** Stable member key: never changes, even when the member number changes. Shops use it to follow a number change. */
+    public static function memberKey(int $userId): string {
+        $k = (string) get_user_meta($userId, 'sfm_wr_member_key', true);
+        if (!preg_match('/^[a-f0-9]{32}$/', $k)) {
+            $k = bin2hex(random_bytes(16));
+            if (!add_user_meta($userId, 'sfm_wr_member_key', $k, true)) { $k = (string) get_user_meta($userId, 'sfm_wr_member_key', true); }
+        }
+        return $k;
+    }
+
+    /** Local user holding this stable member key (0 when none). */
+    public static function userByMemberKey(string $key): int {
+        if (!preg_match('/^[a-f0-9]{32}$/', $key)) { return 0; }
+        $u = get_users(['meta_key' => 'sfm_wr_member_key', 'meta_value' => $key, 'number' => 2, 'fields' => 'ID']);
+        return count($u) === 1 ? (int) $u[0] : 0;
+    }
+
+    /**
+     * Administrator changes (or gives) a member number. Owner 2026-11-21: the administrator has full control; a change
+     * reaches every linked shop and AlgiBazar automatically (they follow the stable member key on their next contact).
+     * Family (1..100) and special numbers are only given here. A number held now or before by another member is refused.
+     * The old number is retired (kept in sfm_wr_member_no_old and never handed out again); an old printed card still finds
+     * the member on the SFM4U account site.
+     */
+    public static function assignNumber(int $userId, int $n, int $staffId): string {
+        if (!user_can($staffId, 'manage_options')) {
+            throw new DomainException(__('Only an administrator can change a member number.', 'sfm4u-wholesale'), 403);
+        }
+        if (class_exists(CardLink::class) && CardLink::role() === 'shop') {
+            throw new DomainException(__('Member numbers are changed on the SFM4U account site.', 'sfm4u-wholesale'), 409);
+        }
+        if (!get_userdata($userId) || $n < 1 || $n > 9999999) {
+            throw new DomainException(__('Enter a member number from 1 to 9999999.', 'sfm4u-wholesale'), 422);
+        }
+        $no = self::formatMemberNo($n);
+        $holder = self::userByMemberNo($no);
+        if ($holder && $holder !== $userId) {
+            throw new DomainException(__('This number already belongs to another member (now or before).', 'sfm4u-wholesale'), 409);
+        }
+        self::memberKey($userId);
+        $old = (string) get_user_meta($userId, 'sfm_wr_member_no', true);
+        if ($old === $no) { return $no; }
+        if ($old !== '') {
+            update_user_meta($userId, 'sfm_wr_member_no_prev', $old);
+            add_user_meta($userId, 'sfm_wr_member_no_old', $old);
+        }
+        update_user_meta($userId, 'sfm_wr_member_no', $no);
+        update_user_meta($userId, 'sfm_wr_member_no_by', $staffId . '@' . gmdate('Y-m-d H:i:s'));
+        do_action('sfm_wr_member_no_changed', $userId, $old, $no, $staffId);
+        return $no;
+    }
+
+    /** @deprecated 0.9.9 name kept for callers: same as assignNumber(). */
+    public static function assignReservedNo(int $userId, int $n, int $staffId): string {
+        return self::assignNumber($userId, $n, $staffId);
+    }
+
+    /** Shop side: follow a number change made on the SFM4U account site (same stable key, new number). */
+    public static function followNumberChange(int $userId, string $newNo): void {
+        $old = (string) get_user_meta($userId, 'sfm_wr_member_no', true);
+        if (!preg_match('/^\d{7}$/', $newNo) || $old === $newNo) { return; }
+        if ($old !== '') { add_user_meta($userId, 'sfm_wr_member_no_old', $old); update_user_meta($userId, 'sfm_wr_member_no_prev', $old); }
+        update_user_meta($userId, 'sfm_wr_member_no', $newNo);
+        update_user_meta($userId, 'sfm_wr_central', 1);
+        do_action('sfm_wr_member_no_followed', $userId, $old, $newNo);
+    }
+
+    /** @return int[] special numbers nobody holds yet (the administrator's stock). */
+    public static function freeSpecialNumbers(): array {
+        return array_values(array_filter(self::specialNumbers(), fn($n) => self::userByMemberNo(self::formatMemberNo($n)) === 0));
+    }
+
     /** Returns the member's number, assigning the next one atomically the first time. */
     public static function memberNo(int $userId): string {
         global $wpdb;
@@ -311,30 +413,65 @@ final class Members {
         // Linked shop: numbers come only from the SFM4U account site (one number per person, company-wide).
         if (class_exists(CardLink::class) && CardLink::role() === 'shop') {
             $no = CardLink::centralNumberFor($userId);
-            $other = self::userByMemberNo($no);
+            $other = self::userByMemberNo($no, true);
             if ($other && $other !== $userId) { throw new DomainException(__('This member number is already used by another customer here.', 'sfm4u-wholesale')); }
             update_user_meta($userId, 'sfm_wr_member_no', $no);
+            update_user_meta($userId, 'sfm_wr_central', 1);
             return $no;
         }
         add_option('sfm_wr_member_seq', '0', '', 'no');
         // Compare-and-swap: only one request can move the counter from N to N+1 (works on MySQL/MariaDB and SQLite).
-        $n = 0;
-        for ($try = 0; $try < 25 && $n === 0; $try++) {
-            $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
-            $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) ($cur + 1), 'sfm_wr_member_seq', (string) $cur));
-            if ($done === 1) { $n = $cur + 1; }
+        // 0.9.9: a number already held by someone else (e.g. a central number kept from when this site was a linked
+        // shop) is skipped, so two people never share a member number.
+        $no = '';
+        for ($skip = 0; $skip < 50 && $no === ''; $skip++) {
+            $n = 0;
+            for ($try = 0; $try < 25 && $n === 0; $try++) {
+                $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
+                // Owner 2026-11-21: 1-100 are family numbers given by the admin only; automatic numbers start at 101.
+                $next = max($cur, self::RESERVED_MAX) + 1;
+                while (self::isReservedNumber($next)) { $next++; }   // special numbers stay in the administrator's stock
+                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) $next, 'sfm_wr_member_seq', (string) $cur));
+                if ($done === 1) { $n = $next; }
+            }
+            wp_cache_delete('sfm_wr_member_seq', 'options');
+            wp_cache_delete('notoptions', 'options');
+            if ($n === 0) { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
+            $candidate = self::formatMemberNo($n);
+            $holder = self::userByMemberNo($candidate);
+            if ($holder === 0 || $holder === $userId) { $no = $candidate; }
         }
-        wp_cache_delete('sfm_wr_member_seq', 'options');
-        wp_cache_delete('notoptions', 'options');
-        if ($n === 0) { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
-        $no = self::formatMemberNo($n);
+        if ($no === '') { throw new DomainException(__('Could not give a member number. Try again.', 'sfm4u-wholesale')); }
         if (!add_user_meta($userId, 'sfm_wr_member_no', $no, true)) { return (string) get_user_meta($userId, 'sfm_wr_member_no', true); }
         return $no;
     }
 
-    public static function userByMemberNo(string $no): int {
-        $u = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $no, 'number' => 1, 'fields' => 'ID']);
-        return $u ? (int) $u[0] : 0;
+    public static function userByMemberNo(string $no, bool $centralOnly = false): int {
+        $u = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $no, 'number' => 20, 'fields' => 'ID', 'orderby' => 'ID']);
+        foreach ($u as $id) {
+            if (!$centralOnly || self::hasCentralNo((int) $id)) { return (int) $id; }
+        }
+        // A number changed by the administrator stays retired: an old printed card still finds the member here,
+        // and the number is never given to anyone else. (A linked shop asks the account site instead.)
+        if (!$centralOnly && !self::isLinkedShop()) {
+            $o = get_users(['meta_key' => 'sfm_wr_member_no_old', 'meta_value' => $no, 'number' => 2, 'fields' => 'ID']);
+            if (count($o) === 1) { return (int) $o[0]; }
+        }
+        return 0;
+    }
+
+    /**
+     * On a linked shop, a member number is trusted only when it came from the SFM4U account site.
+     * Numbers the shop gave out by itself before it was linked can be the same digits as a different
+     * person's central number, so they never decide who a scanned number belongs to.
+     */
+    public static function hasCentralNo(int $userId): bool {
+        return (bool) get_user_meta($userId, 'sfm_wr_central', true) || get_user_meta($userId, 'sfm_wr_link_status', true) !== '';
+    }
+
+    /** True on a shop linked to the SFM4U account site. */
+    public static function isLinkedShop(): bool {
+        return class_exists(CardLink::class) && CardLink::role() === 'shop';
     }
 
     /* ---------- NID stored encrypted (shown only to the owner and on the printed card) ---------- */
@@ -497,37 +634,140 @@ final class Members {
     }
 
     /**
-     * Append a khata row. Locks the customer's last row so two cashiers cannot
-     * write the same balance at once.
+     * Append a khata row in its own transaction, then notify listeners. Locks the customer first, so two cashiers
+     * cannot write the same balance at once (also for a customer's very first entry).
+     * Do NOT call this inside another open transaction (it would commit it): use recordInTransaction() there.
      */
     public static function record(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
-        int $staffId, string $direction = 'up', string $store = 'main'): array {
+        int $staffId, string $direction = 'up', string $store = 'main', string $ref = ''): array {
         global $wpdb;
+        self::checkEntry($kind, $method, $note, $ref);
+        $wpdb->query('START TRANSACTION');
+        try {
+            $row = self::appendLocked($userId, $cardId, $kind, $minor, $method, $note, $staffId, $direction, $store, $ref);
+        } catch (\Throwable $e) {
+            $wpdb->query('ROLLBACK');
+            throw $e;
+        }
+        $wpdb->query('COMMIT');
+        if (empty($row['replayed'])) {
+            self::notifyRecorded($userId, $row);
+        }
+        return $row;
+    }
+
+    /**
+     * Append a khata row inside the CALLER's open transaction (e.g. the POS sale's pinned journal transaction).
+     * No START/COMMIT/ROLLBACK here: if the caller rolls back, the khata row is gone too. On error it throws and the
+     * caller must roll back. Listeners are NOT notified: call notifyRecorded($userId, $row) after the caller commits
+     * (skip it when $row['replayed'] is true).
+     */
+    public static function recordInTransaction(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
+        int $staffId, string $direction = 'up', string $store = 'main', string $ref = ''): array {
+        self::checkEntry($kind, $method, $note, $ref);
+        return self::appendLocked($userId, $cardId, $kind, $minor, $method, $note, $staffId, $direction, $store, $ref);
+    }
+
+    /** Tell listeners a khata row was written (only after its transaction committed). */
+    public static function notifyRecorded(int $userId, array $row): void {
+        do_action('sfm_wr_khata_recorded', $userId, $row);
+    }
+
+    /** Allowed request key: 1-64 chars of letters, digits and . _ : - (never silently cut). */
+    public static function validRef(string $ref): bool {
+        return $ref === '' || (bool) preg_match('/^[A-Za-z0-9._:\-]{1,64}$/', $ref);
+    }
+
+    private static function checkEntry(string $kind, string $method, string $note, string $ref): void {
         if (!in_array($kind, self::KINDS, true) || ($method !== '' && !in_array($method, self::METHODS, true))) {
             throw new DomainException('Invalid khata entry.');
         }
         if ($kind === 'adjust' && trim($note) === '') {
             throw new DomainException(__('Write the reason for a correction.', 'sfm4u-wholesale'));
         }
+        if (!self::validRef($ref)) {
+            throw new DomainException(__('Invalid khata request key.', 'sfm4u-wholesale'), 400);
+        }
+    }
+
+    /** Core insert; caller owns the transaction. Locks the customer's user row (exists even before the first entry). */
+    private static function appendLocked(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
+        int $staffId, string $direction, string $store, string $ref): array {
+        global $wpdb;
         $delta = self::delta($kind, $minor, $direction);
-        $wpdb->query('START TRANSACTION');
+        $locked = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->users} WHERE ID=%d" . self::lockSql(), $userId));
+        if ($locked === null) {
+            throw new DomainException(__('Customer not found.', 'sfm4u-wholesale'), 404);
+        }
         $last = $wpdb->get_var($wpdb->prepare('SELECT balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s ORDER BY id DESC LIMIT 1' . self::lockSql(),
             $userId, $store));
+        if ($ref !== '') {
+            // Idempotent replay: the same request key (e.g. a POS retry) never writes a second row.
+            // Checked while this customer is locked, so two cashiers cannot both insert it.
+            $seen = $wpdb->get_row($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s AND ref=%s LIMIT 1',
+                $userId, $store, $ref), ARRAY_A);
+            if ($seen) {
+                if ($seen['kind'] !== $kind || (int) $seen['amount_minor'] !== $delta) {
+                    throw new DomainException(__('This khata request was already used for a different entry.', 'sfm4u-wholesale'), 409);
+                }
+                return ['id' => (int) $seen['id'], 'balance_minor' => (int) $seen['balance_minor'], 'amount_minor' => (int) $seen['amount_minor'], 'replayed' => true];
+            }
+        }
         $balance = ($last === null ? 0 : (int) $last) + $delta;
         $ok = $wpdb->insert(self::khata(), [
             'user_id' => $userId, 'card_id' => $cardId, 'store' => $store, 'kind' => $kind,
             'amount_minor' => $delta, 'balance_minor' => $balance, 'method' => $method,
             'note' => mb_substr($note, 0, 255), 'staff_id' => $staffId, 'created_at' => current_time('mysql', true),
-        ], ['%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%s']);
+            'ref' => $ref,
+        ], ['%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%s', '%s']);
         if (!$ok) {
-            $wpdb->query('ROLLBACK');
             throw new DomainException(__('The entry was not saved. Try again.', 'sfm4u-wholesale'));
         }
-        $rowId = (int) $wpdb->insert_id;
-        $wpdb->query('COMMIT');
-        $row = ['id' => $rowId, 'balance_minor' => $balance, 'amount_minor' => $delta];
-        do_action('sfm_wr_khata_recorded', $userId, $row);
-        return $row;
+        return ['id' => (int) $wpdb->insert_id, 'balance_minor' => $balance, 'amount_minor' => $delta];
+    }
+
+    /**
+     * What a cashier/shopkeeper needs about one customer's khata at this store: balance (positive = customer owes),
+     * since when it is owed (date the balance last went from 0 or less to above 0), last payment, recent rows.
+     * Notes are left out unless $withNotes (manager views): a cashier sees amounts, not free text.
+     */
+    public static function dueSummary(int $userId, string $store = 'main', int $rows = 10, bool $withNotes = false): array {
+        global $wpdb;
+        $all = $wpdb->get_results($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor, method, note, created_at FROM ' . self::khata()
+            . ' WHERE user_id=%d AND store=%s ORDER BY id ASC', $userId, $store), ARRAY_A) ?: [];
+        $since = null; $lastPay = null; $prev = 0;
+        foreach ($all as $r) {
+            $b = (int) $r['balance_minor'];
+            if ($prev <= 0 && $b > 0) { $since = $r['created_at']; }
+            if ($b <= 0) { $since = null; }
+            if ($r['kind'] === 'payment') { $lastPay = ['at' => $r['created_at'], 'amount_minor' => -(int) $r['amount_minor'], 'method' => $r['method']]; }
+            $prev = $b;
+        }
+        $balance = $all ? (int) end($all)['balance_minor'] : 0;
+        return ['balance_minor' => $balance, 'due_minor' => max(0, $balance), 'advance_minor' => max(0, -$balance),
+            'due_since' => $balance > 0 ? $since : null, 'last_payment' => $lastPay,
+            'recent' => array_map(function ($r) use ($withNotes) { if (!$withNotes) { unset($r['note']); } return $r; },
+                array_reverse(array_slice($all, -$rows)))];
+    }
+
+    /** Day-by-day khata history (store local dates): charged, paid, corrections and closing balance per day. */
+    public static function dueHistory(int $userId, string $store = 'main', int $days = 365): array {
+        global $wpdb;
+        $from = gmdate('Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS);
+        $all = $wpdb->get_results($wpdb->prepare('SELECT kind, amount_minor, balance_minor, created_at FROM ' . self::khata()
+            . ' WHERE user_id=%d AND store=%s AND created_at >= %s ORDER BY id ASC', $userId, $store, $from), ARRAY_A) ?: [];
+        $out = [];
+        foreach ($all as $r) {
+            $day = function_exists('get_date_from_gmt') ? get_date_from_gmt($r['created_at'], 'Y-m-d') : substr($r['created_at'], 0, 10);
+            $out[$day] ??= ['date' => $day, 'charged_minor' => 0, 'paid_minor' => 0, 'adjusted_minor' => 0, 'closing_minor' => 0, 'entries' => 0];
+            $a = (int) $r['amount_minor'];
+            if ($r['kind'] === 'charge') { $out[$day]['charged_minor'] += $a; }
+            elseif ($r['kind'] === 'payment') { $out[$day]['paid_minor'] += -$a; }
+            else { $out[$day]['adjusted_minor'] += $a; }
+            $out[$day]['closing_minor'] = (int) $r['balance_minor'];
+            $out[$day]['entries']++;
+        }
+        return array_values(array_reverse($out));
     }
 
     public static function money(int $minor): string {
