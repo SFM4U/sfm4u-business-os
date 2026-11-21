@@ -120,6 +120,7 @@ if (in_array('dokan', $args ?? [], true)) {
     (new WP_User($otherVendor))->set_role('seller');
     (new WP_User($otherVendor))->add_cap('sfm4u_b2b_offer');
     update_user_meta($otherVendor, 'dokan_enable_selling', 'yes');
+    update_user_meta($otherVendor, '_sfmwh_vendor_tools_grant', 'yes');
     $pendingRfq = call_api($buyer, 'submit', ['lines' => $lines], 'vendor_page_rfq_' . $tag)->get_data()['id'];
     $vendorPage = static function (string $page) use ($wp): string {
         $wp->query_vars = ['sfm4u-wholesale' => $page];

@@ -92,6 +92,9 @@ final class Runtime
                                 $number('quantity'), $number('tender'), $number('session'),$text('tender_type')?:'cash',$text('tender_reference')),
                             'credit' => $service->credit($merchant, $register, $key, $number('order'),
                                 $number('quantity'), is_bool($data['resellable'] ?? null) ? $data['resellable'] : throw new DomainException('Invalid stock disposition.', 422), $number('session')),
+                            'cart_credit' => $service->cartCredit($merchant, $register, $key, $number('order'), $number('session'),
+                                is_array($data['items'] ?? null) ? $data['items'] : throw new DomainException('Invalid credit lines.', 422),
+                                is_bool($data['resellable'] ?? null) ? $data['resellable'] : throw new DomainException('Invalid stock disposition.', 422)),
                             'reprint' => $service->reprint($merchant, $register, $number('order')),
                             'invoice' => $service->invoice($merchant, $register, $number('order'),$text('paper')?:'a4'),
                             default => throw new DomainException('Invalid register action.', 422),
@@ -100,7 +103,7 @@ final class Runtime
                         $status = in_array($error->getCode(), [403, 404, 409, 422], true) ? $error->getCode() : 422;
                         // Messages a cashier can act on (card problems, prices) are shown as they are; the rest stay generic.
                         $clear = ['Card not found.', 'This card does not get the member price. Only an active Business card or a paid Business Black card does.',
-                            'Membership changed. Scan the card again and review the cart.',
+                            'Membership changed. Scan the card again and review the cart.', 'Counter stock is unavailable.',
                             'Wholesale pricing is unavailable.', 'Wholesale pricing is unavailable for a cart line.'];
                         if (in_array($error->getMessage(), $clear, true) || str_contains($error->getMessage(), 'below the lowest price the shop accepts')) {
                             return new \WP_Error('counter_rejected', __($error->getMessage(), 'sfm4u-wholesale'), ['status' => $status]);

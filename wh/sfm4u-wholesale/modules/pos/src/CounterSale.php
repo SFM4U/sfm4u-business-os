@@ -221,7 +221,6 @@ final class CounterSale
                     if (wc_format_decimal($order->get_total(), 2) !== Rule::decimal($quote['total_minor'], 2)) {
                         throw new RuntimeException('Counter totals differ from the WooCommerce order.');
                     }
-                    wc_reserve_stock_for_order($order);
                     $before = [];
                     foreach ($quote['lines'] as $line) {
                         $quantity = wc_get_product($line['product'])->get_stock_quantity();
@@ -230,6 +229,7 @@ final class CounterSale
                         }
                         $before[$line['product']] = (int) $quantity;
                     }
+                    wc_reserve_stock_for_order($order);
                     ManagedOrderStock::reduce($order, static fn() => $order->update_status($cash ? 'processing' : 'on-hold'));
                     wc_release_stock_for_order($order);
                     $movements = [];

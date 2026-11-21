@@ -8,6 +8,7 @@ use RuntimeException;
 require_once dirname(__DIR__, 2) . '/inventory-bridge/src/ManagedOrderStock.php';
 require_once __DIR__ . '/Runtime.php';
 require_once __DIR__ . '/RegisterProductSearch.php';
+require_once __DIR__ . '/CartCreditAllocation.php';
 
 /** Local POS service boundary. Never register it as an unauthenticated HTTP route. */
 final class AuthorizedRegister {
@@ -204,6 +205,12 @@ final class AuthorizedRegister {
                     }
                     $original=$this->receipts->read($merchant,$register,$orderId,true);
                     $sold=$original['sale'];
+                    $counterLine = $sold['lines'][0] ?? null;
+                    if (is_array($counterLine) && count($sold['lines']) === 1) {
+                        $sold += ['factor' => 1, 'packs' => $counterLine['quantity'],
+                            'unit_minor' => $counterLine['unit_minor'], 'name' => $counterLine['name'],
+                            'sku' => $counterLine['sku']];
+                    }
                     if (($original['type'] ?? 'sale') !== 'sale' || ($sold['factor'] ?? 0)!==1
                         || $sold['vat_minor']!==0 || $sold['discount_minor']!==0) {
                         throw new DomainException('This credit fixture supports untaxed piece sales without discounts only.',422);
@@ -256,6 +263,11 @@ final class AuthorizedRegister {
                         'reason'=>$resellable?'Resellable return · credit note recorded':'Damaged return · write-off recorded',
                         'refund_minor'=>$amount,'cash_received_minor'=>0,'cash_refund_minor'=>($sold['tender_type']??'cash')==='cash'?$amount:0,'resellable'=>$resellable,
                         'remaining_minor'=>$sold['total_minor'] - $creditedQuantity * $sold['unit_minor'] - $creditedRounding]);
+                    if (is_array($counterLine)) {
+                        $lineAmount = $quantity * $sold['unit_minor'];
+                        $snapshot['lines'] = [array_replace($counterLine, ['quantity' => $quantity,
+                            'subtotal_minor' => $lineAmount, 'total_minor' => $lineAmount])];
+                    }
                     $receipt=$this->receipts->issue($merchant,$register,$refund->get_id(),$snapshot,'credit');
                     do_action('sfm4u_synthetic_credit_before_commit',$receipt);
                     return ['response'=>$receipt,'movements'=>$resellable?[['product_id'=>$product->get_id(),'delta'=>$quantity,
@@ -265,6 +277,154 @@ final class AuthorizedRegister {
             if ($productId) ReceiptRegister::clearFailedCreditCaches($orderId,$lineId,$productId);
             throw $error;
         }
+    }
+
+    public function cartCredit(int $merchant, string $register, string $key, int $orderId, int $sessionId,
+        array $selection, bool $resellable): array
+    {
+        [$actor, $cashier] = $this->actor($merchant, $register, true);
+        if (!$this->sessions || $orderId < 1 || $sessionId < 1 || !array_is_list($selection)
+            || !$selection || count($selection) > 30) {
+            throw new DomainException('Invalid cart credit.', 422);
+        }
+        $requested = [];
+        foreach ($selection as $entry) {
+            if (!is_array($entry) || !is_int($entry['item'] ?? null) || $entry['item'] < 1
+                || !is_int($entry['quantity'] ?? null) || $entry['quantity'] < 1 || isset($requested[$entry['item']])) {
+                throw new DomainException('Invalid or repeated credit line.', 422);
+            }
+            $requested[$entry['item']] = $entry['quantity'];
+        }
+        ksort($requested, SORT_NUMERIC);
+        $this->journal->requirePinnedConnection();
+        $stock = [];
+        try {
+            return $this->journal->execute($merchant, 'pos_credit', $key,
+                compact('register', 'actor', 'orderId', 'sessionId', 'requested', 'resellable'),
+                function () use ($merchant, $register, $actor, $cashier, $orderId, $sessionId, $requested, $resellable, &$stock): array {
+                    $this->sessions->assertActive($merchant, $register, $sessionId);
+                    $original = $this->receipts->read($merchant, $register, $orderId, true);
+                    [$order, $lines, $items, $returned] = $this->cartSource($original, $orderId);
+                    $sale = $original['sale'];
+                    if (array_sum($returned) > 0) {
+                        $prior = CartCreditAllocation::quote($lines, $sale['rounding_minor'], [], array_filter($returned));
+                        if ($prior['amount_minor'] !== self::minor($order->get_total_refunded())) {
+                            throw new DomainException('Previous cart credits do not reconcile.', 409);
+                        }
+                    } elseif (self::minor($order->get_total_refunded()) !== 0) {
+                        throw new DomainException('Previous cart credits do not reconcile.', 409);
+                    }
+                    $quote = CartCreditAllocation::quote($lines, $sale['rounding_minor'], $returned, $requested);
+                    $refundLines = $receiptLines = [];
+                    $fee = 0;
+                    foreach ($quote['lines'] as $itemId => $credit) {
+                        $line = $lines[$itemId];
+                        $product = $items[$line['product']][1]->get_product();
+                        if (!$product || !$product->managing_stock()) {
+                            throw new DomainException('Credit product stock is unavailable.', 409);
+                        }
+                        $stock[$itemId] = ['product' => $product->get_id(), 'before' => (int) $product->get_stock_quantity()];
+                        $refundLines[$itemId] = ['qty' => $credit['quantity'], 'refund_total' => self::decimal($credit['net_minor']), 'refund_tax' => []];
+                        $receiptLines[] = array_replace($line, ['quantity' => $credit['quantity'],
+                            'subtotal_minor' => $credit['net_minor'], 'total_minor' => $credit['net_minor']]);
+                        $fee += $credit['rounding_minor'];
+                    }
+                    if ($fee !== 0) {
+                        $fees = array_filter($order->get_items('fee'), static fn(\WC_Order_Item_Fee $item): bool =>
+                            (string) $item->get_meta('_sfm4u_cash_rounding') === '1'
+                            && self::minor($item->get_total()) === $sale['rounding_minor']);
+                        if (count($fees) !== 1) {
+                            throw new DomainException('Original rounding fee is unavailable.', 409);
+                        }
+                        $refundLines[array_key_first($fees)] = ['qty' => 0, 'refund_total' => self::decimal($fee), 'refund_tax' => []];
+                    }
+                    $amount = $quote['amount_minor'];
+                    $refund = \SFM4U\Inventory\ManagedOrderStock::refund([
+                        'order_id' => $orderId, 'amount' => self::decimal($amount), 'reason' => 'Counter cart credit',
+                        'refund_payment' => false, 'restock_items' => $resellable, 'line_items' => $refundLines,
+                    ]);
+                    if (is_wp_error($refund)) {
+                        throw new RuntimeException('WooCommerce cart credit failed: ' . $refund->get_error_code());
+                    }
+                    $movements = [];
+                    foreach ($requested as $itemId => $quantity) {
+                        $product = $stock[$itemId]['product'];
+                        $delta = $resellable ? $quantity : 0;
+                        if ((int) wc_get_product($product)->get_stock_quantity() !== $stock[$itemId]['before'] + $delta) {
+                            throw new RuntimeException('Cart credit stock does not reconcile.');
+                        }
+                        do_action('sfm4u_inventory_capture_return', $items[$lines[$itemId]['product']][1],
+                            $refund->get_id(), $returned[$itemId], $quantity, $resellable);
+                        if ($resellable) {
+                            $movements[] = ['product_id'=>$product, 'delta'=>$delta, 'type'=>'return', 'order_id'=>$refund->get_id()];
+                        }
+                    }
+                    $snapshot = array_replace($sale, ['lines' => $receiptLines, 'issued_at' => gmdate('c'),
+                        'actor_id' => $actor, 'cashier' => $cashier, 'session_id' => $sessionId,
+                        'original_number' => $original['number'], 'original_order_id' => $orderId,
+                        'discount_minor' => 0, 'rounding_minor' => $fee, 'total_minor' => $amount,
+                        'tender_minor' => $amount, 'change_minor' => 0, 'cash_received_minor' => 0,
+                        'refund_minor' => $amount, 'cash_refund_minor' => ($sale['tender_type'] ?? '') === 'cash' ? $amount : 0,
+                        'resellable' => $resellable]);
+                    $receipt = $this->receipts->issue($merchant, $register, $refund->get_id(), $snapshot, 'credit');
+                    do_action('sfm4u_synthetic_credit_before_commit', $receipt);
+                    return ['response' => $receipt, 'movements' => $movements];
+                });
+        } catch (\Throwable $error) {
+            foreach ($stock as $itemId => $line) {
+                ReceiptRegister::clearFailedCreditCaches($orderId, $itemId, $line['product']);
+            }
+            throw $error;
+        }
+    }
+
+    public function cartCreditLines(int $merchant, string $register, int $orderId): array
+    {
+        $this->actor($merchant, $register, true);
+        [, $lines, , $returned] = $this->cartSource($this->receipts->read($merchant, $register, $orderId), $orderId);
+        $available = [];
+        foreach ($lines as $item => $line) {
+            $available[] = ['item' => $item, 'name' => $line['name'],
+                'quantity' => max(0, $line['quantity'] - $returned[$item])];
+        }
+        return ['kind' => 'CART_CREDIT_LINES', 'lines' => $available];
+    }
+
+    private function cartSource(array $original, int $orderId): array
+    {
+        $sale = $original['sale'];
+        $order = wc_get_order($orderId);
+        if ($original['type'] !== 'sale' || !is_array($sale['lines'] ?? null) || ($sale['vat_minor'] ?? null) !== 0
+            || !$order || $order->get_currency() !== 'BDT' || self::minor($order->get_total()) !== $sale['total_minor']) {
+            throw new DomainException('Original cart receipt cannot be credited.', 409);
+        }
+        $items = [];
+        foreach ($order->get_items() as $itemId => $item) {
+            $productId = $item->get_product_id();
+            if (isset($items[$productId])) {
+                throw new DomainException('Original cart has ambiguous product lines.', 409);
+            }
+            $items[$productId] = [$itemId, $item];
+        }
+        $lines = $returned = [];
+        foreach ($sale['lines'] as $line) {
+            [$itemId, $item] = $items[$line['product']] ?? [null, null];
+            if (!$item || isset($lines[$itemId]) || (int) $item->get_quantity() !== $line['quantity']
+                || self::minor($item->get_total()) !== $line['total_minor']) {
+                throw new DomainException('Original cart lines have changed.', 409);
+            }
+            $lines[$itemId] = $line;
+            $returned[$itemId] = abs((int) $order->get_qty_refunded_for_item($itemId));
+        }
+        if (count($items) !== count($lines)) {
+            throw new DomainException('Original cart lines have changed.', 409);
+        }
+        return [$order, $lines, $items, $returned];
+    }
+
+    private static function minor(string $amount): int
+    {
+        return \SFM4U\Wholesale\Pro\Money::parse($amount, 'BDT')->minor;
     }
 
     private static function decimal(int $minor): string

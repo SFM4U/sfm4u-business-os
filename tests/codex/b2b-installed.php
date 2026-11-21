@@ -91,6 +91,7 @@ if ($phase === 'seed') {
     installed_check(is_int($buyer) && is_int($vendor), 'synthetic actors created');
     update_user_meta($buyer, '_sfmwh_buyer_status', 'approved');
     update_user_meta($vendor, 'dokan_enable_selling', 'yes');
+    update_user_meta($vendor, '_sfmwh_vendor_tools_grant', 'yes');
     wp_update_post(['ID' => $productId, 'post_author' => $vendor]);
     $_POST = ['buyer' => (string) $buyer, 'limit' => '15000', 'days' => '30', 'grace' => '1',
         '_wpnonce' => wp_create_nonce('sfm4u_b2b_save_account_' . $buyer)];

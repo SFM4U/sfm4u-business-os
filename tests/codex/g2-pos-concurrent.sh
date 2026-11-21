@@ -14,13 +14,15 @@ merchant="$1"
 shift
 barrier=$(mktemp -d "${SFM4U_TEST_BARRIERS:-${TMPDIR:-/tmp}}/sfm4u-test.XXXXXX")
 pids=''
-for product do
+worker=0
+for product in "$@" "$1"; do
+ worker=$((worker + 1))
  (
   attempt=1
   while [ "$attempt" -le 6 ]; do
-   result=$(wp eval-file /tests/g2-pos-concurrent.php sale "$merchant" "$product" "$barrier")
+   result=$(wp eval-file /tests/g2-pos-concurrent.php sale "$merchant" "$product" "$barrier" "$worker")
    if [ "$result" != RETRY ]; then
-    printf '%s\n' "$result"
+    printf '%s\n' "$result" > "$barrier/result-$worker"
     exit 0
    fi
    printf 'Retrying product %s with the original request key\n' "$product" >&2
@@ -31,9 +33,9 @@ for product do
  ) &
  pids="$pids $!"
 done
-for product do
+for worker in 1 2 3 4 5; do
  count=0
- while [ ! -f "$barrier/$product" ]; do
+ while [ ! -f "$barrier/$worker" ]; do
   count=$((count+1))
   [ "$count" -lt 30 ]
   sleep 1
@@ -41,4 +43,7 @@ for product do
 done
 touch "$barrier/go"
 for pid in $pids; do wait "$pid"; done
+test -s "$barrier/result-1"
+cmp "$barrier/result-1" "$barrier/result-5"
+echo "PASS overlapping same-key workers received the same receipt"
 wp eval-file /tests/g2-pos-concurrent.php verify "$merchant" "$@"

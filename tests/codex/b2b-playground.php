@@ -25,6 +25,7 @@ $vendor = wp_insert_user(['user_login' => 'synthetic_vendor', 'user_pass' => wp_
 expect(is_int($buyer) && is_int($vendor) && dokan_is_user_seller($vendor), 'real Dokan seller role');
 update_user_meta($buyer, '_sfmwh_buyer_status', 'approved');
 update_user_meta($vendor, 'dokan_enable_selling', 'yes');
+update_user_meta($vendor, '_sfmwh_vendor_tools_grant', 'yes');
 $product = new WC_Product_Simple();
 $product->set_name('Synthetic carton');
 $product->set_sku('B2B-FIXTURE');

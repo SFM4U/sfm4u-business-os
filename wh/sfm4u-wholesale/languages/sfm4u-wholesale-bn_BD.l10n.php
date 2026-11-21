@@ -958,4 +958,10 @@ return ['language' => 'bn_BD', 'messages' => [
     'Business Black: expired or due' => 'Business Black: মেয়াদ শেষ বা শিগগির শেষ',
     'Expired - wholesale stopped' => 'মেয়াদ শেষ - পাইকারি দাম বন্ধ',
     'Due soon' => 'শিগগির শেষ হবে',
+    'Find cart credit lines' => 'কার্টের ফেরতযোগ্য পণ্য দেখুন',
+    'Credit cart items' => 'কার্টের পণ্য ফেরত নিন',
+    'Cart credit lines (item ID, quantity per line)' => 'ফেরত পণ্য (প্রতি লাইনে পণ্যের আইডি, পরিমাণ)',
+    '%1$d · %2$s · %3$d available to credit' => '%1$d · %2$s · %3$dটি ফেরত নেওয়া যাবে',
+    'Membership changed. Scan the card again and review the cart.' => 'সদস্যতার অবস্থা বদলেছে। কার্ড আবার স্ক্যান করে কার্ট দেখুন।',
+    'Counter stock is unavailable.' => 'কাউন্টারে এই বিক্রির জন্য পর্যাপ্ত স্টক নেই।',
 ]];

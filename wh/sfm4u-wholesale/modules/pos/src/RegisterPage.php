@@ -10,7 +10,7 @@ use SFM4U\Wholesale\Rule;
 final class RegisterPage
 {
     private const ACTIONS = ['search'=>'Find product', 'profit'=>'Preview profit', 'park'=>'Park basket', 'resume'=>'Resume basket', 'status' => 'Drawer status', 'xreport' => 'X-report', 'open' => 'Open drawer', 'sale' => 'Cash sale',
-        'credit' => 'Credit note', 'invoice' => 'Print invoice', 'thermal'=>'Print 80mm receipt', 'reprint' => 'Receipt copy', 'in' => 'Cash in', 'out' => 'Cash out', 'count'=>'Mid-shift count', 'close' => 'Close drawer'];
+        'credit' => 'Credit note', 'cart_credit_lines' => 'Find cart credit lines', 'cart_credit' => 'Credit cart items', 'invoice' => 'Print invoice', 'thermal'=>'Print 80mm receipt', 'reprint' => 'Receipt copy', 'in' => 'Cash in', 'out' => 'Cash out', 'count'=>'Mid-shift count', 'close' => 'Close drawer'];
     private const FIELDS = ['search'=>'SKU, product name or barcode', 'basket'=>'Parked basket key', 'merchant' => 'Merchant ID', 'register' => 'Register', 'session' => 'Session ID', 'product' => 'Product ID',
         'quantity' => 'Quantity', 'tender' => 'Tender amount (BDT)', 'order' => 'Order ID', 'amount' => 'Drawer amount (BDT)',
         'tender_reference'=>'Manual tender reference', 'reason' => 'Reason code', 'approval' => 'Manager approval reference', 'expense_memo' => 'Expense memo'];
@@ -53,7 +53,7 @@ final class RegisterPage
         echo '<input type="hidden" name="request_key" value="' . esc_attr($key) . '">';
         echo '<p><label>' . esc_html__('Action', 'sfm4u-wholesale') . ' <select name="register_action">';
         foreach (self::ACTIONS as $action => $label) {
-            if ($action === 'credit' && !current_user_can('sfm4u_pos_credit')) continue;
+            if (in_array($action, ['credit', 'cart_credit_lines', 'cart_credit'], true) && !current_user_can('sfm4u_pos_credit')) continue;
             if ($action === 'profit' && !current_user_can('manage_woocommerce')) continue;
             echo '<option value="' . esc_attr($action) . '" ' . selected(self::input('register_action'), $action, false) . '>'
                 . esc_html(__($label, 'sfm4u-wholesale')) . '</option>';
@@ -76,6 +76,11 @@ final class RegisterPage
             echo '<p><label for="pos-' . esc_attr($name) . '">' . esc_html(__($label, 'sfm4u-wholesale')) . '</label><br>'
                 . '<input id="pos-' . esc_attr($name) . '" name="' . esc_attr($name) . '" maxlength="250" value="'
                 . esc_attr(self::input($name)) . '"' . (in_array($name, ['merchant', 'register'], true) ? ' required' : '') . '></p>';
+        }
+        if (current_user_can('sfm4u_pos_credit')) {
+            echo '<p><label>' . esc_html__('Cart credit lines (item ID, quantity per line)', 'sfm4u-wholesale')
+                . '<br><textarea name="credit_lines" rows="4" maxlength="900">'
+                . esc_textarea(self::input('credit_lines')) . '</textarea></label></p>';
         }
         echo '<p><label><input type="checkbox" name="resellable" value="1" '
             . checked(($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || self::input('resellable') === '1', true, false) . '> '
@@ -109,6 +114,9 @@ final class RegisterPage
             'resume'=>$this->service->resume($merchant,$register,self::input('basket')),
             'sale' => $this->service->sale($merchant, $register, $key, $number('product', 1), $number('quantity', 1), $amount('tender'), $number('session', 1),self::input('tender_type')?:'cash',self::input('tender_reference')),
             'credit' => $this->service->credit($merchant, $register, $key, $number('order', 1), $number('quantity', 1), self::input('resellable') === '1', $number('session', 1)),
+            'cart_credit_lines' => $this->service->cartCreditLines($merchant, $register, $number('order', 1)),
+            'cart_credit' => $this->service->cartCredit($merchant, $register, $key, $number('order', 1),
+                $number('session', 1), self::creditSelection(self::input('credit_lines')), self::input('resellable') === '1'),
             'reprint' => $this->service->reprint($merchant, $register, $number('order', 1)),
             'invoice', 'thermal' => $this->service->invoice($merchant, $register, $number('order', 1),$action==='thermal'?'thermal':'a4'),
             'status', 'xreport', 'open', 'in', 'out', 'count', 'close' => $this->service->drawer($merchant, $register, $action, $key,
@@ -117,8 +125,32 @@ final class RegisterPage
         };
     }
 
+    private static function creditSelection(string $text): array
+    {
+        if (strlen($text) > 900) {
+            throw new DomainException('Invalid cart credit lines.', 422);
+        }
+        $items = [];
+        foreach (preg_split('/\R/', trim($text)) as $line) {
+            if (!preg_match('/^(\d{1,10})\s*,\s*(\d{1,5})$/D', trim($line), $matches)) {
+                throw new DomainException('Invalid cart credit lines.', 422);
+            }
+            $items[] = ['item' => (int) $matches[1], 'quantity' => (int) $matches[2]];
+        }
+        return $items;
+    }
+
     private function receipt(array $result): void
     {
+        if (($result['kind'] ?? '') === 'CART_CREDIT_LINES') {
+            echo '<ul>';
+            foreach ($result['lines'] as $line) {
+                echo '<li>' . esc_html(sprintf(__('%1$d · %2$s · %3$d available to credit', 'sfm4u-wholesale'),
+                    $line['item'], $line['name'], $line['quantity'])) . '</li>';
+            }
+            echo '</ul>';
+            return;
+        }
         if (($result['kind'] ?? '') === 'PROFIT') {
             \SFM4U\Wholesale\ProfitCard::render($result['rows'], false);
             return;

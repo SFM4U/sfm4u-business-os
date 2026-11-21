@@ -2389,3 +2389,21 @@ msgstr ""
 
 msgid "n8n webhook URL"
 msgstr ""
+
+msgid "Find cart credit lines"
+msgstr ""
+
+msgid "Credit cart items"
+msgstr ""
+
+msgid "Cart credit lines (item ID, quantity per line)"
+msgstr ""
+
+msgid "%1$d · %2$s · %3$d available to credit"
+msgstr ""
+
+msgid "Membership changed. Scan the card again and review the cart."
+msgstr ""
+
+msgid "Counter stock is unavailable."
+msgstr ""

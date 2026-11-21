@@ -140,3 +140,18 @@ $retailSale = $call($retail + ['action' => 'counter_sale', 'session' => $session
 check_member_pos($retailSale->get_status() === 200, 'retail sale succeeds without a card');
 check_member_pos(!wc_get_order($retailSale->get_data()['order_id'])->meta_exists('_sfmwh_member_user'),
     'non-member order does not get member user meta');
+
+$bulk = $intent($no);
+$bulk['lines'][0]['quantity'] = $stock();
+$bulkQuote = $call($bulk + ['action' => 'counter_quote']);
+check_member_pos($bulkQuote->get_status() === 200, 'quote accepts all remaining stock');
+$freshQuote = $call($intent($no) + ['action' => 'counter_quote']);
+$competingSale = $saleData($no, $freshQuote->get_data()['digest']);
+$competingSale['tender'] = $freshQuote->get_data()['total_minor'];
+check_member_pos($call($competingSale)->get_status() === 200, 'competing sale consumes one unit');
+$available = $stock();
+$documents = $receiptCount();
+$oversell = $call($bulk + ['action' => 'counter_sale', 'session' => $session,
+    'digest' => $bulkQuote->get_data()['digest'], 'tender' => $bulkQuote->get_data()['total_minor']]);
+check_member_pos($oversell->get_status() === 409 && ($oversell->get_data()['code'] ?? null) === 'counter_rejected' && $stock() === $available
+    && $receiptCount() === $documents, sprintf('insufficient stock at confirm leaves sale, receipt and stock unchanged (status %d, code %s, stock %d to %d, receipts %d to %d)', $oversell->get_status(), $oversell->get_data()['code'] ?? '-', $available, $stock(), $documents, $receiptCount()));

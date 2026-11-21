@@ -56,6 +56,11 @@ wp_update_post(['ID' => $product->get_id(), 'post_author' => $vendor]);
 Commerce::saveRule($product, ['minor' => 1500, 'min' => 3, 'max' => 20, 'step' => 2,
     'tiers' => [5 => 1200], 'packs' => ['carton' => 5], 'pack_minor' => ['carton' => 5400], 'buyer' => 'approved:subscriber']);
 
+// The standalone fixture registers the B2B routes without the installed runtime bootstrap.
+$capabilityFilter = [\SFM4U\Wholesale\B2BRuntime::class, 'capabilities'];
+if (!has_filter('user_has_cap', $capabilityFilter)) {
+    add_filter('user_has_cap', $capabilityFilter, 10, 4);
+}
 $quotes = sfm4u_b2b_register($wpdb);
 $quotes->install();
 $ledger = $wpdb->prefix . 'sfm4u_b2b_ledger';
@@ -95,7 +100,9 @@ $sku = $product->get_sku();
 check(error_code(call_api(0, 'quick-order', ['csv' => "$sku,5"]), 'authentication_required'), 'anonymous denied bilingually');
 check(error_code(call_api($buyer, 'quick-order', ['csv' => "$sku,5"], '', false), 'nonce_invalid'), 'missing nonce denied bilingually');
 check(error_code(call_api($vendor, 'quick-order', ['csv' => "$sku,5"]), 'forbidden'), 'wrong capability denied bilingually');
-check(call_api($outsider, 'quick-order', ['csv' => "$sku,5"])->get_data()['errors'][0]['code'] === 'sku_not_found', 'buyer visibility');
+$hidden = call_api($outsider, 'quick-order', ['csv' => "$sku,5"]);
+check(error_code($hidden, 'forbidden') || ($hidden->get_data()['errors'][0]['code'] ?? '') === 'sku_not_found',
+    'unapproved buyer cannot see the wholesale SKU');
 check(call_api($buyer, 'quick-order', ['csv' => "$sku,2\n$sku,3"])->get_data()['total_minor'] === 6000, 'Woo aggregate tier');
 check(call_api($buyer, 'quick-order', ['csv' => "$sku,1,carton"])->get_data()['total_minor'] === 5400, 'Woo carton pricing');
 
@@ -107,7 +114,13 @@ $id = ['id' => $submit->get_data()['id']];
 check(call_api($buyer, 'submit', ['lines' => $lines], $key)->get_data() === $submit->get_data(), 'submit exact replay');
 check(error_code(call_api($buyer, 'submit', ['lines' => [['sku' => $sku, 'qty' => 7]]], $key), 'idempotency_conflict'), 'changed submission rejected');
 $offer = $id + ['lines' => [$lines[0] + ['unit_price_minor' => 1200]], 'valid_until' => time() + 3600];
+if (function_exists('dokan_is_user_seller') && dokan_is_user_seller($vendor)) {
+    check(call_api($vendor, 'offer', $offer, 'ungranted_offer_' . $tag)->get_status() === 403,
+        'regular Dokan seller cannot offer before the Business OS grant');
+}
+update_user_meta($vendor, '_sfmwh_vendor_tools_grant', 'yes');
 check(call_api($vendor, 'offer', $offer, 'quote_offer_' . $tag)->get_data()['state'] === 'offered', 'vendor offer');
+update_user_meta($outsider, '_sfmwh_buyer_status', 'approved');
 check(error_code(call_api($outsider, 'accept', $id, 'outsider_accept_' . $tag), 'not_quote_owner'), 'other buyer denied');
 check(call_api($buyer, 'accept', $id, 'quote_accept_' . $tag)->get_data()['state'] === 'accepted', 'buyer accepts');
 

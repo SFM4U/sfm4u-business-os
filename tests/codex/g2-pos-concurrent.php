@@ -1,8 +1,8 @@
 <?php
 if (!defined('WP_CLI') || !WP_CLI || wp_parse_url(home_url(), PHP_URL_HOST) !== '127.0.0.1') exit(1);
-require '/modules/inventory-bridge/src/RequestJournal.php';
-require '/modules/pos/src/ReceiptRegister.php';
-require '/modules/pos/src/SyntheticSale.php';
+require_once '/modules/inventory-bridge/src/RequestJournal.php';
+require_once '/modules/pos/src/ReceiptRegister.php';
+require_once '/modules/pos/src/SyntheticSale.php';
 require_once '/modules/inventory-bridge/src/LossAwareWpdb.php';
 global $wpdb;
 $original = $wpdb;
@@ -40,7 +40,8 @@ if ($mode === 'seed') {
     echo implode(' ', [random_int(10000000,999999999), ...$products]) . "\n";
 } elseif ($mode === 'sale') {
     $merchant=(int)$args[1]; $product=(int)$args[2]; $barrier=$args[3];
-    if (!touch($barrier . '/' . $product)) throw new RuntimeException('Worker barrier failed.');
+    $worker = $args[4] ?? (string) $product;
+    if (!touch($barrier . '/' . $worker)) throw new RuntimeException('Worker barrier failed.');
     for ($tries=0; !is_file($barrier . '/go'); $tries++) {
         if ($tries>=300) throw new RuntimeException('Worker barrier timed out.');
         usleep(100000);

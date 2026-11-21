@@ -4,6 +4,7 @@ function sfm4u_product_meta_security(callable $assert):void {
     // Mounted-source harness explicitly boots the same core registration as the plugin entry.
     if(!has_filter('woocommerce_rest_pre_insert_product_object',[\SFM4U\Wholesale\Commerce::class,'protectOperationsMeta']))\SFM4U\Wholesale\Commerce::register();
     wp_set_current_user(1);$seller=wp_create_user('synthetic-meta-'.wp_generate_uuid4(),wp_generate_password());$user=new WP_User($seller);$user->set_role('seller');update_user_meta($seller,'dokan_enable_selling','yes');
+    update_user_meta($seller, '_sfmwh_vendor_tools_grant', 'yes');
     $p=new WC_Product_Simple();$p->set_name('Synthetic metadata security');$p->set_status('publish');$p->set_regular_price('1.00');$p->update_meta_data('_sfm4u_pos_merchant_id',123);$p->save();wp_update_post(['ID'=>$p->get_id(),'post_author'=>$seller]);
     global $wpdb;$metaId=(int)$wpdb->get_var($wpdb->prepare('SELECT meta_id FROM %i WHERE post_id=%d AND meta_key=%s',$wpdb->postmeta,$p->get_id(),'_sfm4u_pos_merchant_id'));
     $request=static function(string $route,array $entry)use($p):WP_REST_Response{
