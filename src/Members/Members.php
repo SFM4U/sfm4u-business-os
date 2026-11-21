@@ -38,6 +38,9 @@ final class Members {
 
     public static function register(): void {
         add_action('admin_init', [self::class, 'maybeInstall'], 5);
+        // 0.9.9: also on the first front/REST request after an update (e.g. a POS sale before anyone opens wp-admin),
+        // so new columns (khata.ref) exist before a sale writes to them. Cheap: one cached option check when up to date.
+        add_action('init', [self::class, 'maybeInstall'], 5);
         add_filter('user_has_cap', [self::class, 'grantCap'], 10, 4);
         add_action('user_register', [self::class, 'autoIssue'], 20, 1);
     }
