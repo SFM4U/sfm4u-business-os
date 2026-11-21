@@ -308,6 +308,42 @@ final class Members {
         return str_pad((string) $n, 7, '0', STR_PAD_LEFT);
     }
 
+    /** Member numbers 1..RESERVED_MAX are family numbers: only an administrator gives them, by hand. */
+    public const RESERVED_MAX = 100;
+
+    public static function isReservedNo(string $no): bool {
+        return (bool) preg_match('/^\d{7}$/', $no) && (int) $no >= 1 && (int) $no <= self::RESERVED_MAX;
+    }
+
+    /**
+     * Administrator gives a family number (1..100) to a person on the SFM4U account site (or a site that is not linked).
+     * A number already held by someone else is refused. The person's previous number is kept in sfm_wr_member_no_prev.
+     * Change a number only before the card is used at linked shops (shops keep the number they saw).
+     */
+    public static function assignReservedNo(int $userId, int $n, int $staffId): string {
+        if (!user_can($staffId, 'manage_options')) {
+            throw new DomainException(__('Only an administrator can give a family number.', 'sfm4u-wholesale'), 403);
+        }
+        if (class_exists(CardLink::class) && CardLink::role() === 'shop') {
+            throw new DomainException(__('Family numbers are given on the SFM4U account site.', 'sfm4u-wholesale'), 409);
+        }
+        if ($n < 1 || $n > self::RESERVED_MAX || !get_userdata($userId)) {
+            throw new DomainException(sprintf(__('Family numbers are 1 to %d.', 'sfm4u-wholesale'), self::RESERVED_MAX), 422);
+        }
+        $no = self::formatMemberNo($n);
+        $holder = self::userByMemberNo($no);
+        if ($holder && $holder !== $userId) {
+            throw new DomainException(__('This number already belongs to another member.', 'sfm4u-wholesale'), 409);
+        }
+        $old = (string) get_user_meta($userId, 'sfm_wr_member_no', true);
+        if ($old === $no) { return $no; }
+        if ($old !== '') { update_user_meta($userId, 'sfm_wr_member_no_prev', $old); }
+        update_user_meta($userId, 'sfm_wr_member_no', $no);
+        update_user_meta($userId, 'sfm_wr_member_no_by', $staffId . '@' . gmdate('Y-m-d H:i:s'));
+        do_action('sfm_wr_member_no_changed', $userId, $old, $no, $staffId);
+        return $no;
+    }
+
     /** Returns the member's number, assigning the next one atomically the first time. */
     public static function memberNo(int $userId): string {
         global $wpdb;
@@ -331,8 +367,10 @@ final class Members {
             $n = 0;
             for ($try = 0; $try < 25 && $n === 0; $try++) {
                 $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
-                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) ($cur + 1), 'sfm_wr_member_seq', (string) $cur));
-                if ($done === 1) { $n = $cur + 1; }
+                // Owner 2026-11-21: 1-100 are family numbers given by the admin only; automatic numbers start at 101.
+                $next = max($cur, self::RESERVED_MAX) + 1;
+                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) $next, 'sfm_wr_member_seq', (string) $cur));
+                if ($done === 1) { $n = $next; }
             }
             wp_cache_delete('sfm_wr_member_seq', 'options');
             wp_cache_delete('notoptions', 'options');

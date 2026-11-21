@@ -523,6 +523,14 @@ final class MembersAdmin {
                 /* translators: %s: card number */
                 self::notice(sprintf(__('Card created: %s', 'sfm4u-wholesale'), Members::displayNumber($card)));
                 $print = $card;
+            } elseif (isset($_POST['sfm_wr_family_no'])) {
+                check_admin_referer('sfm_wr_family_no');
+                $who = self::post('family_customer');
+                $user = is_email($who) ? get_user_by('email', $who) : null;
+                if (!$user) { throw new DomainException(__('No customer with that email. Ask them to create an SFM4U account first.', 'sfm4u-wholesale')); }
+                $no = Members::assignReservedNo($user->ID, absint($_POST['family_no'] ?? 0), get_current_user_id());
+                /* translators: %s: member number */
+                self::notice(sprintf(__('Family number given: %s', 'sfm4u-wholesale'), $no));
             } elseif (isset($_POST['sfm_wr_auto'])) {
                 check_admin_referer('sfm_wr_auto');
                 update_option(Members::AUTO_OPTION, self::post('auto_on') === '1' ? '1' : '0', false);
@@ -565,6 +573,15 @@ final class MembersAdmin {
             . '<label>' . esc_html__('per days', 'sfm4u-wholesale') . ' <input type="number" name="black_days" min="1" max="366" value="' . (int) $tr['black_days'] . '" style="width:70px"></label></p>'
             . '<p><button class="button">' . esc_html__('Save plans', 'sfm4u-wholesale') . '</button></p></form>';
 
+        if (current_user_can('manage_options') && CardLink::role() !== 'shop') {
+            echo '<h2>' . esc_html__('Family number (1-100, administrator only)', 'sfm4u-wholesale') . '</h2><form method="post">';
+            wp_nonce_field('sfm_wr_family_no');
+            echo '<input type="hidden" name="sfm_wr_family_no" value="1"><p><label>' . esc_html__('Customer email', 'sfm4u-wholesale')
+                . ' <input type="email" name="family_customer" required class="regular-text"></label> <label>' . esc_html__('Number', 'sfm4u-wholesale')
+                . ' <input type="number" name="family_no" min="1" max="' . (int) Members::RESERVED_MAX . '" required style="width:90px"></label> '
+                . '<button class="button">' . esc_html__('Give family number', 'sfm4u-wholesale') . '</button></p><p class="description">'
+                . esc_html__('Numbers 1-100 are kept for the family. Everyone else gets the next number from 101 automatically. Change a number only before the card is used at shops.', 'sfm4u-wholesale') . '</p></form>';
+        }
         echo '<h2>' . esc_html__('Give a new card', 'sfm4u-wholesale') . '</h2><form method="post" class="sfm-wr-issue">';
         wp_nonce_field('sfm_wr_issue');
         echo '<input type="hidden" name="sfm_wr_issue" value="1"><table class="form-table"><tr><th>' . esc_html__('Customer email or phone', 'sfm4u-wholesale')
