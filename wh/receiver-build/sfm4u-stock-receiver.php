@@ -3,7 +3,7 @@
  * Plugin Name: SFM4U Business OS — AlgiBazar Connector
  * Description: Part of SFM4U Business OS. Sellers and customers link their SFM4U member account (My Account → SFM4U membership), sellers ask for the Business / Business Black plan, checkout can take an SFM4U card, sellers see their monthly profit & loss, and it receives Business Black purchases from the SFM4U wholesale shop and adds the goods to the member's own AlgiBazar store (new products as drafts, more stock for existing ones). Off until set to "AlgiBazar marketplace" and paired.
  * Version: 0.8.1-dev
- * Author: SFM for you
+ * Author: SFM4U
  * Requires at least: 6.5
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce

@@ -82,3 +82,29 @@ check_member_pos(str_contains($html, 'আগের বাকি') && str_contain
     && str_contains($html, 'বাকিতে বিক্রি') && str_contains($html, 'নতুন বাকি'), 'Bangla sale COPY prints khata summary');
 file_put_contents('/fixture-out/c09-bn-counter.html', '<!doctype html><html lang="bn"><meta charset="utf-8">' . $markup);
 file_put_contents('/fixture-out/c09-bn-receipt.html', '<!doctype html><html lang="bn"><meta charset="utf-8">' . $html);
+
+foreach (['suspended'=>$suspended, 'expired Black'=>$expired, 'unpaid Black'=>$unpaid] as $label => $user) {
+    $memberClass::record($user, 0, 'charge', 2000, '', '', 1, 'up', 'test-main');
+    $scan = $memberClass::memberNo($user);
+    $lookup = $call(['action'=>'member_due','member'=>$scan]);
+    check_member_pos($lookup->get_status() === 200 && $lookup->get_data()['due_minor'] === 2000, "$label can view old due");
+    $oldHistory = $call(['action'=>'member_due_history','member'=>$scan]);
+    check_member_pos($oldHistory->get_status() === 200 && $oldHistory->get_data()['days'][0]['closing_minor'] === 2000,
+        "$label can view existing due history");
+    $dueKey = wp_generate_uuid4();
+    $duePay = ['action'=>'member_due_payment','member'=>$scan,'session'=>$session,'amount'=>500];
+    $paidDue = $call($duePay, $dueKey);
+    check_member_pos($paidDue->get_status() === 200 && $paidDue->get_data()['payment_id'] > 0
+        && $paidDue->get_data()['due_minor'] === 1500, "$label can pay existing due");
+    check_member_pos($call($duePay, $dueKey)->get_data() === $paidDue->get_data()
+        && $memberClass::balance($user, 'test-main') === 1500, "$label replay reuses payment without double credit");
+    $noPrice = $call($intent($scan) + ['action'=>'counter_quote']);
+    check_member_pos($noPrice->get_status() === 422, "$label still denied member price");
+    $newCredit = $saleData($scan, $quote->get_data()['digest']) + ['credit_minor'=>500];
+    check_member_pos($call($newCredit)->get_status() === 409 && $memberClass::balance($user, 'test-main') === 1500,
+        "$label still denied new credit");
+}
+check_member_pos($call(['action'=>'member_due','member'=>'0000000'])->get_status() === 404, 'unknown card due is 404');
+check_member_pos($call(['action'=>'member_due_history','member'=>'0000000'])->get_status() === 404, 'unknown card history is 404');
+check_member_pos($call(['action'=>'member_due_payment','member'=>'0000000','session'=>$session,'amount'=>500])->get_status() === 404,
+    'unknown card payment is 404');

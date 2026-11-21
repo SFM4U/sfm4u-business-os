@@ -5,7 +5,7 @@
  * Version: 0.7.1-dev
  * Requires PHP: 8.1
  * Requires at least: 6.5
- * Author: SFM for you
+ * Author: SFM4U
  * License: GPL-2.0-or-later
  * Text Domain: sfm4u-wholesale
  */

@@ -2,6 +2,7 @@
 use SFM4U\Inventory\{PurchaseOrders, StockCounts, StockValuation};
 
 wp_set_current_user(1);
+$dailyBeforeCounts = $daily->report($today, $merchant, 'R1');
 $counts = new StockCounts($wpdb);
 $counts->install();
 $purchase = new PurchaseOrders($wpdb);
@@ -152,7 +153,8 @@ $workflowZ = $cashPos->drawer($merchant, 'R1', 'close', wp_generate_uuid4(), $wo
 wp_set_current_user(1);
 $workflowDay = $daily->report($today, $merchant, 'R1');
 check($workflowZ['expected_cash_minor'] === 3000 && $workflowDay['session_ledger_mismatches'] === 0
-    && $workflowDay['inventory_adjusted_units'] === -5 && $workflowDay['inventory_value_adjustment_micros'] === -90000000,
+    && $workflowDay['inventory_adjusted_units'] - $dailyBeforeCounts['inventory_adjusted_units'] === -5
+    && $workflowDay['inventory_value_adjustment_micros'] - $dailyBeforeCounts['inventory_value_adjustment_micros'] === -90000000,
     'Daily Close reconciles the POS drawer and reports warehouse adjustments separately');
 
 $guardedSale = wc_get_order($workflowSale['order_id']);

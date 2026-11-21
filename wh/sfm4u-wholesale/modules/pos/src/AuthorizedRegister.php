@@ -146,9 +146,7 @@ final class AuthorizedRegister {
         if (!$member || empty($member['user_id'])) {
             throw new DomainException('Card not found.', 404);
         }
-        if (!empty($member['suspended']) || ($member['status'] ?? '') !== 'active') {
-            throw new DomainException('Khata is unavailable for this card.', 403);
-        }
+        // Identity is sufficient to settle existing due. CounterSale separately checks price eligibility and new credit.
         return [(int) $member['user_id'], $store];
     }
 
