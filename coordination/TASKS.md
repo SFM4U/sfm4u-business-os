@@ -14,7 +14,7 @@ Candidate under test: plugin 0.9.8-dev, ZIP SHA-256 171956960dd8ca12d3bee0574a09
 ## Codex section — POS lane (whole night, in order)
 | ID | Task | Status |
 |---|---|---|
-| C-01 | Run every `tests/codex/*.php` against 0.9.8 on POS staging (`tools/qa/pos-staging.sh` builds it). Make a pass/fail matrix in `coordination/codex-matrix.md`. Tests written for 0.6.0: separate "test outdated" from "real defect" with evidence. | READY |
+| C-01 | Codex matrix | REVIEW (Codex via Drive handoff `C-01-CODEX-MATRIX-2026-11-21.md`, base 8bc26d2, ZIP 17195696… verified) — 61 of 62 files PASS (5 with harness-only adjustments), 483-assertion B2B parent driver PASS, 4-phase 54/54 PASS on WP 7.1.4/WC 11.3.0/Dokan 5.3.4. `b2b-installed.php` NOT TESTED (needs 0.1.2-dev archive; Owner/lead to decide retire). Codex has no GitHub push yet. |
 | C-02 | Member card at the counter end to end: commit (not only quote) with valid Business, paid Black, unpaid Black, expired, suspended, unknown card; price/permission rechecked at confirm; card changes between quote and confirm → 409. | READY |
 | C-03 | Duplicate/concurrent submits (same key twice, two cashiers at once, retry after timeout) → exactly one sale, one receipt, one stock move; refund twice → once. (`g2-pos-concurrent`, `g2-authorized-recovery`) | READY |
 | C-04 | Roles: cashier vs manager vs inventory manager vs vendor vs guest for sale, credit/refund, drawer in/out/close, count approval, reprint, X report (`pos-role-lifecycle`). | READY |
@@ -28,13 +28,14 @@ Candidate under test: plugin 0.9.8-dev, ZIP SHA-256 171956960dd8ca12d3bee0574a09
 |---|---|---|
 | L-01 | Black auto stock via POS counter sale | REVIEW (Claude 07:05 UTC) — StockFeed side done: POS member order at `processing` queues a one-off send 30 s later (never inside the sale transaction), re-checks order is still paid, sends once, retries on failure; online orders still wait for `completed`. Test `wh/tests-local/stockfeed-pos-test.php` 15/15; regression suite + unit all PASS. Needs C-08 for the real counter path. Source now ahead of the 0.9.8 ZIP (release bump in L-07). |
 | L-02 | Entitlement: Business membership system only on wholesale shops SFM4U opened (licensed shop flag on the receiver/shop pairing). Non-licensed sites never show member price or card features. Owner to confirm exact rule (see Owner questions). | READY |
-| L-03 | Two-site tests (master :8899 + shop): link-central, link-shop, pair-*, stock-send/recv, bos-master/bos-shop; rerun here (were 16/16 + 11/11 on the Owner's Mac). | READY |
+| L-03 | Two-site tests | DONE (Claude 07:45 UTC) — `tools/qa/two-site.sh` (shop :8080, master :8899, AlgiBazar receiver :8894 with Dokan): link-shop 16/16, link-central 12/12, pair-master 4/4, pair-shop-finish 6/6, stock-recv-setup 5/5, stock-send-test 6/6, receiver stock 20 as draft PASS, bos-shop-test 33/33 (on AlgiBazar Connector built from current source), bos-master-check 3/3. Test fix: bos-shop-test master path via SFM4U_MASTER_WP. Note: committed `wh/receiver-build/out` is a stale 0.9.5 build -> rebuild + version bump at release (L-07). |
 | L-04 | Dokan compatibility | DONE (Claude 07:15 UTC) — Dokan Lite 5.3.5 active on the shop site: full WP suite (13 files) PASS; profit page via Dokan seller path. |
 | L-05 | ERP mock reconciliation | REVIEW (Claude 07:25 UTC) — Found 2 gaps and fixed in src/Erp/ErpSync.php: (1) POS sales were exported inside the sale transaction -> now a one-off job after commit, re-checks the sale; (2) refunds never reached ERPNext -> now a return Sales Invoice (is_return=1, return_against original, negative qty) once per refund, retries if the original is not in ERP yet; amount-only refunds refused with a note (manual credit note). Mock now validates returns. Test `wh/tests-local/erp-refund-test.php` 14/14 (ERP stock: sold 3, returned 1 -> net -2). erp-order 12/12. ERP export stays OFF by default. |
-| L-06 | CI: GitHub Actions for unit tests + PHP lint (WP integration later). | READY |
+| L-06 | CI | DONE locally — `.github/workflows/ci.yml` (lint + unit + secret guard). GitHub Actions run NOT TESTED from this session (no Actions access). |
 | L-07 | Release candidate: ZIP + SHA + source commit + rollback in Factory/01 Ready Project after all lanes pass. | BLOCKED until C-01..07, L-01..05 pass |
 
 ## Owner questions (no change until answered)
+0. This repo is PUBLIC on GitHub (checked 2026-11-21 07:45 UTC via API). No secrets/personal data found by scan. Keep public or make private (Settings -> General -> Danger Zone)?
 1. G8 whole-taka rule at the POS (round cash totals? up/down/nearest?).
 2. Black auto stock target: the member's AlgiBazar.com store (current design) or also his own separate shop website/POS?
 3. "Only shops we open get Business membership": is a shop = a WordPress site paired by us, or a Dokan store on AlgiBazar?

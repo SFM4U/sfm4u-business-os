@@ -5,7 +5,8 @@ $p = 0; $f = 0; $ok = function ($c, $m) use (&$p, &$f) { if ($c) { $p++; } else 
 $k = json_decode(file_get_contents('/tmp/bos.json'), true);
 $phase = $GLOBALS['argv'][count($GLOBALS['argv']) - 1] ?? '';
 $phase = getenv('PHASE') ?: 'a';
-$W = 'php /home/claude/wplocal/wpcli.phar --allow-root --path=/home/claude/wplocal/site';
+// Master (account) site path; override with SFM4U_MASTER_WP when the master is not at the original path.
+$W = 'php /home/claude/wplocal/wpcli.phar --allow-root --path=' . (getenv('SFM4U_MASTER_WP') ?: '/home/claude/wplocal/site');
 $code = fn () => trim((string) shell_exec("$W eval-file /home/claude/wh/tests-local/bos-master-code.php 2>/dev/null"));
 // pure
 $e = MemberLink::newPending('x', 1000, fn ($a, $b) => 42);
