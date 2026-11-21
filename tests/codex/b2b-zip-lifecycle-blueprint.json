@@ -1,0 +1,116 @@
+{
+  "steps": [
+    {
+      "step": "runPHP",
+      "code": "<?php define('WP_INSTALLING',true); require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/upgrade.php'; if (!is_blog_installed()) wp_install('Synthetic Playground','fixture_admin','fixture@example.invalid',false); global $wpdb; file_put_contents('/fixture-out/installed-mariadb.txt', $wpdb->get_var('SELECT VERSION()'));"
+    },
+    {
+      "step": "unzip",
+      "zipFile": {
+        "resource": "vfs",
+        "path": "/archives/woocommerce.zip"
+      },
+      "extractToPath": "/wordpress/wp-content/plugins"
+    },
+    {
+      "step": "unzip",
+      "zipFile": {
+        "resource": "vfs",
+        "path": "/archives/dokan-lite.zip"
+      },
+      "extractToPath": "/wordpress/wp-content/plugins"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; $error = activate_plugin('woocommerce/woocommerce.php'); if (is_wp_error($error)) throw new RuntimeException($error->get_error_message());"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; $error = activate_plugin('dokan-lite/dokan.php'); if (is_wp_error($error)) throw new RuntimeException($error->get_error_message());"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; update_option('woocommerce_custom_orders_table_enabled', 'yes');"
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "vfs",
+        "path": "/archives/sfm4u-wholesale-old.zip"
+      },
+      "ifAlreadyInstalled": "overwrite",
+      "options": {
+        "activate": true,
+        "targetFolderName": "sfm4u-wholesale"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php putenv('SFM4U_TEST_PHASE=old'); require '/tests/b2b-installed.php';"
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "vfs",
+        "path": "/archives/sfm4u-wholesale-new.zip"
+      },
+      "ifAlreadyInstalled": "overwrite",
+      "options": {
+        "activate": false,
+        "targetFolderName": "sfm4u-wholesale"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php putenv('SFM4U_TEST_PHASE=upgrade'); require '/tests/b2b-installed.php';"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; deactivate_plugins('sfm4u-wholesale/sfm4u-wholesale.php');"
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "vfs",
+        "path": "/archives/sfm4u-wholesale-old.zip"
+      },
+      "ifAlreadyInstalled": "overwrite",
+      "options": {
+        "activate": true,
+        "targetFolderName": "sfm4u-wholesale"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php putenv('SFM4U_TEST_PHASE=rollback'); require '/tests/b2b-installed.php';"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; deactivate_plugins('sfm4u-wholesale/sfm4u-wholesale.php');"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; delete_option('sfmwh_b2b_schema');"
+    },
+    {
+      "step": "installPlugin",
+      "pluginData": {
+        "resource": "vfs",
+        "path": "/archives/sfm4u-wholesale-new.zip"
+      },
+      "ifAlreadyInstalled": "overwrite",
+      "options": {
+        "activate": true,
+        "targetFolderName": "sfm4u-wholesale"
+      }
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php putenv('SFM4U_TEST_PHASE=seed'); require '/tests/b2b-installed.php';"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php putenv('SFM4U_TEST_PHASE=workflow'); require '/tests/b2b-installed.php';"
+    }
+  ]
+}

@@ -25,8 +25,13 @@ update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u)
 $ok(MemberPrice::memberFor($u)===null, 'card no longer found -> none');
 $v=(int)wp_insert_user(['user_login'=>"rc2$r",'user_pass'=>wp_generate_password(20),'user_email'=>"rc2$r@example.com"]); update_user_meta($v,'sfm_wr_member_no',$no);
 update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u); $answer=['found'=>true,'member_no'=>$no,'tier'=>'business','status'=>'active','wholesale_ok'=>true];
-$ok(MemberPrice::memberFor($u)===null, 'same member linked to two accounts -> none (anti-sharing)');
-delete_user_meta($v,'sfm_wr_member_no');
+// 0.9.8: digits the shop issued itself before linking (no central mark) must NOT block a real member.
+$ok(MemberPrice::memberFor($u)!==null, 'old local digits on another account do not block (0.9.8 clash fix)');
+// A second account that really carries the central number IS sharing -> none.
+update_user_meta($v,'sfm_wr_central',1);
+update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u);
+$ok(MemberPrice::memberFor($u)===null, 'same central member linked to two accounts -> none (anti-sharing)');
+delete_user_meta($v,'sfm_wr_member_no'); delete_user_meta($v,'sfm_wr_central');
 $c0=$calls; update_user_meta($u,'sfmwh_member_checked', time()); MemberPrice::forget($u); MemberPrice::memberFor($u);
 $ok($calls===$c0, 'no call when checked within 10 min');
 update_option(CardLink::OPT_ROLE,$oldRole ?: 'off'); $oldMaster ? update_option(CardLink::OPT_MASTER,$oldMaster) : delete_option(CardLink::OPT_MASTER);

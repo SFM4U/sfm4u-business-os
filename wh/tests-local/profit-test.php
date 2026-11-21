@@ -8,7 +8,13 @@ $s = VendorProfit::summarise([[1,'A',2,30000,0,12000.0],[1,'A',1,15000,15000,120
 $ok($s['total']['sales'] === 50000 && $s['total']['refund'] === 15000 && $s['total']['cost'] === 36000 && $s['total']['unknown_sales'] === 5000 && $s['total']['profit_known'] === -6000, 'summary ' . json_encode($s['total']));
 $ok($s['rows'][2]['profit'] === null && $s['rows'][1]['profit'] === 45000 - 15000 - 36000, 'row profit');
 // real orders on site4
+// Synthetic fixture users (the original run relied on a pre-seeded "site4"); create them if missing.
+foreach (['blackvendor', 'notvendor'] as $login) {
+    if (!get_user_by('email', "$login@example.com")) { wp_insert_user(['user_login' => $login, 'user_pass' => wp_generate_password(20), 'user_email' => "$login@example.com"]); }
+}
 $v = get_user_by('email', 'blackvendor@example.com'); $vid = $v->ID;
+// VendorProfit::page() is only for sellers (Dokan seller, or the 'seller' capability without Dokan).
+if (function_exists('dokan_is_user_seller')) { $v->set_role('seller'); update_user_meta($vid, 'dokan_enable_selling', 'yes'); } else { $v->add_cap('seller'); }
 $other = get_user_by('email','notvendor@example.com')->ID;
 $mk = function($sku,$author,$price,$cost){ $id = wc_get_product_id_by_sku($sku); if ($id) wp_delete_post($id,true); $pr = new WC_Product_Simple(); $pr->set_name($sku); $pr->set_sku($sku); $pr->set_regular_price((string)$price); $pr->set_status('publish'); $id=$pr->save(); wp_update_post(['ID'=>$id,'post_author'=>$author]); if ($cost!==null) update_post_meta($id,'_sfm_cost',(string)$cost); return $id; };
 $a = $mk('PL-A', $vid, 150, 120); $b = $mk('PL-B', $vid, 50, null); $c = $mk('PL-C', $other, 999, 1);

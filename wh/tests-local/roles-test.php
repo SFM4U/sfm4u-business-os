@@ -27,7 +27,8 @@ $ok(strpos($o, 'Only a manager can correct the khata') !== false, 'cashier adjus
 $ok(Members::balance($cust, 'shop2') === 0, 'no khata change');
 wp_set_current_user($man); $_POST['_wpnonce'] = wp_create_nonce('sfm_wr_khata'); $_REQUEST = $_POST;
 ob_start(); MembersAdmin::scanPage(); $o = ob_get_clean();
-$ok(Members::balance($cust, 'shop2') === -100, 'manager adjust works (' . Members::balance($cust, 'shop2') . ')');
+// "100" taka down = -100 × 10^store decimals in minor units (the test was written for a 0-decimal store).
+$ok(Members::balance($cust, 'shop2') === -100 * (10 ** wc_get_price_decimals()), 'manager adjust works (' . Members::balance($cust, 'shop2') . ')');
 $_POST = []; $_REQUEST = [];
 Members::setStaff($cash, 'main', 'none');
 $ok(Members::shopRole($cash) === 'none', 'removed from staff');

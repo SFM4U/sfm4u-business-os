@@ -1,0 +1,33 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP version
+        run: php --version
+      - name: Lint plugin PHP
+        run: find wh/sfm4u-wholesale -name '*.php' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
+      - name: Unit tests (synthetic)
+        run: |
+          sudo mkdir -p /home/claude && sudo ln -sfn "$PWD/wh" /home/claude/wh
+          fail=0
+          for t in m c t m1 m2 m4; do
+            out=$(php whtest/$t.php | tail -1); echo "$t: $out"
+            echo "$out" | grep -q "fail 0" || fail=1
+          done
+          exit $fail
+  secrets-guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          if grep -rInE 'sk-ant-[A-Za-z0-9]|BEGIN [A-Z ]*PRIVATE KEY|ghp_[A-Za-z0-9]{20,}' --exclude-dir=.git . ; then exit 1; fi

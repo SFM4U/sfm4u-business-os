@@ -1,0 +1,40 @@
+{
+  "steps": [
+    {
+      "step": "runPHP",
+      "code": "<?php define('WP_INSTALLING',true); require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/upgrade.php'; if (!is_blog_installed()) wp_install('Synthetic Playground','fixture_admin','fixture@example.invalid',false); global $wpdb; file_put_contents('/fixture-out/installed-mariadb.txt', $wpdb->get_var('SELECT VERSION()'));"
+    },
+    {
+      "step": "unzip",
+      "zipFile": {
+        "resource": "vfs",
+        "path": "/archives/woocommerce.zip"
+      },
+      "extractToPath": "/wordpress/wp-content/plugins"
+    },
+    {
+      "step": "unzip",
+      "zipFile": {
+        "resource": "vfs",
+        "path": "/archives/dokan-lite.zip"
+      },
+      "extractToPath": "/wordpress/wp-content/plugins"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; $error = activate_plugin('woocommerce/woocommerce.php'); if (is_wp_error($error)) throw new RuntimeException($error->get_error_message());"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require_once ABSPATH . 'wp-admin/includes/plugin.php'; $error = activate_plugin('dokan-lite/dokan.php'); if (is_wp_error($error)) throw new RuntimeException($error->get_error_message());"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; update_option('woocommerce_custom_orders_table_enabled', 'yes');"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; define('WP_CLI', true); require '/source/sfm4u-wholesale/src/Rule.php'; require '/source/sfm4u-wholesale/src/Commerce.php'; $args = ['dokan', 'statement-html']; ob_start(); try { global $wpdb; echo 'Playground WASM; server: ' . $wpdb->get_var('SELECT VERSION()') . PHP_EOL; require '/tests/b2b-woo.php'; copy('/tmp/sfm4u-credit-fixture.html', '/fixture-out/mysql-statement.html'); copy('/tmp/sfm4u-quotes-fixture.html', '/fixture-out/mysql-quotes.html'); copy('/tmp/sfm4u-lists-fixture.html', '/fixture-out/mysql-lists.html'); } finally { file_put_contents('/fixture-out/mysql-scenarios.txt', ob_get_clean()); }"
+    }
+  ]
+}

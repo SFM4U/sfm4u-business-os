@@ -1,0 +1,25 @@
+services:
+  db:
+    image: sha256:d1891ede5a559f1086f55053bb8cc1569b0298338c4d72d71725a7f74f6ba620
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: '1'
+      MARIADB_DATABASE: sfmwh_test
+    volumes:
+      - fixture-db:/var/lib/mysql
+  wp:
+    image: noakhali_dev2-wordpress_current:latest
+    working_dir: /site
+    command: ["php","-S","0.0.0.0:8080","-t","/site"]
+    ports:
+      - "127.0.0.1:18937:8080"
+    volumes:
+      - ./wordpress:/site
+      - ./wp-cli.phar:/usr/local/bin/wp:ro
+      - ../plugin/sfm4u-wholesale:/site/wp-content/plugins/sfm4u-wholesale:ro
+      - ../tests:/tests:ro
+      - ../modules:/modules:ro
+      - ../contracts:/contracts:ro
+    depends_on:
+      - db
+volumes:
+  fixture-db:

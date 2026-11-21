@@ -17,6 +17,7 @@ ob_start(); MembersAdmin::duePage(); $o = ob_get_clean();
 $ok(strpos($o, 'wa.me/8801711223344') !== false && strpos($o, 'বাকি এক') !== false && strpos($o, 'no mobile number') !== false, 'manager page with WhatsApp link');
 $cash = $mk('duecash'); Members::setStaff($cash, $st, 'cashier'); wp_set_current_user($cash);
 ob_start(); MembersAdmin::duePage(); $o = ob_get_clean();
-$ok(strpos($o, 'wa.me') === false && strpos($o, '900') !== false, 'cashier sees list without phone links');
+// 900 minor units at 2 store decimals = ৳ 9.00 (money display changed before 0.9.5; was raw "900").
+$ok(strpos($o, 'wa.me') === false && strpos($o, '9.00') !== false, 'cashier sees list without phone links');
 unset($_REQUEST['store']);
 echo "pass $p fail $f\n";
