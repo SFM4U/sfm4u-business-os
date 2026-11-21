@@ -99,7 +99,10 @@ function initializeCounter() {
         });
         if (!response.ok) {
             let text = response.status < 500 ? labels.rejected : labels.failed;
-            try { const body = await response.json(); if (body && body.code === 'counter_rejected' && body.message) text = body.message; } catch (e) { /* keep generic */ }
+            try {
+                const body = await response.json();
+                if (body && ['counter_rejected', 'drawer_already_open'].includes(body.code) && body.message) text = body.message;
+            } catch (e) { /* keep generic */ }
             throw Object.assign(new Error(text), { status: response.status });
         }
         return response.json();

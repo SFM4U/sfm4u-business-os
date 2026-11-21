@@ -65,5 +65,12 @@ StockFeed::retry(); $ok(count($calls) === 3, 'retry again: no second send');
 $o6 = $mkOrder($blk, ''); $o6->update_status('processing');
 $ok(StockFeed::memberUser($o6) === 0 && StockFeed::sendPos($o6->get_id()) === 'skip', 'member meta without POS source is not trusted');
 
+// 7. C-15: a cash counter sale saved as "completed" is queued, not sent inside the status change; sent once
+$before = count($calls);
+$o7 = $mkOrder($blk); $o7->update_status('completed'); $id7 = $o7->get_id();
+$ok(count($calls) === $before && (bool) wp_next_scheduled(StockFeed::CRON_POS, [$id7]), 'completed POS member sale: queued, not sent inside the sale');
+StockFeed::sendPos($id7); StockFeed::sendPos($id7);
+$ok(count($calls) === $before + 1, 'completed POS member sale: sent once across replay');
+
 update_option(StockFeed::OPT_ROLE, $oldRole ?: 'off'); $oldTarget ? update_option(StockFeed::OPT_TARGET, $oldTarget) : delete_option(StockFeed::OPT_TARGET);
 echo "pass $p fail $f\n";

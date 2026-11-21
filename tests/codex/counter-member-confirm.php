@@ -95,6 +95,7 @@ foreach (['Business' => $business, 'paid Black' => $paid] as $label => $id) {
     $sale = $call($data, $key);
     check_member_pos($sale->get_status() === 200 && $stock() === $before - 1, "$label commits and removes one stock");
     $order = wc_get_order($sale->get_data()['order_id']);
+    check_member_pos($order->has_status('completed'), "$label fully paid cash order is completed");
     check_member_pos((int) $order->get_meta('_sfmwh_member_user') === $id, "$label has internal member order meta");
     check_member_pos(!isset($price->get_data()['member']['user_id']) && !isset($sale->get_data()['sale']['member']['user_id']),
         "$label member user ID stays out of the quote and receipt");
@@ -138,6 +139,8 @@ check_member_pos($retailQuote->get_status() === 200, 'retail quote succeeds with
 $retailSale = $call($retail + ['action' => 'counter_sale', 'session' => $session,
     'digest' => $retailQuote->get_data()['digest'], 'tender' => $retailQuote->get_data()['total_minor']]);
 check_member_pos($retailSale->get_status() === 200, 'retail sale succeeds without a card');
+check_member_pos(wc_get_order($retailSale->get_data()['order_id'])->has_status('completed'),
+    'fully paid cash retail order is completed');
 check_member_pos(!wc_get_order($retailSale->get_data()['order_id'])->meta_exists('_sfmwh_member_user'),
     'non-member order does not get member user meta');
 

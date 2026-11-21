@@ -320,7 +320,11 @@ final class StockFeed {
 
     public static function onCompleted(int $orderId): void {
         $o = wc_get_order($orderId);
-        if ($o) { self::send($o); }
+        if (!$o) { return; }
+        // C-15: a cash counter sale becomes "completed" inside its own transaction; never send from there.
+        // POS member sales are queued (sent once after commit); online orders keep sending on "completed".
+        if (self::isPosMemberSale($o)) { self::onPosPaid($orderId); return; }
+        self::send($o);
     }
 
     public static function retry(): void {

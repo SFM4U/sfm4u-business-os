@@ -61,6 +61,25 @@ $call = static function (array $data, ?string $key = null) use ($cashier): WP_RE
 $open = $call(['action' => 'drawer', 'drawer_action' => 'open', 'session' => 0, 'amount' => 0]);
 op_check($open->get_status() === 200, 'installed assigned cashier opens drawer');
 $sid = $open->get_data()['session_id']; $key = wp_generate_uuid4();
+$openIntent = ['action' => 'drawer', 'drawer_action' => 'open', 'session' => 0, 'amount' => 0];
+$englishLocale = static fn () => 'en_US';
+add_filter('pre_determine_locale', $englishLocale);
+$alreadyOpen = $call($openIntent);
+remove_filter('pre_determine_locale', $englishLocale);
+op_check($alreadyOpen->get_status() === 409
+    && $alreadyOpen->get_data()['code'] === 'drawer_already_open'
+    && $alreadyOpen->get_data()['message'] === "Drawer is already open (session $sid). Close it first or continue selling.",
+    'opening an active drawer returns a specific English conflict');
+$banglaLocale = static fn () => 'bn_BD';
+add_filter('pre_determine_locale', $banglaLocale);
+$alreadyOpen = $call($openIntent);
+remove_filter('pre_determine_locale', $banglaLocale);
+op_check($alreadyOpen->get_status() === 409
+    && $alreadyOpen->get_data()['code'] === 'drawer_already_open'
+    && $alreadyOpen->get_data()['message'] === "ড্রয়ার আগে থেকেই খোলা আছে (সেশন $sid)। আগে ড্রয়ার বন্ধ করুন অথবা বিক্রি চালিয়ে যান।",
+    'opening an active drawer returns a specific Bangla conflict');
+$drawerStatus = $call(['action' => 'drawer', 'drawer_action' => 'status', 'session' => 0, 'amount' => 0]);
+op_check($drawerStatus->get_data()['session_id'] === $sid, 'duplicate opens keep the original session active');
 $intent = ['action' => 'sale', 'session' => $sid, 'product' => $pid, 'quantity' => 1, 'tender' => 3000];
 $sale = $call($intent, $key);
 op_check($sale->get_status() === 200 && $call($intent, $key)->get_data() === $sale->get_data(), 'installed POS cash sale replays same receipt');
