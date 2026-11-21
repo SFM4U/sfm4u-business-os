@@ -43,7 +43,7 @@ $ok(strpos($html, 'sfm-wr-sigpad') !== false, 'signature pad on member page');
 $ok(strpos($html, 'sfm-wr-nidscan') !== false, 'NID scan button on member page');
 $ok(strpos($html, 'শর্তাবলি') !== false, 'guide inside card page');
 $g = do_shortcode('[sfm4u_card_guide]');
-$ok(strpos($g, 'SAMPLE MEMBER') !== false && strpos($g, '123 456 7890') !== false, 'guide shows sample card');
+$ok(strpos($g, 'SAMPLE MEMBER') !== false && strpos($g, '123 456 7890') === false, 'guide shows sample card without the NID number (rules v3)');
 $ok(strpos($g, 'Admin only') === false, 'members do not see admin draft note');
 // 6. self details: 2 saves then locked
 $_POST = ['sfm_wr_my_details' => '1', 'sfm_wr_name_en' => 'CARD TEST', 'sfm_wr_mother' => 'মাতা', 'sfm_wr_address' => 'Maijdee, Noakhali', 'billing_phone' => '০১৭০০ ০০০০০০', '_wpnonce' => wp_create_nonce('sfm_wr_my_details')];

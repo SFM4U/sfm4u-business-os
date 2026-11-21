@@ -108,6 +108,12 @@ final class Identity {
                     $uid = self::openAccount(self::p('email'), self::p('name'), $me, absint($_POST['number'] ?? 0), $idn);
                     $note(sprintf(__('Account opened: member %s', 'sfm4u-wholesale'), Members::memberNo($uid)));
                 }
+                elseif ($act === 'services' && current_user_can('manage_options')) {
+                    $sv = array_values(array_intersect(array_keys(CardView::SERVICES), array_map('sanitize_key', (array) ($_POST['services'] ?? []))));
+                    update_user_meta($uid, CardView::SERVICES_META, $sv);
+                    self::log($uid, $me, 'card services: ' . (implode(',', $sv) ?: 'none'));
+                    $note(__('Saved.', 'sfm4u-wholesale'));
+                }
                 elseif ($act === 'scan') { $note(sprintf(__('%d new duplicate alerts.', 'sfm4u-wholesale'), self::scanDuplicates())); }
             }
         } catch (DomainException $e) {
@@ -146,6 +152,12 @@ final class Identity {
             echo $form('check', esc_html__('Government check:', 'sfm4u-wholesale') . ' <select name="result"><option value="verified">' . esc_html__('verified', 'sfm4u-wholesale') . '</option><option value="problem">' . esc_html__('problem (warn, hold)', 'sfm4u-wholesale') . '</option></select> ' . esc_html__('deadline days', 'sfm4u-wholesale') . ' <input type="number" name="days" value="30" min="1" max="365" style="width:70px"> <input name="note" placeholder="' . esc_attr__('Note', 'sfm4u-wholesale') . '"> <button class="button">' . esc_html__('Save check', 'sfm4u-wholesale') . '</button>');
             if (current_user_can('manage_options')) {
                 echo $form('state', '<select name="state"><option value="">' . esc_html__('normal', 'sfm4u-wholesale') . '</option><option value="hold">' . esc_html__('hold', 'sfm4u-wholesale') . '</option><option value="blocked">' . esc_html__('blocked', 'sfm4u-wholesale') . '</option></select> <input name="reason" placeholder="' . esc_attr__('Reason', 'sfm4u-wholesale') . '"> <button class="button">' . esc_html__('Save account state', 'sfm4u-wholesale') . '</button>');
+            }
+            if (current_user_can('manage_options')) {
+                $have = (array) get_user_meta($id, CardView::SERVICES_META, true);
+                $boxes = '';
+                foreach (CardView::SERVICES as $slug => $label) { $boxes .= '<label style="margin-right:10px"><input type="checkbox" name="services[]" value="' . esc_attr($slug) . '"' . checked(in_array($slug, $have, true), true, false) . '> ' . esc_html($label) . '</label>'; }
+                echo $form('services', esc_html__('Card back badges (member enrolled; Golden Club only when the member connected it):', 'sfm4u-wholesale') . ' ' . $boxes . ' <button class="button">' . esc_html__('Save badges', 'sfm4u-wholesale') . '</button>');
             }
             echo '<details><summary>' . esc_html__('History', 'sfm4u-wholesale') . '</summary><pre>' . esc_html(implode("\n", self::history($id))) . '</pre></details></div>';
         }

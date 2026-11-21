@@ -46,6 +46,28 @@ final class CardView {
         return get_date_from_gmt($src, 'm/Y');
     }
 
+    /** Services the member belongs to (account rules §6): slug => label; extend with the 'sfm4u_card_services' filter (logos). */
+    public const SERVICES = ['algibazar' => 'AlgiBazar', 'realestate' => 'SFM4U Real Estate', 'goldenclub' => 'Golden Club'];
+    public const SERVICES_META = 'sfm_wr_services';
+
+    /** @return array<string,array{label:string,logo:string}> */
+    public static function servicesOf(int $uid): array {
+        $have = array_values(array_intersect(array_keys(self::SERVICES), (array) get_user_meta($uid, self::SERVICES_META, true)));
+        $out = [];
+        foreach ($have as $slug) { $out[$slug] = ['label' => self::SERVICES[$slug], 'logo' => '']; }
+        return (array) apply_filters('sfm4u_card_services', $out, $uid);
+    }
+
+    /** Badges row above the barcode on the back of the card. */
+    private static function badges(array $services): string {
+        if (!$services) { return ''; }
+        $h = '<div class="c-svc">';
+        foreach ($services as $s) {
+            $h .= !empty($s['logo']) ? '<img src="' . esc_url((string) $s['logo']) . '" alt="' . esc_attr((string) $s['label']) . '">' : '<span>' . esc_html((string) $s['label']) . '</span>';
+        }
+        return $h . '</div>';
+    }
+
     /** Front text is always English; back text is always Bangla (owner decision 2026-11-20). $lang is kept for old links and ignored. */
     public static function render(array $card, string $lang, bool $private): string {
         unset($lang);
@@ -87,7 +109,10 @@ final class CardView {
         if ($fatherEn !== '') { $extra .= '<div class="c-sub"><span>' . self::e($en['father']) . '</span><b>' . self::e($fatherEn) . '</b></div>'; }
         if ($dob !== '') { $extra .= '<div class="c-sub"><span>' . self::e($en['dob']) . '</span><b class="c-num">' . self::e(wp_date('d/m/Y', strtotime($dob . ' 12:00:00'))) . '</b></div>'; }
         if ($extra !== '') { $names .= '<div class="c-subs">' . $extra . '</div>'; }
-        $nidItem = $nid !== '' ? $item($card['id_type'] === 'brn' ? $en['brn'] : $en['nid'], self::groupDigits($nid)) : '<div></div>';
+        // Account rules v3 §11 (Owner 2026-11-21): the NID / birth registration number is NEVER printed on the card.
+        // Only the check result is shown ("NID verified").
+        $verified = !$demo && class_exists(Identity::class) && Identity::accountState((int) $u->ID)['id_verified'] === 'verified';
+        $nidItem = ($nid !== '' || $verified) ? $item($card['id_type'] === 'brn' ? $en['brn'] : $en['nid'], $verified ? '✓ verified' : '✓ on file') : '<div></div>';
         $front = '<div class="sfm-cv-card sfm-cv-front" lang="en" style="--bc:' . esc_attr($bc) . '">'
             . '<img class="c-bg" src="' . esc_url(self::asset('sfm4u-logo-wide.jpg')) . '" alt=""><div class="c-shade"></div><div class="c-topbar"></div>'
             . '<div class="c-brand"><img src="' . esc_url(self::asset('sfm4u-logo-round.jpg')) . '" alt="SFM4U"><div><b>SFM<i>4</i>U</b><span>Membership Card <em class="c-no">No. ' . self::e($memberNo) . '</em></span></div></div>'
@@ -122,8 +147,9 @@ final class CardView {
             . '<div class="c-head"><b>SFM<i>4</i>U · ' . self::e(self::BADGE_BN[$tier] ?? 'সদস্য') . '</b><span><small>' . self::e($bn['cardno']) . ' </small>' . self::e($memberNo) . '</span></div>'
             . '<div class="c-grid">' . $rows . '</div>'
             . '<div class="c-home">' . $home . '</div>'
+            . self::badges($demo ? [] : self::servicesOf((int) $u->ID))
             . '<div class="c-bar">' . Barcode::code128Svg($memberNo) . '</div><div class="c-barno">' . self::e($memberNo) . '</div>'
-            . '<div class="c-note"><p>' . self::e($bn['prop']) . '</p><p>' . self::e(sprintf($bn['lost'], $shopPhone)) . '</p>' . ($nid !== '' ? '<p class="c-src">' . self::e($bn['src']) . '</p>' : '') . '</div><div class="c-botbar"></div>'
+            . '<div class="c-note"><p>' . self::e($bn['prop']) . '</p><p>' . self::e(sprintf($bn['lost'], $shopPhone)) . '</p><p class="c-src">' . self::e($nid !== '' ? $bn['src'] : 'এটি সরকারি পরিচয়পত্র নয়।') . '</p></div><div class="c-botbar"></div>'
             . '</div>';
         return '<div class="sfm-cv"><div class="sfm-cv-scale">' . $front . '</div><div class="sfm-cv-scale">' . $back . '</div></div>';
     }
@@ -145,7 +171,7 @@ final class CardView {
             . '.sfm-cv-back{background:#f4f7f6;color:#0b0f0e}.c-wm{position:absolute;left:0;top:17px;width:1012px;height:617px;object-fit:cover;opacity:.34}'
             . '.c-head{position:absolute;left:0;top:0;width:1012px;height:74px;background:#050807;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;padding:0 56px;color:#f2f5f4}'
             . '.c-head b{font:700 28px "Space Grotesk",Arial,sans-serif;letter-spacing:1px}.c-head span{font:26px "Space Grotesk",Arial,sans-serif;letter-spacing:3px}.c-head small{font-size:22px;color:#b9c6c2;letter-spacing:0;font-family:"Hind Siliguri",Arial,sans-serif}'
-            . '.c-grid{position:absolute;left:56px;top:94px;right:262px;display:grid;grid-template-columns:150px 1fr;row-gap:3px;column-gap:16px;font-size:22px;line-height:1.24;max-height:300px;overflow:hidden}.c-grid em,.c-grid b{overflow-wrap:anywhere}.c-home{position:absolute;right:50px;top:92px;width:196px;display:flex;flex-direction:column;align-items:center;gap:4px}.c-bdmap{width:168px;height:232px}.c-flag{width:96px;height:58px;box-shadow:0 1px 4px rgba(0,0,0,.25)}.c-dist{width:170px;height:200px}.c-dname{font-size:24px;font-weight:700;color:#006a4e;line-height:1.2}.c-grid span{color:#4e5b57}.c-grid b{font-weight:600}.c-grid em{font-style:normal}'
+            . '.c-grid{position:absolute;left:56px;top:94px;right:262px;display:grid;grid-template-columns:150px 1fr;row-gap:3px;column-gap:16px;font-size:22px;line-height:1.24;max-height:250px;overflow:hidden}.c-svc{position:absolute;left:56px;bottom:246px;width:560px;height:42px;display:flex;gap:10px;align-items:center}.c-svc span{font:700 18px "Space Grotesk",Arial,sans-serif;padding:6px 12px;border-radius:999px;background:#050807;color:#f2f5f4}.c-svc img{height:40px;width:auto}.c-grid em,.c-grid b{overflow-wrap:anywhere}.c-home{position:absolute;right:50px;top:92px;width:196px;display:flex;flex-direction:column;align-items:center;gap:4px}.c-bdmap{width:168px;height:232px}.c-flag{width:96px;height:58px;box-shadow:0 1px 4px rgba(0,0,0,.25)}.c-dist{width:170px;height:200px}.c-dname{font-size:24px;font-weight:700;color:#006a4e;line-height:1.2}.c-grid span{color:#4e5b57}.c-grid b{font-weight:600}.c-grid em{font-style:normal}'
             . '.c-bar{position:absolute;left:56px;bottom:112px;width:560px;height:120px;background:#fff;padding:12px 18px;box-sizing:border-box;border-radius:10px}.c-bar svg{width:100%;height:100%;display:block}'
             . '.c-barno{position:absolute;left:56px;bottom:70px;width:560px;text-align:center;font:700 28px "Space Grotesk",Arial,sans-serif;letter-spacing:8px}'
             . '.c-note{position:absolute;right:56px;bottom:64px;width:300px;font-size:18px;line-height:1.35;color:#3b4744}.c-note p{margin:0 0 6px}.c-src{font-size:15px;color:#5d6b67}.c-sign{position:absolute;left:56px;top:478px;width:230px;height:72px;object-fit:contain;filter:invert(1) brightness(1.6)}'

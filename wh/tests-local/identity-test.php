@@ -78,5 +78,11 @@ $new2 = Identity::openAccount("open3$r@example.com", "Cust $r", $mgr, 0, ['type'
 $ok(Identity::hasIdentity($new2) && (int) Members::memberNo($new2) > 100, 'account manager opens an account with NID (normal number)');
 $ok($bad(fn() => Identity::openAccount("open4$r@example.com", 'Y', $mgr, 0, ['type' => 'nid', 'number' => $nid3, 'dob' => '1970-01-01', 'consent' => true]), 409) && !email_exists("open4$r@example.com"), 'duplicate NID at opening: refused, no account left behind');
 $ok($bad(fn() => Identity::openAccount("open1$r@example.com", 'Z', 1), 409), 'existing email: refused (search instead)');
+// card: NID never printed; badges for services; "not a government ID" always
+update_user_meta($a, \SFM4U\Wholesale\Members\CardView::SERVICES_META, ['algibazar', 'goldenclub']);
+$html = \SFM4U\Wholesale\Members\CardView::render(Members::bestCardFor($a), 'en', true);
+$ok(!str_contains(preg_replace('/\D/', '', $html), $nid2) && str_contains($html, '✓'), 'card print: no NID digits, only the check mark');
+$ok(str_contains($html, 'AlgiBazar') && str_contains($html, 'Golden Club') && !str_contains($html, 'SFM4U Real Estate'), 'card back shows only the enrolled service badges');
+$ok(str_contains($html, 'সরকারি পরিচয়পত্র নয়'), 'card says it is not a government ID');
 $oldRole !== false ? update_option(CardLink::OPT_ROLE, $oldRole) : delete_option(CardLink::OPT_ROLE);
 echo "pass $p fail $f\n";
