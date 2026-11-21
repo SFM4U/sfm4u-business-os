@@ -225,7 +225,7 @@ final class MarketConnect {
     /* ---------------- Admin (standalone AlgiBazar connector only) ---------------- */
 
     public static function adminMenu(): void {
-        add_submenu_page('woocommerce', __('SFM4U Business OS', 'sfm4u-wholesale'), __('SFM4U Business OS', 'sfm4u-wholesale'), 'manage_options', 'sfm-wr-link', [self::class, 'adminPage']);
+        add_submenu_page('woocommerce', __('SFM4U Business Software', 'sfm4u-wholesale'), __('SFM4U Business Software', 'sfm4u-wholesale'), 'manage_options', 'sfm-wr-link', [self::class, 'adminPage']);
     }
 
     public static function adminActions(): void {
@@ -269,7 +269,7 @@ final class MarketConnect {
     public static function adminPage(): void {
         if (!current_user_can('manage_options')) { wp_die(esc_html__('Not allowed.', 'sfm4u-wholesale')); }
         $k = 'sfm_bos_admin_msg_' . get_current_user_id();
-        echo '<div class="wrap"><h1>' . esc_html__('SFM4U Business OS — member link', 'sfm4u-wholesale') . '</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__('SFM4U Business Software — member link', 'sfm4u-wholesale') . '</h1>';
         if (is_array($m = get_transient($k))) { delete_transient($k); echo '<div class="notice notice-' . esc_attr((string) $m[0]) . '"><p>' . esc_html((string) $m[1]) . '</p></div>'; }
         $s = self::settings();
         echo '<h2>' . esc_html__('1. Connect to the SFM4U account site', 'sfm4u-wholesale') . '</h2>';
