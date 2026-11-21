@@ -27,6 +27,7 @@ final class Modules {
         return [
             'wholesale' => ['SFM4U Wholesale System', 'SFM4U হোলসেল সিস্টেম', 'Wholesale prices and pack sizes, approved buyers, bulk orders, B2B credit and quotes.', 'sfmwh-rules'],
             'retail' => ['SFM4U Retail Prices (B2C)', 'SFM4U খুচরা দাম (B2C)', 'Price sets per audience: who can see (public, customers, Premium, Business, shops, only me) and who can buy; quantity savings, "buy 7, 1 off" offers, private cost price.', ''],
+            'purchase' => ['SFM4U Purchase & Cost', 'SFM4U কেনা ও আসল খরচ', 'Record each buying trip: goods, packs, pieces per pack, your fare, manager/worker fare, truck, labour; real cost per pack and per piece; price sheet with profit. Not ERPNext.', 'sfm-purchases'],
             'membership' => ['SFM4U Membership System', 'SFM4U মেম্বারশিপ সিস্টেম', 'Member cards (Regular, Premium, Business, Business Black), khata, points, link to account.sfm4u.com.', 'sfm-wr-scan'],
             'pos' => ['SFM4U POS System', 'SFM4U POS সিস্টেম', 'Counter sale screen, registers and cashiers, stock that stays correct with online orders.', 'sfm4u-counter'],
             'receipt' => ['SFM4U Receipt System', 'SFM4U রিসিট সিস্টেম', '80 mm order slips, automatic printing of new orders, invoice profile.', 'sfm-wr-autoprint'],
