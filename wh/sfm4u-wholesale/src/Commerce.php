@@ -116,6 +116,9 @@ final class Commerce {
                 }
             }
         }
+        if ($rule['currency'] === get_woocommerce_currency()) {
+            $rule = Rule::rescale($rule, wc_get_price_decimals());
+        }
         if ($rule['currency'] !== get_woocommerce_currency() || $rule['scale'] !== wc_get_price_decimals()) {
             throw new DomainException(__('The wholesale rule uses a different store currency or precision.', 'sfm4u-wholesale'));
         }

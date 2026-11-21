@@ -38,6 +38,20 @@ An active SFM4U Business member, or a Business Black member whose monthly fee is
 POS: choose the price tier "SFM4U member card" and scan the card (or type the member number). The counter checks the card (this site first, then account.sfm4u.com) and shows the member name, business, card type and masked number. Products with a wholesale rule get the member price at any quantity; products without a rule stay at retail. Only an active Business card or a paid Business Black card is accepted; the card is checked again when the sale is confirmed, and the order records the masked number.
 Orders: on an unpaid order that is pending or on hold, staff can type or scan a member card in "Apply SFM4U member card" and press Update. Lines with a wholesale rule are repriced (never raised), totals are recalculated and an order note records who did it and how much was saved. It can be applied once per order.
 
+== Linked shop: member number clash guard (0.9.8-dev / card 0.7.3-dev) ==
+* A shop that gave out its own member numbers before it was linked to account.sfm4u.com could hold the same digits as a different person's central number. Scanning that number or adopting the central member could then pick the wrong local customer (khata and points mixed).
+* Now, on a linked shop, only numbers that came from the SFM4U account site decide who a number belongs to (user meta sfm_wr_central or an active link). Old local numbers are ignored for lookups, adopt and the anti-sharing check; the master is asked instead. Unlinking clears the mark.
+* Tests: member-card-build/tests/link-clash-test.php (11), link-shop-test 16/16, m2-recheck updated (9).
+
+== Live check fixes (0.9.7-dev) ==
+* POS counter: a wrong or non-member card now shows a clear message ("Card not found." / Bangla) instead of the generic register error; floor-price refusals are shown too.
+* Live test on thenoakhali.com (2026-11-21): product price box, cart tiers 1-49/50-99/100+, guest sees retail only, POS retail/wholesale/member quotes, 31 admin pages: all correct.
+
+== Live fix: price precision (0.9.6-dev) ==
+* Found on the live test site: a wholesale rule saved when the store used 0 decimals was hidden after the store switched to 2 decimals (no price table, no member price). Rules are now converted to the store's decimals automatically (exact up; down only when no paisa is lost, otherwise refused).
+* Same conversion at the POS counter and when a member price is applied to an order.
+* Tests: whtest/m4.php (11).
+
 == Owner settings, Black renewals, ERPNext orders (0.9.5-dev) ==
 WooCommerce -> SFM4U member price: (1) card online: "card number + matching account" by 6-digit code (default, safest) or "card number alone"; (2) member price for small quantities: base wholesale/group price (default, safest) or the lowest tier price even for 1 piece; (3) cash whole-taka rounding stays on the POS register settings page; (4) Business Black reminder window and a list of expired/due members (expired members lose the member price automatically).
 ERPNext: paid orders can be sent as Sales Invoices (option sfmwh_erp_orders = yes, off by default). Branch map option sfmwh_erp_branch_map (JSON: {"pos:MAIN":"Stores - SFM","web":"Online - LLC"}) picks the warehouse; the company comes from the warehouse in ERPNext. Member sales carry the masked member number in the remarks. Each order is sent once.

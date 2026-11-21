@@ -80,7 +80,7 @@ final class CounterSale
             if ($member) {
                 $stored = Commerce::storedRule((int) $id);
                 if (is_array($stored)) {
-                    $rule = Rule::validate($stored);
+                    $rule = Rule::rescale(Rule::validate($stored), 2);
                     // Same member, same price online and at the counter: use the member's own buyer group when known.
                     $group = !empty($member['user_id']) ? MemberPrice::groupPrice($rule, (int) $member['user_id']) : null;
                     $quote = Rule::memberQuote($rule, $quantity, 'piece', $group, MemberPrice::priceMode());
@@ -96,7 +96,7 @@ final class CounterSale
                 if (get_option('sfmwh_enabled', 'no') !== 'yes' || !is_array($stored)) {
                     throw new DomainException('Wholesale pricing is unavailable for a cart line.', 422);
                 }
-                $rule = Rule::validate($stored);
+                $rule = Rule::rescale(Rule::validate($stored), 2);
                 $quote = Rule::quote($rule, $quantity, 'piece');
                 if ($quote !== null) {
                     $floors[count($lines)] = $rule['floor_minor'] ?? null;

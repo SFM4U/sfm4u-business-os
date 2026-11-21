@@ -311,9 +311,10 @@ final class Members {
         // Linked shop: numbers come only from the SFM4U account site (one number per person, company-wide).
         if (class_exists(CardLink::class) && CardLink::role() === 'shop') {
             $no = CardLink::centralNumberFor($userId);
-            $other = self::userByMemberNo($no);
+            $other = self::userByMemberNo($no, true);
             if ($other && $other !== $userId) { throw new DomainException(__('This member number is already used by another customer here.', 'sfm4u-wholesale')); }
             update_user_meta($userId, 'sfm_wr_member_no', $no);
+            update_user_meta($userId, 'sfm_wr_central', 1);
             return $no;
         }
         add_option('sfm_wr_member_seq', '0', '', 'no');
@@ -332,9 +333,26 @@ final class Members {
         return $no;
     }
 
-    public static function userByMemberNo(string $no): int {
-        $u = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $no, 'number' => 1, 'fields' => 'ID']);
-        return $u ? (int) $u[0] : 0;
+    public static function userByMemberNo(string $no, bool $centralOnly = false): int {
+        $u = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $no, 'number' => 20, 'fields' => 'ID', 'orderby' => 'ID']);
+        foreach ($u as $id) {
+            if (!$centralOnly || self::hasCentralNo((int) $id)) { return (int) $id; }
+        }
+        return 0;
+    }
+
+    /**
+     * On a linked shop, a member number is trusted only when it came from the SFM4U account site.
+     * Numbers the shop gave out by itself before it was linked can be the same digits as a different
+     * person's central number, so they never decide who a scanned number belongs to.
+     */
+    public static function hasCentralNo(int $userId): bool {
+        return (bool) get_user_meta($userId, 'sfm_wr_central', true) || get_user_meta($userId, 'sfm_wr_link_status', true) !== '';
+    }
+
+    /** True on a shop linked to the SFM4U account site. */
+    public static function isLinkedShop(): bool {
+        return class_exists(CardLink::class) && CardLink::role() === 'shop';
     }
 
     /* ---------- NID stored encrypted (shown only to the owner and on the printed card) ---------- */

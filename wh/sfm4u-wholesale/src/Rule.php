@@ -89,6 +89,42 @@ final class Rule {
             + ($floor !== null ? ['floor_minor' => $floor] : []);
     }
 
+    /**
+     * Convert a rule's money fields to another decimal scale (e.g. a rule saved when the store used
+     * 0 decimals, read after the store switched to 2). Going up is exact. Going down is allowed only
+     * when no value would lose digits; otherwise the rule is refused (never guess a price).
+     */
+    public static function rescale(array $rule, int $to): array {
+        $from = (int) ($rule['scale'] ?? 2);
+        if ($from === $to) {
+            return $rule;
+        }
+        if ($to < 0 || $to > 6) {
+            throw new DomainException('Invalid store precision.');
+        }
+        $f = 10 ** abs($to - $from);
+        $conv = static function (int $v) use ($to, $from, $f): int {
+            if ($to > $from) {
+                return $v * $f;
+            }
+            if ($v % $f !== 0) {
+                throw new DomainException('The wholesale rule has more decimals than the store shows.');
+            }
+            return intdiv($v, $f);
+        };
+        $rule['minor'] = $conv((int) $rule['minor']);
+        foreach (['tiers', 'pack_minor', 'group_prices'] as $k) {
+            if (!empty($rule[$k]) && is_array($rule[$k])) {
+                $rule[$k] = array_map(static fn($v) => $conv((int) $v), $rule[$k]);
+            }
+        }
+        if (isset($rule['floor_minor'])) {
+            $rule['floor_minor'] = $conv((int) $rule['floor_minor']);
+        }
+        $rule['scale'] = $to;
+        return $rule;
+    }
+
     public static function factor(array $rule, string $pack): int {
         if ($pack === 'piece') {
             return 1;

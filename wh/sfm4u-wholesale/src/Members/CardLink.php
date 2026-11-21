@@ -225,7 +225,8 @@ final class CardLink {
         [$kind, $val] = Members::parseScan($raw);
         if ($kind === 'invalid') { return null; }
         if ($kind === 'member_no') {
-            $uid = Members::userByMemberNo($val);
+            // Linked shop: only numbers that came from the SFM4U account site; otherwise ask the master.
+            $uid = Members::userByMemberNo($val, Members::isLinkedShop());
             return $uid ? Members::bestCardFor($uid) : null;
         }
         $card = Members::find($kind, $val);
@@ -364,7 +365,7 @@ final class CardLink {
     public static function adoptRemote(array $m): int {
         $no = (string) ($m['member_no'] ?? '');
         if (!preg_match('/^\d{7}$/', $no)) { throw new DomainException(__('Card not found.', 'sfm4u-wholesale')); }
-        $uid = Members::userByMemberNo($no);
+        $uid = Members::userByMemberNo($no, true);
         if (!$uid) {
             // Never reuse an existing login: someone could have registered "sfm4u-<number>" to take over a member.
             $login = 'sfm4u-' . $no;

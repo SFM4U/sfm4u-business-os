@@ -95,7 +95,11 @@ function initializeCounter() {
             headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce, 'Idempotency-Key': key ?? '' },
             body: JSON.stringify(intent), signal: AbortSignal.timeout(20000),
         });
-        if (!response.ok) throw Object.assign(new Error(response.status < 500 ? labels.rejected : labels.failed), { status: response.status });
+        if (!response.ok) {
+            let text = response.status < 500 ? labels.rejected : labels.failed;
+            try { const body = await response.json(); if (body && body.code === 'counter_rejected' && body.message) text = body.message; } catch (e) { /* keep generic */ }
+            throw Object.assign(new Error(text), { status: response.status });
+        }
         return response.json();
     }
 
