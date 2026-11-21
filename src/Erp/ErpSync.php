@@ -61,7 +61,7 @@ final class ErpSync {
         if ($known !== '') { return $known; }
         $no = \SFM4U\Wholesale\Members\Members::memberNo($userId);
         $name = 'SFM4U ' . \SFM4U\Wholesale\MemberPrice::mask($no) . ' #' . substr(hash('sha256', 'sfm4u-khata|' . $userId . '|' . $no), 0, 6);
-        $name = $client->ensureCustomer($name);
+        $name = $client->ensureCustomer($name, (string) get_option('sfmwh_erp_customer_group', 'Individual'), (string) get_option('sfmwh_erp_territory', ''));
         update_user_meta($userId, self::META_CUSTOMER, $name);
         return $name;
     }
