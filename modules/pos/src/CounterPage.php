@@ -37,6 +37,9 @@ final class CounterPage
                 'failed' => __('The connection is unavailable. Try again.', 'sfm4u-wholesale'),
                 'queued' => __('Sale saved on this device. Stock and receipt are pending until sync.', 'sfm4u-wholesale'),
                 'rejected' => __('Sale needs review. Keep its request key and contact the manager.', 'sfm4u-wholesale'),
+                'accountGrace' => determine_locale() === 'bn_BD' ? 'NID যোগ করা হয়নি। %d দিন বাকি।' : __('NID missing — %d days left', 'sfm4u-wholesale'),
+                'accountHold' => determine_locale() === 'bn_BD' ? 'অ্যাকাউন্ট স্থগিত আছে।' : __('Account on hold', 'sfm4u-wholesale'),
+                'accountBlocked' => determine_locale() === 'bn_BD' ? 'অ্যাকাউন্ট ব্লক করা হয়েছে।' : __('Account blocked', 'sfm4u-wholesale'),
                 'storage' => __('Local storage is unavailable. This device cannot queue sales.', 'sfm4u-wholesale'),
                 'saved' => __('Sale confirmed.', 'sfm4u-wholesale'),
                 'pending' => __('Pending sales on this device', 'sfm4u-wholesale'),
@@ -90,7 +93,8 @@ final class CounterPage
             . esc_html__('Wholesale', 'sfm4u-wholesale') . '</option><option value="member">'
             . esc_html__('SFM4U member card', 'sfm4u-wholesale') . '</option></select></label>'
             . '<label id="sfc-member-row" hidden>' . esc_html__('Scan member card', 'sfm4u-wholesale')
-            . ' <input id="sfc-member" maxlength="200" autocomplete="off"></label><p id="sfc-member-info" aria-live="polite"></p>';
+            . ' <input id="sfc-member" maxlength="200" autocomplete="off"></label><p id="sfc-member-info" aria-live="polite"></p>'
+            . '<p id="sfc-account-status" aria-live="polite"></p>';
         echo '<div id="sfc-khata" hidden><p id="sfc-due" aria-live="polite"></p>'
             . '<button type="button" id="sfc-due-history" class="button">' . esc_html__('Due history', 'sfm4u-wholesale')
             . '</button><ul id="sfc-history"></ul>';

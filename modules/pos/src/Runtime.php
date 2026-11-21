@@ -85,6 +85,7 @@ final class Runtime
                             'drawer' => $service->drawer($merchant, $register, $text('drawer_action'), $key,
                                 $number('session'), $number('amount'), $text('reason'), $text('approval'), $text('expense_memo')),
                             'counter_quote', 'counter_sale' => $service->counter($merchant, $register, $key, $data, $data['action'] === 'counter_sale'),
+                            'member_status' => $service->memberStatus($merchant, $register, $text('member')),
                             'member_due', 'member_due_history' => $service->memberDue($merchant, $register,
                                 $text('member'), $data['action'] === 'member_due_history'),
                             'member_due_payment' => $service->payMemberDue($merchant, $register, $key,
