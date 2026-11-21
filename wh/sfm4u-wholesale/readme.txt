@@ -38,6 +38,12 @@ An active SFM4U Business member, or a Business Black member whose monthly fee is
 POS: choose the price tier "SFM4U member card" and scan the card (or type the member number). The counter checks the card (this site first, then account.sfm4u.com) and shows the member name, business, card type and masked number. Products with a wholesale rule get the member price at any quantity; products without a rule stay at retail. Only an active Business card or a paid Business Black card is accepted; the card is checked again when the sale is confirmed, and the order records the masked number.
 Orders: on an unpaid order that is pending or on hold, staff can type or scan a member card in "Apply SFM4U member card" and press Update. Lines with a wholesale rule are repriced (never raised), totals are recalculated and an order note records who did it and how much was saved. It can be applied once per order.
 
+== Night qualification (0.9.9-dev, Connector 0.8.1-dev) ==
+* Business Black auto stock now also works for counter (POS) member sales: the paid sale queues a one-off send to the member's AlgiBazar store after the sale has committed (never inside the sale), checks the sale still stands, sends once and retries on failure. Online orders still wait for "completed".
+* ERPNext (off by default): POS sales are exported after commit; refunds/returns are sent as ERPNext return invoices (credit notes) against the original invoice, once per refund.
+* POS: the member card is checked again when the sale is confirmed; if it stopped qualifying the cashier gets 409 "Membership changed. Scan the card again" (Codex, C-02).
+* Tests: stockfeed-pos 15, erp-refund 14, counter-member-confirm 21, 4-phase operations 54.
+
 == Linked shop: member number clash guard (0.9.8-dev / card 0.7.3-dev) ==
 * A shop that gave out its own member numbers before it was linked to account.sfm4u.com could hold the same digits as a different person's central number. Scanning that number or adopting the central member could then pick the wrong local customer (khata and points mixed).
 * Now, on a linked shop, only numbers that came from the SFM4U account site decide who a number belongs to (user meta sfm_wr_central or an active link). Old local numbers are ignored for lookups, adopt and the anti-sharing check; the master is asked instead. Unlinking clears the mark.
