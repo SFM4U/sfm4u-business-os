@@ -26,7 +26,7 @@ serve() { pkill -f "php -S 127.0.0.1:$1" 2>/dev/null; (cd "$2" && PHP_CLI_SERVER
 serve 8080 $L/shopq; serve 8899 $L/master; serve 8894 $L/recv; sleep 2
 WS="php $L/wpcli.phar --allow-root --path=$L/shopq"; WM="php $L/wpcli.phar --allow-root --path=$L/master"; WR="php $L/wpcli.phar --allow-root --path=$L/recv"
 run() { local who=$1 f=$2; local W; case $who in shop) W=$WS;; master) W=$WM;; recv) W=$WR;; esac
-  printf "%-7s %-22s " "$who" "$f"; timeout 300 $W eval-file "$T/$f.php" 2>&1 | grep -vE "sendmail|^Notice|^Deprecated|^PHP (Notice|Deprecated)" | tail -2 | tr '\n' ' '; echo; }
+  printf "%-7s %-22s " "$who" "$f"; timeout 300 $W eval-file "$T/$f.php" 2>&1 | grep -vE "sendmail|^Notice|^Deprecated|^PHP (Notice|Deprecated)|auto-issue failed" | grep -E "pass|FAIL|ok|ready|master|Fatal|Error" | tail -3 | tr '\n' ' '; echo; }
 rm -f /tmp/link.json /tmp/pair.json /tmp/pair2.json /tmp/stock_pair.json /tmp/stock_pair2.json /tmp/stock_vendor.txt /tmp/bos.json
 echo "== CardLink"; run master link-master-setup; run shop link-shop-test; run shop link-central-test
 echo "== Pairing"; run shop pair-shop-start; run master pair-master-approve; run shop pair-shop-finish

@@ -49,11 +49,12 @@ final class CounterSale
         return compact('items', 'tier', 'discount', 'method') + ($tier === 'member' ? ['member' => $member] : []);
     }
 
-    public static function quote(int $merchant, array $intent, bool $confirming = false): array
+    public static function quote(int $merchant, array $intent, bool $confirming = false, ?int &$memberUserId = null): array
     {
         if (!Runtime::allowedContext() || get_woocommerce_currency() !== 'BDT' || wc_get_price_decimals() !== 2 || wc_tax_enabled()) {
             throw new DomainException('Counter sales require untaxed BDT with two decimals.', 422);
         }
+        $memberUserId = null;
         $subtotal = 0;
         $lines = [];
         $member = null;
@@ -70,6 +71,7 @@ final class CounterSale
             if (!$member['qualifies']) {
                 throw new DomainException('This card does not get the member price. Only an active Business card or a paid Business Black card does.', 422);
             }
+            $memberUserId = (int) ($member['user_id'] ?? 0) ?: null;
             if (get_option('sfmwh_enabled', 'no') !== 'yes') {
                 throw new DomainException('Wholesale pricing is unavailable.', 422);
             }
@@ -173,7 +175,7 @@ final class CounterSale
             return $journal->execute($merchant, 'pos', $key, compact('register', 'actor', 'session', 'intent', 'digest', 'tender'),
                 static function () use ($receipts, $sessions, $merchant, $register, $actor, $cashier, $session, $intent, $digest, $tender, &$orderId): array {
                     $sessions->assertActive($merchant, $register, $session);
-                    $quote = self::quote($merchant, $intent, true);
+                    $quote = self::quote($merchant, $intent, true, $memberUserId);
                     if (!hash_equals($quote['digest'], $digest)) {
                         throw new DomainException('Counter price changed. Review the cart.', 409);
                     }
@@ -195,6 +197,9 @@ final class CounterSale
                         $order->update_meta_data('_sfmwh_member_no_masked', $quote['member']['member_no']);
                         $order->update_meta_data('_sfmwh_member_tier', $quote['member']['tier']);
                         $order->update_meta_data('_sfmwh_member_source', 'pos');
+                        if ($memberUserId !== null) {
+                            $order->update_meta_data('_sfmwh_member_user', $memberUserId);
+                        }
                     }
                     foreach ($quote['lines'] as $line) {
                         $item = new \WC_Order_Item_Product();

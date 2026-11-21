@@ -94,6 +94,10 @@ foreach (['Business' => $business, 'paid Black' => $paid] as $label => $id) {
     $data = $saleData($no, $price->get_data()['digest']);
     $sale = $call($data, $key);
     check_member_pos($sale->get_status() === 200 && $stock() === $before - 1, "$label commits and removes one stock");
+    $order = wc_get_order($sale->get_data()['order_id']);
+    check_member_pos((int) $order->get_meta('_sfmwh_member_user') === $id, "$label has internal member order meta");
+    check_member_pos(!isset($price->get_data()['member']['user_id']) && !isset($sale->get_data()['sale']['member']['user_id']),
+        "$label member user ID stays out of the quote and receipt");
     check_member_pos($call($data, $key)->get_data() === $sale->get_data() && $stock() === $before - 1, "$label same key returns same receipt");
 }
 $before = $stock();
@@ -124,3 +128,15 @@ $stale = $call($saleData($no, $quote->get_data()['digest']));
 check_member_pos($stale->get_status() === 409 && $stock() === $before && $receiptCount() === 2, 'changed price still rejects stale confirmation');
 $unassigned = $call($saleData($no, $quote->get_data()['digest']), null, $unpaid);
 check_member_pos($unassigned->get_status() === 403 && $receiptCount() === 2, 'unassigned actor cannot confirm');
+
+
+$retail = $intent('');
+unset($retail['member']);
+$retail['tier'] = 'retail';
+$retailQuote = $call($retail + ['action' => 'counter_quote']);
+check_member_pos($retailQuote->get_status() === 200, 'retail quote succeeds without a card');
+$retailSale = $call($retail + ['action' => 'counter_sale', 'session' => $session,
+    'digest' => $retailQuote->get_data()['digest'], 'tender' => $retailQuote->get_data()['total_minor']]);
+check_member_pos($retailSale->get_status() === 200, 'retail sale succeeds without a card');
+check_member_pos(!wc_get_order($retailSale->get_data()['order_id'])->meta_exists('_sfmwh_member_user'),
+    'non-member order does not get member user meta');
