@@ -1,1 +1,1 @@
-LIVE BUILD for algibazar.com (build phase). Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.12-dev.zip from main 9286eda, ZIP SHA-256 6958d647e1ff3c1da55d899612af4de48a770b1a8cf18ff1d3be02c0b83927bd.
+LIVE BUILD for algibazar.com (build phase). Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.13-dev.zip from main 0a8c16a, ZIP SHA-256 3c078545cf446f3873e189cf602ab1912ca35c1aac41bc0403de07d494dd6d69.

@@ -234,6 +234,30 @@ final class PriceAudience {
         return intdiv($qty, $promo['buy']) * $promo['off'] * $unit;
     }
 
+    /**
+     * Shop staff (cashier) never see the cost price, even if the shop published it (Owner 2026-11-21:
+     * staff must not see what the shop paid). Shop manager, shop owner and administrators do.
+     */
+    public static function isStaff(int $uid): bool {
+        if ($uid <= 0 || self::isManager($uid)) {
+            return false;
+        }
+        if (class_exists(Members\Members::class) && Members\Members::shopRole($uid) === 'cashier') {
+            return true;
+        }
+        return user_can($uid, 'sfm4u_pos_cashier');
+    }
+
+    public static function isManager(int $uid): bool {
+        if ($uid <= 0) {
+            return false;
+        }
+        if (user_can($uid, 'manage_woocommerce')) {
+            return true;
+        }
+        return class_exists(Members\Members::class) && in_array(Members\Members::shopRole($uid), ['ceo', 'owner', 'manager'], true);
+    }
+
     private static function owner(int $productId, int $uid): bool {
         return $uid > 0 && ((int) get_post_field('post_author', $productId) === $uid || user_can($uid, 'manage_woocommerce'));
     }
@@ -325,7 +349,8 @@ final class PriceAudience {
         }
         $cost = get_post_meta($productId, self::COST, true);
         $cost = is_string($cost) ? json_decode($cost, true) : null;
-        if (is_array($cost) && !empty($cost['minor']) && self::canSee((array) ($cost['show_to'] ?? ['only_me']), $buyer, $vendor, $owner)) {
+        if (is_array($cost) && !empty($cost['minor']) && !self::isStaff($uid)
+            && (self::isManager($uid) || self::canSee((array) ($cost['show_to'] ?? ['only_me']), $buyer, $vendor, $owner))) {
             $shown++;
             $h .= '<li><strong>' . esc_html($bn ? 'কেনা দাম' : 'Cost price') . '</strong>: ' . esc_html(self::money((int) $cost['minor']))
                 . ($owner && in_array('only_me', (array) $cost['show_to'], true) ? ' <em>(' . esc_html($bn ? 'শুধু আপনি দেখছেন' : 'only you see this') . ')</em>' : '') . '</li>';
