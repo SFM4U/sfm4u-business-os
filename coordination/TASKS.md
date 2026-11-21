@@ -71,3 +71,5 @@ No change on account.sfm4u.com or algibazar.com until the Owner says "go" AND a 
 1. G8 whole-taka rule at the POS (round cash totals? up/down/nearest?).
 2. Black auto stock target: the member's AlgiBazar.com store (current design) or also his own separate shop website/POS?
 3. "Only shops we open get Business membership": is a shop = a WordPress site paired by us, or a Dokan store on AlgiBazar?
+
+| C-16 | POS account state (Codex patch C-16-pos-account-status.zip, SHA-256 9bb74a83…109f, base eef2871) | DONE (Claude 2026-11-21 ~22:05 UTC) — SHA verified, applied unchanged. Fresh DB: 4-phase 57/57, counter-khata-rest 84/84 (11 new C-16 checks), cart-credit-rest 82/82, stockfeed-pos 17/17, identity 36/36. NOT TESTED: browser UI, old remote account site. Owner priority from now: Nijam Library wholesale POS launch (card number system stays 7 digits as built; redesign later). |

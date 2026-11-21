@@ -81,6 +81,17 @@ final class AuthorizedRegister {
         });
     }
 
+    public function memberStatus(int $merchant, string $register, string $scan): array
+    {
+        $this->actor($merchant, $register);
+        $member = \SFM4U\Wholesale\MemberPrice::fromScan($scan);
+        if (!$member) {
+            throw new DomainException('Card not found.', 404);
+        }
+        $state = $member['account_state'] ?? 'ok';
+        return ['account_state' => $state, 'id_days_left' => $member['id_days_left'] ?? null];
+    }
+
     public function memberDue(int $merchant, string $register, string $scan, bool $history): array
     {
         $this->actor($merchant, $register);

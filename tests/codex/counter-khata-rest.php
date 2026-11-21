@@ -108,3 +108,27 @@ check_member_pos($call(['action'=>'member_due','member'=>'0000000'])->get_status
 check_member_pos($call(['action'=>'member_due_history','member'=>'0000000'])->get_status() === 404, 'unknown card history is 404');
 check_member_pos($call(['action'=>'member_due_payment','member'=>'0000000','session'=>$session,'amount'=>500])->get_status() === 404,
     'unknown card payment is 404');
+
+$identity = \SFM4U\Wholesale\Members\Identity::class;
+$statusIntent = ['action' => 'member_status', 'member' => $card];
+$status = $call($statusIntent);
+check_member_pos($status->get_status() === 200
+    && $status->get_data() === ['account_state' => 'grace', 'id_days_left' => 90],
+    'new member scan exposes only grace state and countdown');
+check_member_pos($call($statusIntent, null, $unpaid)->get_status() === 403,
+    'unassigned user cannot read account status');
+$graceQuote = $call($intent($card) + ['action' => 'counter_quote']);
+check_member_pos($graceQuote->get_status() === 200, 'grace allows member pricing');
+foreach (['hold', 'blocked'] as $accountState) {
+    $identity::setState($business, $accountState, 'Synthetic C-16 reason', 1);
+    check_member_pos($call($statusIntent)->get_data() === ['account_state' => $accountState, 'id_days_left' => null],
+        "$accountState scan exposes no private reason");
+    check_member_pos($call($intent($card) + ['action' => 'counter_quote'])->get_status() === 422,
+        "$accountState rejects a member price quote");
+    $creditAttempt = $saleData($card, $graceQuote->get_data()['digest']) + ['credit_minor' => 100];
+    check_member_pos($call($creditAttempt)->get_status() === 409, "$accountState rejects new credit after earlier quote");
+    $oldDue = $call(['action' => 'member_due_payment', 'member' => $card, 'session' => $session, 'amount' => 100]);
+    check_member_pos($oldDue->get_status() === 200, "$accountState can pay old due");
+    $memberClass::record($business, 0, 'charge', 100, '', '', 1, 'up', 'test-main');
+}
+$identity::setState($business, '', '', 1);

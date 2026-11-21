@@ -64,6 +64,7 @@ function initializeCounter() {
     let session = 0;
     let busy = false;
     let dueScope;
+    let memberBenefitsAllowed = true;
     const announce = message => { el('status').textContent = message; };
     const updateConfirm = () => { el('confirm').disabled = !queue || !quote || !session || busy; };
     const invalidate = () => {
@@ -218,6 +219,24 @@ function initializeCounter() {
         for (const id of ['due-only', 'due-payment', 'credit']) el(id).value = '0.00';
     }
 
+    function clearMemberStatus() {
+        memberBenefitsAllowed = true;
+        el('account-status').textContent = '';
+    }
+
+    async function readMemberStatus() {
+        const scope = memberContext();
+        if (!scope.member || el('tier').value !== 'member') return false;
+        const reply = await send({ ...scope, action: 'member_status' });
+        if (JSON.stringify(scope) !== JSON.stringify(memberContext()) || el('tier').value !== 'member') return false;
+        const state = reply.account_state;
+        memberBenefitsAllowed = state !== 'hold' && state !== 'blocked';
+        el('account-status').textContent = state === 'grace' && Number.isInteger(reply.id_days_left)
+            ? labels.accountGrace.replace('%d', String(reply.id_days_left))
+            : ({ hold: labels.accountHold, blocked: labels.accountBlocked })[state] || '';
+        return memberBenefitsAllowed;
+    }
+
     function memberContext() {
         return { ...context(), member: el('member').value.trim() };
     }
@@ -229,7 +248,7 @@ function initializeCounter() {
         if (JSON.stringify(scope) !== JSON.stringify(memberContext()) || el('tier').value !== 'member') return;
         dueScope = JSON.stringify(scope);
         el('khata').hidden = false;
-        el('khata-sale').hidden = el('method').value !== 'cash';
+        el('khata-sale').hidden = !memberBenefitsAllowed || el('method').value !== 'cash';
         el('due').textContent = labels.due + ' ' + money(reply.due_minor) + ' · ' + labels.advance + ' ' + money(reply.advance_minor);
     }
 
@@ -297,9 +316,11 @@ function initializeCounter() {
     });
     for (const id of ['tier', 'method', 'discount', 'member']) el(id).addEventListener('input', invalidate);
     el('member').addEventListener('input', resetDue);
-    el('method').addEventListener('input', () => { el('khata-sale').hidden = !dueScope || el('method').value !== 'cash'; });
+    el('member').addEventListener('input', clearMemberStatus);
+    el('method').addEventListener('input', () => { el('khata-sale').hidden = !dueScope || !memberBenefitsAllowed || el('method').value !== 'cash'; });
     el('tier').addEventListener('input', () => {
         resetDue();
+        clearMemberStatus();
         el('member-row').hidden = el('tier').value !== 'member';
         el('member-info').textContent = '';
         if (el('tier').value === 'member') el('member').focus();
@@ -309,7 +330,10 @@ function initializeCounter() {
         if (event.key !== 'Enter') return;
         event.preventDefault();
         if (cart.size) el('quote').requestSubmit();
-        else void perform(readDue);
+        else void perform(async () => {
+            await readMemberStatus();
+            await readDue();
+        });
     });
 
     el('search').addEventListener('submit', event => {
@@ -344,6 +368,10 @@ function initializeCounter() {
         invalidate();
         void perform(async () => {
             const intent = payload();
+            if (intent.member && !await readMemberStatus()) {
+                await readDue();
+                return;
+            }
             const reply = await send({ ...intent, action: 'counter_quote' });
             if (JSON.stringify(payload()) !== JSON.stringify(intent)) {
                 announce(labels.cartChanged);
