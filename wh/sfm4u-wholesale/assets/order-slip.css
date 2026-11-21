@@ -1,0 +1,11 @@
+/* 80 mm thermal order slip. Safe to edit: only changes how the slip looks. */
+@page { size: 80mm auto; margin: 3mm; }
+body { margin: 0; font: 12px/1.35 "Noto Sans Bengali", Arial, sans-serif; color: #000; }
+.slip { width: 74mm; }
+.slip h1 { font-size: 16px; text-align: center; margin: 0 0 4px; }
+.slip .c { text-align: center; }
+.slip table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.slip td { padding: 3px 0; border-bottom: 1px dashed #999; vertical-align: top; }
+.slip .r { text-align: right; white-space: nowrap; }
+.slip .t td { font-weight: 700; font-size: 14px; border-bottom: 0; }
+.slip p { margin: 4px 0; }

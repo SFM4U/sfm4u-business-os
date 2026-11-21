@@ -1,0 +1,33 @@
+<?php
+// M2: linked member is re-checked at the account site (HTTP mocked), and survives a short outage.
+use SFM4U\Wholesale\MemberPrice; use SFM4U\Wholesale\Members\{CardLink, Members};
+$p=0;$f=0;$ok=function($c,$m)use(&$p,&$f){if($c)$p++;else{$f++;echo "FAIL $m\n";}};
+$oldRole = get_option(CardLink::OPT_ROLE); $oldMaster = get_option(CardLink::OPT_MASTER);
+update_option(CardLink::OPT_ROLE,'shop'); update_option(CardLink::OPT_MASTER,['url'=>'https://account.example.test','key_id'=>'shop_test','secret_enc'=>Members::encrypt(str_repeat('a',64))]);
+$answer = null; $calls = 0;
+add_filter('pre_http_request', function($pre,$args,$url) use (&$answer,&$calls){ if(strpos($url,'account.example.test')===false) return $pre; $calls++;
+  if ($answer==='down') return new WP_Error('down','unreachable');
+  return ['headers'=>[],'body'=>wp_json_encode($answer),'response'=>['code'=>200,'message'=>'OK'],'cookies'=>[]]; },10,3);
+$r=wp_rand(10000,99999); $u=(int)wp_insert_user(['user_login'=>"rc$r",'user_pass'=>wp_generate_password(20),'user_email'=>"rc$r@example.com"]);
+$no=(string)wp_rand(1000000,9999999); $calls=0; update_user_meta($u,'sfm_wr_member_no',$no); update_user_meta($u,'sfm_wr_link_tier','business'); update_user_meta($u,'sfm_wr_link_status','active');
+update_user_meta($u,'sfmwh_member_checked', time()-700);
+$answer=['found'=>true,'member_no'=>$no,'tier'=>'black','status'=>'active','name'=>'X','wholesale_ok'=>false];
+$ok(MemberPrice::memberFor($u)===null && $calls===1, 'recheck: Black unpaid at master -> none');
+$ok(get_user_meta($u,'sfm_wr_link_tier',true)==='black', 'link tier updated from master');
+update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u);
+$answer['wholesale_ok']=true;
+$ok(MemberPrice::memberFor($u)['tier']==='black', 'recheck: Black paid -> member');
+update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u); $answer='down';
+$ok(MemberPrice::memberFor($u)!==null, 'master down, last answer < 24 h -> still member');
+update_user_meta($u,'sfmwh_member_checked', time()-90000); MemberPrice::forget($u);
+$ok(MemberPrice::memberFor($u)===null, 'master down, last answer > 24 h -> none');
+update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u); $answer=['found'=>false];
+$ok(MemberPrice::memberFor($u)===null, 'card no longer found -> none');
+$v=(int)wp_insert_user(['user_login'=>"rc2$r",'user_pass'=>wp_generate_password(20),'user_email'=>"rc2$r@example.com"]); update_user_meta($v,'sfm_wr_member_no',$no);
+update_user_meta($u,'sfmwh_member_checked', time()-700); MemberPrice::forget($u); $answer=['found'=>true,'member_no'=>$no,'tier'=>'business','status'=>'active','wholesale_ok'=>true];
+$ok(MemberPrice::memberFor($u)===null, 'same member linked to two accounts -> none (anti-sharing)');
+delete_user_meta($v,'sfm_wr_member_no');
+$c0=$calls; update_user_meta($u,'sfmwh_member_checked', time()); MemberPrice::forget($u); MemberPrice::memberFor($u);
+$ok($calls===$c0, 'no call when checked within 10 min');
+update_option(CardLink::OPT_ROLE,$oldRole ?: 'off'); $oldMaster ? update_option(CardLink::OPT_MASTER,$oldMaster) : delete_option(CardLink::OPT_MASTER);
+echo "pass $p fail $f\n";

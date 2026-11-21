@@ -1,0 +1,14 @@
+/* SFM4U card guide page (members only). Safe to edit: only changes how the guide looks. */
+.sfm-card-guide h3 { margin: 18px 0 6px; }
+.sfm-card-guide ul { margin: 0 0 8px 18px; list-style: disc; }
+.sfm-card-guide li { margin: 2px 0; line-height: 1.6; }
+.sfm-card-guide .sfm-guide-admin { background: #fff8c5; padding: 6px 10px; border-radius: 6px; }
+/* Big red "SAMPLE" across the sample card */
+.sfm-card-guide .sfm-cv-scale { position: relative; }
+.sfm-card-guide .sfm-cv-scale:after {
+  content: "SAMPLE · নমুনা";
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) rotate(-18deg);
+  font: 700 34px Arial, sans-serif; color: rgba(255, 40, 60, .55);
+  letter-spacing: 4px; pointer-events: none;
+}

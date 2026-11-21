@@ -1,0 +1,67 @@
+# SFM4U POS staging test (disposable). No ports published, nothing public.
+services:
+  db:
+    image: mariadb:11.8
+    restart: "no"
+    environment:
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+      MARIADB_DATABASE: wp
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    networks: [posnet]
+  runner:
+    image: wordpress:cli-php8.3
+    user: "0:0"
+    restart: "no"
+    depends_on: [db]
+    networks: [posnet]
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -e
+        W="php -d memory_limit=1024M /usr/local/bin/wp --allow-root --path=/var/www/html"
+        echo "== waiting for database"
+        i=0; until php -r 'exit(@mysqli_connect("db","root","","wp") ? 0 : 1);'; do i=$$((i+1)); [ $$i -gt 60 ] && exit 1; sleep 2; done
+        cd /var/www/html
+        $$W core download --force --quiet
+        $$W config create --dbname=wp --dbuser=root --dbpass= --dbhost=db --skip-check --force --extra-php <<'PHP'
+        define('SFM4U_B2B_ENABLED', true);
+        define('SFM4U_OPERATIONS_ENABLED', true);
+        define('WP_DEBUG', true);
+        define('WP_DEBUG_LOG', '/tmp/wp-debug.log');
+        define('WP_DEBUG_DISPLAY', false);
+        PHP
+        $$W core install --url=http://127.0.0.1 --title=SFM4U-POS-Staging --admin_user=fixture_admin --admin_password="$$(head -c 18 /dev/urandom | base64)" --admin_email=fixture@example.invalid --skip-email
+        $$W plugin install woocommerce dokan-lite --activate --quiet
+        $$W option update woocommerce_custom_orders_table_enabled yes
+        $$W option update woocommerce_currency BDT
+        echo "WordPress $$($$W core version), WooCommerce $$($$W plugin get woocommerce --field=version), Dokan $$($$W plugin get dokan-lite --field=version), PHP $$(php -r 'echo PHP_VERSION;'), DB $$($$W db query 'SELECT VERSION()' --skip-column-names)"
+        wget -q -O /tmp/p.zip "https://drive.usercontent.google.com/download?id=1rPrQEndV6renpRbWwTx1u2uknocO-qB1&export=download&confirm=t"
+        wget -q -O /tmp/t.tgz "https://drive.usercontent.google.com/download?id=1V1RXevb_Hfyc4KdhDkoYjMHWXii9Kzov&export=download&confirm=t"
+        echo "plugin zip sha256 $$(sha256sum /tmp/p.zip | cut -c1-64)"
+        unzip -q -o /tmp/p.zip -d wp-content/plugins
+        mkdir -p /opt/t && tar xzf /tmp/t.tgz -C /opt/t
+        mkdir -p wp-content/sfm4u-db /fixture-out
+        cp wp-content/plugins/sfm4u-wholesale/modules/inventory-bridge/src/LossAwareWpdb.php wp-content/sfm4u-db/
+        printf '%s\n' '<?php' "require_once WP_CONTENT_DIR . '/sfm4u-db/LossAwareWpdb.php';" '$$wpdb = new \SFM4U\Inventory\LossAwareWpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);' > wp-content/db.php
+        ln -sfn /var/www/html /wordpress
+        ln -sfn /opt/t/tests /tests
+        ln -sfn /var/www/html/wp-content/plugins/sfm4u-wholesale/modules /modules
+        chown -R www-data:www-data /var/www/html
+        printf '%s\n' '<?php' "\$$_SERVER['HTTP_HOST']='127.0.0.1';" "require '/wordpress/wp-load.php';" "require_once ABSPATH . 'wp-admin/includes/plugin.php';" 'wp_set_current_user(1);' "\$$r = activate_plugin('sfm4u-wholesale/sfm4u-wholesale.php');" "if (is_wp_error(\$$r)) { throw new RuntimeException(\$$r->get_error_message()); }" 'echo "activated\n";' > /tmp/activate.php
+        php -d memory_limit=1024M /tmp/activate.php
+        RESULT=PASS
+        for step in init workflow reactivate resumed; do
+          printf '%s\n' '<?php' "\$$_SERVER['HTTP_HOST']='127.0.0.1';" "putenv('SFM4U_OPERATIONS_PHASE=$$step');" "require '/tests/b2b-installed-operations.php';" > /tmp/phase.php
+          echo "== phase $$step"
+          if ! php -d memory_limit=1024M /tmp/phase.php; then RESULT=FAIL; echo "PHASE $$step FAILED"; break; fi
+        done
+        echo "== operations-workflow.txt"
+        cat /fixture-out/operations-workflow.txt || true
+        echo "== debug log (last lines)"
+        tail -n 40 /tmp/wp-debug.log 2>/dev/null || true
+        echo "SFM4U POS STAGING RESULT: $$RESULT"
+        sleep 86400
+networks:
+  posnet:
+    driver: bridge
+    internal: false

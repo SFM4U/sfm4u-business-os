@@ -1,0 +1,45 @@
+.sfm-wr-scanbox{margin:16px 0;padding:16px;background:#fff;border:1px solid #c3c4c7;border-radius:8px;max-width:720px}
+.sfm-wr-scanbox input{font-size:20px;padding:8px 10px;margin:8px 8px 0 0}
+.sfm-wr-member{display:flex;gap:20px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #c3c4c7;border-radius:10px;padding:16px;max-width:900px}
+.sfm-wr-member h2{margin:0}
+.sfm-wr-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;background:#eee}
+.sfm-wr-balance{margin-left:auto;text-align:right;padding:12px 18px;border-radius:10px}
+.sfm-wr-balance span{display:block;font-size:12px;opacity:.8}.sfm-wr-balance strong{font-size:28px}
+.sfm-wr-balance.owes{background:#fcf0f1;color:#8a1f11}.sfm-wr-balance.clear{background:#edfaef;color:#1a6b2d}
+.sfm-wr-tier{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:600;font-size:12px}
+.sfm-wr-tier-regular{background:#e7f1fb;color:#0a4b78}.sfm-wr-tier-business{background:#fdf2d6;color:#7a5600}.sfm-wr-tier-premium{background:#efe5fb;color:#4b2a7a}
+.sfm-wr-bad{color:#b32d2e}
+.sfm-wr-forms{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0}
+.sfm-wr-entry{background:#fff;border:1px solid #c3c4c7;border-radius:10px;padding:12px 16px;min-width:260px}
+.sfm-wr-entry h3{margin:.2em 0 .6em}.sfm-wr-entry-payment{border-color:#2271b1}
+/* Member card: CR80 85.6 x 54 mm */
+.sfm-wr-card{width:85.6mm;height:54mm;box-sizing:border-box;border-radius:3.2mm;padding:3mm 3.5mm;color:#fff;background:linear-gradient(135deg,#0f3d2e,#070c0b);
+  font:9pt/1.25 Arial,"Noto Sans Bengali",sans-serif;display:flex;flex-direction:column;justify-content:space-between;margin:10px 0;box-shadow:0 2px 8px rgba(0,0,0,.25);overflow:hidden}
+.sfm-wr-card-business{background:linear-gradient(135deg,#6b4f12,#1d1606)}.sfm-wr-card-premium{background:linear-gradient(135deg,#3b1d6b,#0c0618)}
+.sfm-wr-card.is-off{filter:grayscale(1);opacity:.6}
+.sfm-wr-card-top{display:flex;justify-content:space-between;align-items:center}.sfm-wr-card-top strong{font-size:11pt}.sfm-wr-card-top span{font-size:7.5pt;border:1px solid #ffffff88;border-radius:99px;padding:.3mm 2mm}
+.sfm-wr-card-body{display:flex;gap:3mm;align-items:flex-end}
+.sfm-wr-card-body img{width:17mm;height:21mm;object-fit:cover;border-radius:1.5mm;background:#fff}
+.sfm-wr-card-body>div:not(.sfm-wr-qr){flex:1;display:flex;flex-direction:column;gap:1mm;min-width:0}
+.sfm-wr-card-body b{font-size:10pt;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sfm-wr-card-body code{background:none;color:#fff;font-size:9pt;padding:0}
+.sfm-wr-card-body small{font-size:7pt;opacity:.8}
+.sfm-wr-card .sfm-wr-qr{width:22mm;height:22mm;background:#fff;border-radius:1mm;padding:.6mm;box-sizing:border-box}
+.sfm-wr-qr svg{width:100%;height:100%;display:block}
+/* Product labels */
+.sfm-wr-labels{display:flex;flex-wrap:wrap;gap:2mm}
+.sfm-wr-label{display:flex;gap:2mm;align-items:center;background:#fff;color:#000;border:1px dashed #bbb;box-sizing:border-box;overflow:hidden;font:8pt/1.2 Arial,"Noto Sans Bengali",sans-serif}
+.sfm-wr-labels-small .sfm-wr-label{width:50mm;height:30mm;padding:1.5mm}
+.sfm-wr-labels-a4 .sfm-wr-label{width:63mm;height:38mm;padding:2mm}
+.sfm-wr-label .sfm-wr-qr{flex:0 0 auto;width:24mm;height:24mm}
+.sfm-wr-label>div:last-child{display:flex;flex-direction:column;gap:1mm;min-width:0}
+.sfm-wr-label b{max-height:3.6em;overflow:hidden}.sfm-wr-label span{font-size:11pt;font-weight:700}.sfm-wr-label small{font-size:6.5pt;word-break:break-all}
+@media print{
+  body *{visibility:hidden}
+  .sfm-wr-labels,.sfm-wr-labels *,.sfm-wr-print-wrap,.sfm-wr-print-wrap *{visibility:visible}
+  .sfm-wr-labels,.sfm-wr-print-wrap{position:absolute;left:0;top:0}
+  .sfm-wr-noprint{display:none!important}
+  .sfm-wr-label{border:0;break-inside:avoid}
+  .sfm-wr-labels-small .sfm-wr-label{break-after:page}
+  .sfm-wr-card{box-shadow:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+.sfm-wr-card-body .sfm-wr-biz{font-size:10.5pt}.sfm-wr-card-body span{font-size:8pt;opacity:.9}
