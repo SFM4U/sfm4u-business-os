@@ -42,7 +42,11 @@ Orders: on an unpaid order that is pending or on hold, staff can type or scan a 
 * Business Black auto stock now also works for counter (POS) member sales: the paid sale queues a one-off send to the member's AlgiBazar store after the sale has committed (never inside the sale), checks the sale still stands, sends once and retries on failure. Online orders still wait for "completed".
 * ERPNext (off by default): POS sales are exported after commit; refunds/returns are sent as ERPNext return invoices (credit notes) against the original invoice, once per refund.
 * POS: the member card is checked again when the sale is confirmed; if it stopped qualifying the cashier gets 409 "Membership changed. Scan the card again" (Codex, C-02).
-* Tests: stockfeed-pos 15, erp-refund 14, counter-member-confirm 21, 4-phase operations 54.
+* ERPNext rounding: the POS cash-rounding fee and per-unit rate rounding go to ERPNext as one "Actual" charge row on the round-off account (option sfmwh_erp_round_off_account, e.g. "Round Off - SFM"; rounded total off), so ERP invoice and return totals equal WooCommerce to the poisha. If there is a difference and no account is set, the export waits and logs why.
+* ERPNext returns: damaged returns (WooCommerce refund without "restock") are sent with update_stock 0, so ERP stock does not go up. Resellable returns go back in stock as before.
+* Khata at the counter (for POS due): Members::recordInTransaction() writes inside the sale's transaction; notifyRecorded() after commit; request keys validated (never cut); cashier summary hides notes.
+* POS (Codex): multi-line cart credits with fair rounding share, role matrix, Bangla strings, Black-store vendor rule in B2B tests.
+* Tests: stockfeed-pos 15, erp-refund 14, erp-rounding 14, khata-due 25, counter-member-confirm 28, cart-credit-rest 79, 4-phase operations 54.
 
 == Linked shop: member number clash guard (0.9.8-dev / card 0.7.3-dev) ==
 * A shop that gave out its own member numbers before it was linked to account.sfm4u.com could hold the same digits as a different person's central number. Scanning that number or adopting the central member could then pick the wrong local customer (khata and points mixed).

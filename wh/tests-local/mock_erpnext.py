@@ -42,8 +42,14 @@ class H(BaseHTTPRequestHandler):
                 names = ['ACC-SINV-%04d' % (i + 1) for i in range(len(INVOICES))]
                 if body.get('return_against') not in names or any(float(it['qty']) >= 0 for it in body['items']):
                     return self.send(417, {'exception': 'bad return'})
-            for it in body['items']:
-                k = (it['item_code'], it['warehouse']); BINS[k] = BINS.get(k, 0.0) - float(it['qty'])
+            for t in body.get('taxes', []):
+                # Only fixed "Actual" charge rows to a named account; a rounding row means ERP rounding is off.
+                if t.get('charge_type') != 'Actual' or not t.get('account_head') or body.get('disable_rounded_total') != 1: return self.send(417, {'exception': 'bad tax row'})
+            if body.get('update_stock', 1) == 1:
+                for it in body['items']:
+                    k = (it['item_code'], it['warehouse']); BINS[k] = BINS.get(k, 0.0) - float(it['qty'])
+            # grand total as ERPNext computes it: item rate x qty + Actual charge rows
+            body['_grand_total'] = round(sum(float(it['rate']) * float(it['qty']) for it in body['items']) + sum(float(t['tax_amount']) for t in body.get('taxes', [])), 2)
             INVOICES.append(body); return self.send(200, {'data': {'name': 'ACC-SINV-%04d' % len(INVOICES)}})
         self.send(404, {})
 HTTPServer(('127.0.0.1', int(sys.argv[1])), H).serve_forever()

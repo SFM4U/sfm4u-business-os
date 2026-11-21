@@ -7,7 +7,7 @@ REPO="$(cd "$(dirname "$0")/../.." && pwd)"; L=/home/claude/wplocal; P=$L/pos
 DBPW=$(cat /tmp/claude-0/bos-dbpw)
 docker exec bos-db mariadb -uroot -p"$DBPW" -e "DROP DATABASE IF EXISTS wppos; CREATE DATABASE wppos" || exit 1
 rm -rf "$P/wp-content/plugins/sfm4u-wholesale"; cp -r "$REPO/wh/sfm4u-wholesale" "$P/wp-content/plugins/"
-cp "$P/wp-content/plugins/sfm4u-wholesale/modules/inventory-bridge/src/LossAwareWpdb.php" "$P/wp-content/sfm4u-db/"
+ln -sfn "$P/wp-content/plugins/sfm4u-wholesale/modules/inventory-bridge/src/LossAwareWpdb.php" "$P/wp-content/sfm4u-db/LossAwareWpdb.php"   # symlink: tests that require_once the module file get the same class
 mv "$P/wp-content/db.php" /tmp/claude-0/db.php.hold
 W="php -d memory_limit=1024M $L/wpcli.phar --allow-root --path=$P --quiet"
 $W core install --url=http://127.0.0.1 --title=SFM4U-POS-Staging --admin_user=fixture_admin \
@@ -25,7 +25,7 @@ for step in init workflow reactivate resumed; do
 done
 echo "4-phase: $(grep -c '^PASS' /fixture-out/operations-workflow.txt) PASS, result $R"
 WV="php -d memory_limit=1024M $L/wpcli.phar --allow-root --path=$P"
-for t in /tests/counter-member-confirm.php "$@"; do
+for t in ${POS_MAIN:-/tests/counter-member-confirm.php} "$@"; do   # POS_MAIN: chained Codex test (e.g. /tests/cart-credit-rest.php runs role matrix + counter tests)
   out=$($WV eval "require '$t';" 2>&1); rc=$?
   echo "$(basename "$t"): exit $rc, PASS $(echo "$out" | grep -c '^PASS'), FAIL lines $(echo "$out" | grep -ciE '^FAIL|Fatal|Uncaught')"
   echo "$out" | grep -iE '^FAIL|Fatal|Uncaught' | head -3

@@ -30,6 +30,7 @@ final class ErpSync {
         // 0.9.9: POS sales and all refunds are exported by a one-off job AFTER their transaction commits,
         // so ERPNext never receives a sale/refund that the shop rolled back.
         add_action(self::JOB_ORDER, [self::class, 'runOrderJob']);
+        add_action('woocommerce_refund_created', [self::class, 'onRefundCreated'], 5, 2);
         add_action('woocommerce_order_refunded', [self::class, 'onRefunded'], 30, 2);
         add_action(self::JOB_REFUND, [self::class, 'runRefundJob']);
     }
@@ -202,6 +203,50 @@ final class ErpSync {
     }
 
     /** Pure: ERPNext Sales Invoice document for one shop order (amounts in minor units in $o). */
+    public const OPT_ROUND_OFF = 'sfmwh_erp_round_off_account';
+    public const META_RESTOCK = '_sfmwh_erp_restock';
+
+    /** Remember whether WooCommerce put the refunded items back in stock (resellable) or not (damaged). */
+    public static function onRefundCreated($refundId, $args = []): void {
+        $refund = wc_get_order((int) $refundId);
+        if (!$refund instanceof \WC_Order_Refund) { return; }
+        $refund->update_meta_data(self::META_RESTOCK, !empty($args['restock_items']) ? '1' : '0');
+        $refund->save_meta_data();
+    }
+
+    /**
+     * ERPNext rounds each item rate; WooCommerce keeps exact line totals and a POS cash-rounding fee.
+     * Returns one "Actual" charge row (to the round-off account) for the difference, so the ERP document total
+     * equals the WooCommerce total to the minor unit. $sign is 1 for invoices, -1 for returns.
+     */
+    public static function roundingRow(array $items, int $targetMinor, int $scale, int $sign, string $account): array {
+        $sent = 0;
+        foreach ($items as $it) { $sent += (int) round($it['rate'] * (10 ** $scale)) * abs((int) $it['qty']); }
+        $diff = $sign * ($targetMinor - $sent);
+        if ($diff === 0) { return []; }
+        if ($account === '') {
+            throw new DomainException('Set the ERPNext round-off account (cash rounding) before exporting this document.');
+        }
+        return [['charge_type' => 'Actual', 'account_head' => $account, 'description' => 'Cash and unit-rate rounding (WooCommerce)',
+            'tax_amount' => round($diff / (10 ** $scale), $scale)]];
+    }
+
+    /** Minor units of the POS cash-rounding fee lines on an order or refund. */
+    public static function roundingFeeMinor($order, int $scale): int {
+        $sum = 0;
+        // Refund fee lines do not copy the original line's meta: look at the refunded original fee line instead.
+        $parent = $order instanceof \WC_Order_Refund ? wc_get_order($order->get_parent_id()) : null;
+        foreach ($order->get_items('fee') as $fee) {
+            $source = $fee;
+            if ($parent) {
+                $source = $parent->get_item((int) $fee->get_meta('_refunded_item_id'));
+                if (!$source) { continue; }
+            }
+            if ((string) $source->get_meta('_sfm4u_cash_rounding') === '1') { $sum += (int) round((float) $fee->get_total() * (10 ** $scale)); }
+        }
+        return $sum;
+    }
+
     public static function invoiceDoc(array $o, string $company, string $warehouse, string $customer = 'Walk-in Customer'): array {
         if ($company === '' || $warehouse === '') {
             throw new DomainException('ERPNext company and warehouse are required.');
@@ -216,7 +261,9 @@ final class ErpSync {
             $items[] = ['item_code' => (string) $l['sku'], 'qty' => (int) $l['qty'], 'rate' => $rate, 'warehouse' => $warehouse];
         }
         $member = !empty($o['member_no_masked']);
-        return [
+        $target = array_sum(array_map(fn($l) => (int) $l['total_minor'], $o['lines'])) + (int) ($o['rounding_minor'] ?? 0);
+        $taxes = self::roundingRow($items, $target, $scale, 1, (string) ($o['round_off_account'] ?? ''));
+        return ($taxes ? ['taxes' => $taxes, 'disable_rounded_total' => 1] : []) + [
             'doctype' => 'Sales Invoice', 'docstatus' => 1, 'company' => $company, 'customer' => $customer,
             'posting_date' => (string) $o['date'], 'currency' => (string) $o['currency'], 'update_stock' => 1,
             'set_warehouse' => $warehouse, 'is_pos' => ($o['source'] ?? '') === 'pos' ? 1 : 0, 'items' => $items,
@@ -240,7 +287,8 @@ final class ErpSync {
         return ['id' => $order->get_id(), 'number' => $order->get_order_number(), 'date' => $order->get_date_created() ? $order->get_date_created()->date('Y-m-d') : gmdate('Y-m-d'),
             'currency' => $order->get_currency(), 'scale' => $scale, 'lines' => $lines, 'source' => $pos ? 'pos' : 'web',
             'register' => (string) $order->get_meta('_sfm4u_pos_register'),
-            'member_no_masked' => (string) $order->get_meta('_sfmwh_member_no_masked'), 'member_tier' => (string) $order->get_meta('_sfmwh_member_tier')];
+            'member_no_masked' => (string) $order->get_meta('_sfmwh_member_no_masked'), 'member_tier' => (string) $order->get_meta('_sfmwh_member_tier'),
+            'rounding_minor' => self::roundingFeeMinor($order, $scale), 'round_off_account' => (string) get_option(self::OPT_ROUND_OFF, '')];
     }
 
     /** Send one order to ERPNext once. Returns the invoice name (existing one if already sent). */
@@ -298,10 +346,13 @@ final class ErpSync {
             $items[] = ['item_code' => (string) $l['sku'], 'qty' => -$qty, 'rate' => round((abs((int) $l['total_minor']) / $qty) / (10 ** $scale), $scale), 'warehouse' => $warehouse];
         }
         if (!$items) { throw new DomainException('Amount-only refund: no returned items. Make the credit note in ERPNext by hand.'); }
-        return ['doctype' => 'Sales Invoice', 'docstatus' => 1, 'is_return' => 1, 'return_against' => $against, 'company' => $company,
-            'customer' => $customer, 'posting_date' => (string) $r['date'], 'currency' => (string) $r['currency'], 'update_stock' => 1,
+        $target = array_sum(array_map(fn($l) => abs((int) $l['total_minor']), $r['lines'])) + abs((int) ($r['rounding_minor'] ?? 0));
+        $taxes = self::roundingRow($items, $target, $scale, -1, (string) ($r['round_off_account'] ?? ''));
+        $restock = ($r['restock'] ?? '1') !== '0';
+        return ($taxes ? ['taxes' => $taxes, 'disable_rounded_total' => 1] : []) + ['doctype' => 'Sales Invoice', 'docstatus' => 1, 'is_return' => 1, 'return_against' => $against, 'company' => $company,
+            'customer' => $customer, 'posting_date' => (string) $r['date'], 'currency' => (string) $r['currency'], 'update_stock' => $restock ? 1 : 0,
             'set_warehouse' => $warehouse, 'is_pos' => ($r['source'] ?? '') === 'pos' ? 1 : 0, 'items' => $items,
-            'remarks' => sprintf('WooCommerce refund #%s of order #%s', (string) $r['id'], (string) $r['number']), 'po_no' => 'WC-R-' . (string) $r['id']];
+            'remarks' => sprintf('WooCommerce refund #%s of order #%s%s', (string) $r['id'], (string) $r['number'], $restock ? '' : ' (damaged: not back in stock)'), 'po_no' => 'WC-R-' . (string) $r['id']];
     }
 
     /** Send one refund once. The original order must already be in ERPNext (else it throws and the job retries). */
@@ -320,7 +371,9 @@ final class ErpSync {
             $lines[] = ['sku' => $p ? (string) $p->get_sku() : '', 'qty' => (int) $item->get_quantity(), 'total_minor' => (int) round((float) $item->get_total() * (10 ** $scale))];
         }
         $o = self::orderData($order);
-        $r = ['id' => $refund->get_id(), 'number' => $o['number'], 'date' => gmdate('Y-m-d'), 'currency' => $o['currency'], 'scale' => $scale, 'source' => $o['source'], 'lines' => $lines];
+        $r = ['id' => $refund->get_id(), 'number' => $o['number'], 'date' => gmdate('Y-m-d'), 'currency' => $o['currency'], 'scale' => $scale, 'source' => $o['source'], 'lines' => $lines,
+            'rounding_minor' => self::roundingFeeMinor($refund, $scale), 'round_off_account' => (string) get_option(self::OPT_ROUND_OFF, ''),
+            'restock' => (string) $refund->get_meta(self::META_RESTOCK)];
         $client = $client ?? self::client();
         $name = $client->salesInvoice(self::returnDoc($r, $against, (string) $order->get_meta('_sfmwh_erp_company'),
             (string) $order->get_meta('_sfmwh_erp_warehouse'), (string) get_option('sfmwh_erp_customer', 'Walk-in Customer')));
