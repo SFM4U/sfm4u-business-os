@@ -13,7 +13,7 @@ use DomainException;
  * All money is in store minor units (taka with 0 decimals = whole taka).
  */
 final class Members {
-    public const SCHEMA = '5';
+    public const SCHEMA = '6'; // 6: khata.ref (idempotency key, 0.9.9-dev)
     public const SCHEMA_OPTION = 'sfm_wr_members_schema';
     public const TIERS = ['regular', 'business', 'premium', 'black'];
     public const KINDS = ['charge', 'payment', 'adjust'];
@@ -142,8 +142,10 @@ final class Members {
             note varchar(255) NOT NULL DEFAULT '',
             staff_id bigint(20) unsigned NOT NULL,
             created_at datetime NOT NULL,
+            ref varchar(64) NOT NULL DEFAULT '',
             PRIMARY KEY  (id),
-            KEY user_store (user_id,store,id)
+            KEY user_store (user_id,store,id),
+            KEY store_ref (store,ref)
         ) $charset;");
         Rewards::install();
         if (!get_role('sfm_cashier')) {
@@ -519,7 +521,7 @@ final class Members {
      * write the same balance at once.
      */
     public static function record(int $userId, int $cardId, string $kind, int $minor, string $method, string $note,
-        int $staffId, string $direction = 'up', string $store = 'main'): array {
+        int $staffId, string $direction = 'up', string $store = 'main', string $ref = ''): array {
         global $wpdb;
         if (!in_array($kind, self::KINDS, true) || ($method !== '' && !in_array($method, self::METHODS, true))) {
             throw new DomainException('Invalid khata entry.');
@@ -531,12 +533,26 @@ final class Members {
         $wpdb->query('START TRANSACTION');
         $last = $wpdb->get_var($wpdb->prepare('SELECT balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s ORDER BY id DESC LIMIT 1' . self::lockSql(),
             $userId, $store));
+        if ($ref !== '') {
+            // Idempotent replay: the same request key (e.g. a POS retry) never writes a second row.
+            // Checked while this customer's last row is locked, so two cashiers cannot both insert it.
+            $seen = $wpdb->get_row($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor FROM ' . self::khata() . ' WHERE user_id=%d AND store=%s AND ref=%s LIMIT 1',
+                $userId, $store, $ref), ARRAY_A);
+            if ($seen) {
+                $wpdb->query('COMMIT');
+                if ($seen['kind'] !== $kind || (int) $seen['amount_minor'] !== $delta) {
+                    throw new DomainException(__('This khata request was already used for a different entry.', 'sfm4u-wholesale'), 409);
+                }
+                return ['id' => (int) $seen['id'], 'balance_minor' => (int) $seen['balance_minor'], 'amount_minor' => (int) $seen['amount_minor'], 'replayed' => true];
+            }
+        }
         $balance = ($last === null ? 0 : (int) $last) + $delta;
         $ok = $wpdb->insert(self::khata(), [
             'user_id' => $userId, 'card_id' => $cardId, 'store' => $store, 'kind' => $kind,
             'amount_minor' => $delta, 'balance_minor' => $balance, 'method' => $method,
             'note' => mb_substr($note, 0, 255), 'staff_id' => $staffId, 'created_at' => current_time('mysql', true),
-        ], ['%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%s']);
+            'ref' => mb_substr($ref, 0, 64),
+        ], ['%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%s', '%s']);
         if (!$ok) {
             $wpdb->query('ROLLBACK');
             throw new DomainException(__('The entry was not saved. Try again.', 'sfm4u-wholesale'));
@@ -546,6 +562,48 @@ final class Members {
         $row = ['id' => $rowId, 'balance_minor' => $balance, 'amount_minor' => $delta];
         do_action('sfm_wr_khata_recorded', $userId, $row);
         return $row;
+    }
+
+    /**
+     * What a cashier/shopkeeper needs about one customer's khata at this store: balance (positive = customer owes),
+     * since when it is owed (date the balance last went from 0 or less to above 0), last payment, recent rows.
+     */
+    public static function dueSummary(int $userId, string $store = 'main', int $rows = 10): array {
+        global $wpdb;
+        $all = $wpdb->get_results($wpdb->prepare('SELECT id, kind, amount_minor, balance_minor, method, note, created_at FROM ' . self::khata()
+            . ' WHERE user_id=%d AND store=%s ORDER BY id ASC', $userId, $store), ARRAY_A) ?: [];
+        $since = null; $lastPay = null; $prev = 0;
+        foreach ($all as $r) {
+            $b = (int) $r['balance_minor'];
+            if ($prev <= 0 && $b > 0) { $since = $r['created_at']; }
+            if ($b <= 0) { $since = null; }
+            if ($r['kind'] === 'payment') { $lastPay = ['at' => $r['created_at'], 'amount_minor' => -(int) $r['amount_minor'], 'method' => $r['method']]; }
+            $prev = $b;
+        }
+        $balance = $all ? (int) end($all)['balance_minor'] : 0;
+        return ['balance_minor' => $balance, 'due_minor' => max(0, $balance), 'advance_minor' => max(0, -$balance),
+            'due_since' => $balance > 0 ? $since : null, 'last_payment' => $lastPay,
+            'recent' => array_reverse(array_slice($all, -$rows))];
+    }
+
+    /** Day-by-day khata history (store local dates): charged, paid, corrections and closing balance per day. */
+    public static function dueHistory(int $userId, string $store = 'main', int $days = 365): array {
+        global $wpdb;
+        $from = gmdate('Y-m-d H:i:s', time() - $days * DAY_IN_SECONDS);
+        $all = $wpdb->get_results($wpdb->prepare('SELECT kind, amount_minor, balance_minor, created_at FROM ' . self::khata()
+            . ' WHERE user_id=%d AND store=%s AND created_at >= %s ORDER BY id ASC', $userId, $store, $from), ARRAY_A) ?: [];
+        $out = [];
+        foreach ($all as $r) {
+            $day = function_exists('get_date_from_gmt') ? get_date_from_gmt($r['created_at'], 'Y-m-d') : substr($r['created_at'], 0, 10);
+            $out[$day] ??= ['date' => $day, 'charged_minor' => 0, 'paid_minor' => 0, 'adjusted_minor' => 0, 'closing_minor' => 0, 'entries' => 0];
+            $a = (int) $r['amount_minor'];
+            if ($r['kind'] === 'charge') { $out[$day]['charged_minor'] += $a; }
+            elseif ($r['kind'] === 'payment') { $out[$day]['paid_minor'] += -$a; }
+            else { $out[$day]['adjusted_minor'] += $a; }
+            $out[$day]['closing_minor'] = (int) $r['balance_minor'];
+            $out[$day]['entries']++;
+        }
+        return array_values(array_reverse($out));
     }
 
     public static function money(int $minor): string {

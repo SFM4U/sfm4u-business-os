@@ -2,6 +2,8 @@
 use SFM4U\Wholesale\Members\{MemberLink, Members};
 $p=0;$f=0;$ok=function($c,$m)use(&$p,&$f){if($c)$p++;else{$f++;echo "FAIL $m\n";}};
 Members::install(); wp_set_current_user(1);
+// link-finish is a MASTER endpoint: run as master regardless of earlier two-site tests, restore afterwards.
+$oldRole=get_option(\SFM4U\Wholesale\Members\CardLink::OPT_ROLE); update_option(\SFM4U\Wholesale\Members\CardLink::OPT_ROLE,'master');
 $r=wp_rand(10000,99999); $u=(int)wp_insert_user(['user_login'=>"lk$r",'user_pass'=>wp_generate_password(20),'user_email'=>"lk$r@example.com"]);
 Members::issue($u,'business',0,1);
 $no=Members::memberNo($u); $id='shop_test1';
@@ -15,4 +17,5 @@ add_option($lock, time()-60, '', 'no');
 $ok($req('123456')->get_status()===200, 'stale lock cleared, code works once');
 $ok($req('123456')->get_status()===422, 'same code cannot be used twice');
 $ok(get_option($lock, null)===null, 'lock released');
+$oldRole!==false ? update_option(\SFM4U\Wholesale\Members\CardLink::OPT_ROLE,$oldRole) : delete_option(\SFM4U\Wholesale\Members\CardLink::OPT_ROLE);
 echo "pass $p fail $f\n";
