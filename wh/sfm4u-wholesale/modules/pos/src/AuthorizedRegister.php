@@ -81,6 +81,77 @@ final class AuthorizedRegister {
         });
     }
 
+    public function memberDue(int $merchant, string $register, string $scan, bool $history): array
+    {
+        $this->actor($merchant, $register);
+        [$memberId, $store] = self::khataIdentity($merchant, $scan);
+        $members = \SFM4U\Wholesale\Members\Members::class;
+        if ($history) {
+            return ['days' => $members::dueHistory($memberId, $store)];
+        }
+        return $members::dueSummary($memberId, $store, 10, false);
+    }
+
+    public function payMemberDue(int $merchant, string $register, string $key, int $session,
+        string $scan, int $amount): array
+    {
+        [$actor] = $this->actor($merchant, $register);
+        if (!$this->sessions || $session < 1 || $amount < 1 || $amount > 1000000000
+            || get_woocommerce_currency() !== 'BDT' || wc_get_price_decimals() !== 2) {
+            throw new DomainException('Invalid due payment.', 422);
+        }
+        $this->journal->requirePinnedConnection();
+        $notification = null;
+        $result = $this->journal->execute($merchant, 'pos_due', $key, compact('register', 'actor', 'session', 'scan', 'amount'),
+            function () use ($merchant, $register, $key, $session, $scan, $amount, $actor, &$notification): array {
+                $this->sessions->assertActive($merchant, $register, $session);
+                [$member, $store] = self::khataIdentity($merchant, $scan);
+                $members = \SFM4U\Wholesale\Members\Members::class;
+                $ref = 'pos-due:' . substr(hash('sha256', $merchant . ':' . $key), 0, 48);
+                $row = $members::recordInTransaction($member, 0, 'payment', $amount, 'cash',
+                    'POS due payment', $actor, 'up', $store, $ref);
+                $notification = [$member, $row];
+                $signedBalance = $row['balance_minor'];
+                $response = ['kind' => 'DUE_PAYMENT', 'register' => $register, 'session_id' => $session,
+                    'payment_id' => $row['id'], 'paid_minor' => $amount, 'previous_due_minor' => max(0, $signedBalance + $amount),
+                    'due_minor' => max(0, $signedBalance), 'advance_minor' => max(0, -$signedBalance)];
+                do_action('sfm4u_pos_due_payment_before_commit', $response);
+                return ['response' => $response, 'movements' => []];
+            });
+        if ($notification && empty($notification[1]['replayed'])) {
+            try {
+                \SFM4U\Wholesale\Members\Members::notifyRecorded(...$notification);
+            } catch (\Throwable) {
+                // The payment is committed. A listener failure must not invalidate its receipt.
+            }
+        }
+        return $result;
+    }
+
+    public static function khataStore(int $merchant): string
+    {
+        $mappings = defined('SFM4U_POS_KHATA_STORES') ? SFM4U_POS_KHATA_STORES : [];
+        $store = is_array($mappings) ? ($mappings[$merchant] ?? null) : null;
+        if (!is_string($store) || !preg_match('/^[a-z0-9_-]{1,32}$/D', $store)
+            || count(array_keys($mappings, $store, true)) !== 1) {
+            throw new DomainException('Khata is unavailable for this shop.', 403);
+        }
+        return $store;
+    }
+
+    private static function khataIdentity(int $merchant, string $scan): array
+    {
+        $store = self::khataStore($merchant);
+        $member = \SFM4U\Wholesale\MemberPrice::fromScan($scan);
+        if (!$member || empty($member['user_id'])) {
+            throw new DomainException('Card not found.', 404);
+        }
+        if (!empty($member['suspended']) || ($member['status'] ?? '') !== 'active') {
+            throw new DomainException('Khata is unavailable for this card.', 403);
+        }
+        return [(int) $member['user_id'], $store];
+    }
+
     public function search(int $merchant,string $register,string $term):array {
         $this->actor($merchant,$register);
         return ['kind'=>'SEARCH','products'=>RegisterProductSearch::find($merchant,$term)];
@@ -164,8 +235,13 @@ final class AuthorizedRegister {
             || !is_string($data['digest'] ?? null)) {
             throw new DomainException('Invalid counter confirmation.', 422);
         }
+        $duePayment = $data['due_payment_minor'] ?? 0;
+        $credit = $data['credit_minor'] ?? 0;
+        if (!is_int($duePayment) || !is_int($credit)) {
+            throw new DomainException('Invalid khata amounts.', 422);
+        }
         return CounterSale::commit($this->journal, $this->receipts, $this->sessions, $merchant, $register, $key,
-            $actor, $cashier, $data['session'], $intent, $data['digest'], $data['tender']);
+            $actor, $cashier, $data['session'], $intent, $data['digest'], $data['tender'], $duePayment, $credit);
     }
 
     public function recover(int $merchant,string $register,string $key,bool $credit=false): ?array {
@@ -210,6 +286,9 @@ final class AuthorizedRegister {
                         $sold += ['factor' => 1, 'packs' => $counterLine['quantity'],
                             'unit_minor' => $counterLine['unit_minor'], 'name' => $counterLine['name'],
                             'sku' => $counterLine['sku']];
+                    }
+                    if (!empty($sold['credit_minor'])) {
+                        throw new DomainException('A sale on khata needs manager reconciliation.', 409);
                     }
                     if (($original['type'] ?? 'sale') !== 'sale' || ($sold['factor'] ?? 0)!==1
                         || $sold['vat_minor']!==0 || $sold['discount_minor']!==0) {
@@ -394,6 +473,9 @@ final class AuthorizedRegister {
     {
         $sale = $original['sale'];
         $order = wc_get_order($orderId);
+        if (!empty($sale['credit_minor'])) {
+            throw new DomainException('A sale on khata needs manager reconciliation.', 409);
+        }
         if ($original['type'] !== 'sale' || !is_array($sale['lines'] ?? null) || ($sale['vat_minor'] ?? null) !== 0
             || !$order || $order->get_currency() !== 'BDT' || self::minor($order->get_total()) !== $sale['total_minor']) {
             throw new DomainException('Original cart receipt cannot be credited.', 409);

@@ -116,7 +116,7 @@ final class RegisterSessions
     public function cashTotals(int $merchant, string $register, int $session): array
     {
         $rows = $this->db->get_results($this->db->prepare(
-            "SELECT channel,response FROM %i WHERE merchant_id=%d AND channel IN ('pos','pos_credit','pos_drawer')
+            "SELECT channel,response FROM %i WHERE merchant_id=%d AND channel IN ('pos','pos_credit','pos_drawer','pos_due')
              AND response IS NOT NULL",
             $this->db->prefix . 'sfm4u_inventory_requests', $merchant
         ), ARRAY_A);
@@ -132,7 +132,7 @@ final class RegisterSessions
         $end = gmdate('Y-m-d', time() + DAY_IN_SECONDS);
         $rows = $this->db->get_results($this->db->prepare(
             "SELECT channel,response FROM %i WHERE merchant_id=%d AND created_at >= %s AND created_at < %s
-             AND channel IN ('pos','pos_credit','pos_drawer') AND response IS NOT NULL",
+             AND channel IN ('pos','pos_credit','pos_drawer','pos_due') AND response IS NOT NULL",
             $this->db->prefix . 'sfm4u_inventory_requests', $merchant, $day, $end
         ), ARRAY_A);
         if ($this->db->last_error !== '') {
@@ -153,6 +153,7 @@ final class RegisterSessions
             }
             [$field, $amount] = match ($row['channel']) {
                 'pos' => ['cash_sales_minor', $cash['cash_received_minor'] ?? $cash['tender_minor'] - $cash['change_minor']],
+                'pos_due' => ['cash_in_minor', $cash['paid_minor']],
                 'pos_credit' => ['cash_returns_minor', $cash['cash_refund_minor'] ?? $cash['refund_minor']],
                 'pos_drawer' => ['cash_' . $cash['direction'] . '_minor', $cash['amount_minor']],
             };

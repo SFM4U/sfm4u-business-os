@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createCounterQueue, counterMinor, syncCounterQueue } = require('../modules/pos/src/counter.js');
+const { createCounterQueue, counterMinor, syncCounterQueue } = require('../../wh/sfm4u-wholesale/modules/pos/src/counter.js');
 
 function storage() {
     const data = new Map();
@@ -56,4 +56,22 @@ test('currency input preserves minor units and rejects malformed or excessive in
     assert.equal(counterMinor('12.09'), 1209);
     assert.equal(counterMinor('0.1'), 10);
     for (const bad of ['-1', '1e2', '1.002', '10000000.01']) assert.throws(() => counterMinor(bad));
+});
+
+
+test('due payment remains queued after a lost response and reuses its key', async () => {
+    const queue = createCounterQueue(storage(), 'counter:');
+    const intent = { action: 'member_due_payment', merchant: 1, register: 'R1', session: 2, amount: 700 };
+    queue.save({ key: 'synthetic-due-key', created: 1, intent });
+    await assert.rejects(syncCounterQueue(queue, async () => { throw new Error('response lost'); }, () => {}));
+    assert.equal(queue.entries().length, 1);
+    await syncCounterQueue(queue, async (retry, key) => {
+        assert.deepEqual(retry, intent);
+        assert.equal(key, 'synthetic-due-key');
+        return { kind: 'DUE_PAYMENT', payment_id: 42 };
+    }, (receipt, source) => {
+        assert.equal(receipt.payment_id, 42);
+        assert.deepEqual(source, intent);
+    });
+    assert.equal(queue.entries().length, 0);
 });

@@ -49,6 +49,13 @@ final class InvoiceTemplate
         $html.='<dt>'.esc_html__('VAT rate','sfm4u-wholesale').'</dt><dd>'.esc_html($rate).'</dd>';
         foreach(['Discount'=>$sale['discount_minor'],'Cash rounding'=>$sale['rounding_minor'],'VAT amount'=>$sale['vat_minor'],'Total'=>$sale['total_minor'],
             (($sale['tender_type']??'cash')==='cash'?'Cash tender':'Recorded tender amount')=>$sale['tender_minor']??0,'Change'=>$sale['change_minor']??0] as $label=>$amount)$html.='<dt>'.esc_html(__($label,'sfm4u-wholesale')).'</dt><dd>'.esc_html($currency.' '.$format($amount)).'</dd>';
+        if (($receipt['type'] ?? 'sale') === 'sale' && isset($sale['previous_due_minor'])) {
+            foreach (['Previous due' => 'previous_due_minor', 'Paid toward previous due' => 'due_payment_minor',
+                'Sale on credit' => 'credit_minor', 'New due' => 'due_minor', 'Advance' => 'advance_minor'] as $label => $field) {
+                $html .= '<dt>' . esc_html(__($label, 'sfm4u-wholesale')) . '</dt><dd>'
+                    . esc_html($currency . ' ' . $format($sale[$field])) . '</dd>';
+            }
+        }
         if (isset($sale['method_label'], CounterSale::METHODS[$sale['method_label']])) {
             $html .= '<dt>' . esc_html__('Payment method', 'sfm4u-wholesale') . '</dt><dd>'
                 . esc_html(CounterSale::methodLabel($sale['method_label'])) . '</dd>';

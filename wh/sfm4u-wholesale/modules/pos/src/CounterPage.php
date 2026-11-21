@@ -24,7 +24,7 @@ final class CounterPage
 
     public static function assets(): void
     {
-        wp_enqueue_script('sfm4u-counter', plugins_url('counter.js', __FILE__), [], '0.2.1-dev', true);
+        wp_enqueue_script('sfm4u-counter', plugins_url('counter.js', __FILE__), [], '0.2.2-khata-dev', true);
         wp_enqueue_style('sfm4u-counter', plugins_url('counter.css', __FILE__), [], '0.2.1-dev');
         wp_localize_script('sfm4u-counter', 'sfm4uCounter', [
             'url' => rest_url('sfm4u-pos/v1/register'), 'nonce' => wp_create_nonce('wp_rest'),
@@ -56,6 +56,11 @@ final class CounterPage
                 'expected' => __('Expected cash (BDT)', 'sfm4u-wholesale'),
                 'counted' => __('Counted cash (BDT)', 'sfm4u-wholesale'),
                 'variance' => __('Variance (BDT)', 'sfm4u-wholesale'),
+                'due' => __('Shop due', 'sfm4u-wholesale'),
+                'advance' => __('Advance', 'sfm4u-wholesale'),
+                'dueUnavailable' => __('Khata is unavailable for this shop or card.', 'sfm4u-wholesale'),
+                'dueSaved' => __('Due payment recorded.', 'sfm4u-wholesale'),
+                'cashDue' => __('Cash to collect', 'sfm4u-wholesale'),
                 'total' => __('Total', 'sfm4u-wholesale'),
             ],
         ]);
@@ -86,6 +91,11 @@ final class CounterPage
             . esc_html__('SFM4U member card', 'sfm4u-wholesale') . '</option></select></label>'
             . '<label id="sfc-member-row" hidden>' . esc_html__('Scan member card', 'sfm4u-wholesale')
             . ' <input id="sfc-member" maxlength="200" autocomplete="off"></label><p id="sfc-member-info" aria-live="polite"></p>';
+        echo '<div id="sfc-khata" hidden><p id="sfc-due" aria-live="polite"></p>'
+            . '<button type="button" id="sfc-due-history" class="button">' . esc_html__('Due history', 'sfm4u-wholesale')
+            . '</button><ul id="sfc-history"></ul>';
+        self::amount('due-only', __('Due-only payment (BDT)', 'sfm4u-wholesale'));
+        echo '<button type="button" id="sfc-pay-due" class="button">' . esc_html__('Pay due only', 'sfm4u-wholesale') . '</button></div>';
         self::amount('discount', __('Discount', 'sfm4u-wholesale'));
         echo '<label>' . esc_html__('Payment method', 'sfm4u-wholesale') . ' <select id="sfc-method">';
         foreach (array_keys(CounterSale::METHODS) as $method) {
@@ -93,6 +103,10 @@ final class CounterPage
         }
         echo '</select></label><button class="button">' . esc_html__('Review cart total', 'sfm4u-wholesale') . '</button></form>';
         echo '<p id="sfc-total"></p><form id="sfc-sale">';
+        echo '<div id="sfc-khata-sale" hidden>';
+        self::amount('due-payment', __('Paid toward previous due', 'sfm4u-wholesale'));
+        self::amount('credit', __('Sale on credit', 'sfm4u-wholesale'));
+        echo '<p id="sfc-cash-due" aria-live="polite"></p></div>';
         self::amount('tender', __('Tender amount (BDT)', 'sfm4u-wholesale'));
         echo '<button id="sfc-confirm" class="button button-primary" disabled>' . esc_html__('Confirm sale', 'sfm4u-wholesale') . '</button></form></section>';
         echo '<section><h2>' . esc_html__('Cash drawer', 'sfm4u-wholesale') . '</h2><form id="sfc-drawer">';

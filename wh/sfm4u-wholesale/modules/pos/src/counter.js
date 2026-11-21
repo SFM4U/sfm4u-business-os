@@ -34,11 +34,12 @@ function counterMinor(value) {
 async function syncCounterQueue(queue, send, accepted) {
     for (const entry of queue.entries()) {
         const receipt = await send(entry.intent, entry.key);
-        if (!Number.isSafeInteger(receipt.order_id) || receipt.order_id < 1 || typeof receipt.number !== 'string') {
-            throw new Error('Invalid receipt');
-        }
+        const valid = entry.intent.action === 'member_due_payment'
+            ? receipt.kind === 'DUE_PAYMENT' && Number.isSafeInteger(receipt.payment_id) && receipt.payment_id > 0
+            : Number.isSafeInteger(receipt.order_id) && receipt.order_id > 0 && typeof receipt.number === 'string';
+        if (!valid) throw new Error('Invalid receipt');
         queue.remove(entry.key);
-        accepted(receipt);
+        accepted(receipt, entry.intent);
     }
 }
 
@@ -62,6 +63,7 @@ function initializeCounter() {
     let quote;
     let session = 0;
     let busy = false;
+    let dueScope;
     const announce = message => { el('status').textContent = message; };
     const updateConfirm = () => { el('confirm').disabled = !queue || !quote || !session || busy; };
     const invalidate = () => {
@@ -103,7 +105,16 @@ function initializeCounter() {
         return response.json();
     }
 
-    function receipt(data) {
+    function receipt(data, intent) {
+        if (data.kind === 'DUE_PAYMENT') {
+            const { merchant, register, member } = intent;
+            if (JSON.stringify({ merchant, register, member }) === dueScope) {
+                el('due').textContent = labels.due + ' ' + money(data.due_minor) + ' · ' + labels.advance + ' ' + money(data.advance_minor);
+            }
+            announce(labels.dueSaved + ' #' + data.payment_id);
+            el('due-only').value = '0.00';
+            return;
+        }
         el('order').value = data.order_id;
         announce(labels.saved + ' ' + labels.receipt + ' ' + data.number);
     }
@@ -194,8 +205,84 @@ function initializeCounter() {
         });
     }
 
+    function resetDue() {
+        dueScope = null;
+        el('khata').hidden = true;
+        el('khata-sale').hidden = true;
+        el('due').textContent = '';
+        el('history').replaceChildren();
+        el('cash-due').textContent = '';
+        for (const id of ['due-only', 'due-payment', 'credit']) el(id).value = '0.00';
+    }
+
+    function memberContext() {
+        return { ...context(), member: el('member').value.trim() };
+    }
+
+    async function readDue() {
+        const scope = memberContext();
+        if (!scope.member || el('tier').value !== 'member') return;
+        const reply = await send({ ...scope, action: 'member_due' });
+        if (JSON.stringify(scope) !== JSON.stringify(memberContext()) || el('tier').value !== 'member') return;
+        dueScope = JSON.stringify(scope);
+        el('khata').hidden = false;
+        el('khata-sale').hidden = el('method').value !== 'cash';
+        el('due').textContent = labels.due + ' ' + money(reply.due_minor) + ' · ' + labels.advance + ' ' + money(reply.advance_minor);
+    }
+
+    function khataAmounts() {
+        if (!dueScope || el('khata-sale').hidden) return { due_payment_minor: 0, credit_minor: 0 };
+        return { due_payment_minor: counterMinor(el('due-payment').value), credit_minor: counterMinor(el('credit').value) };
+    }
+
+    function refreshTender() {
+        if (!quote) return;
+        try {
+            const parts = khataAmounts();
+            const cash = quote.total + parts.due_payment_minor - parts.credit_minor;
+            if (cash < 0 || parts.credit_minor > quote.total) throw new Error();
+            el('cash-due').textContent = labels.cashDue + ' ' + money(cash);
+            el('tender').value = (cash / 100).toFixed(2);
+        } catch {
+            el('cash-due').textContent = labels.invalid;
+        }
+    }
+
+    for (const id of ['due-payment', 'credit']) el(id).addEventListener('input', refreshTender);
+    el('due-history').addEventListener('click', () => {
+        if (!dueScope) return;
+        void perform(async () => {
+            const scope = memberContext();
+            const result = await send({ ...scope, action: 'member_due_history' });
+            if (JSON.stringify(scope) !== dueScope) return;
+            el('history').replaceChildren(...result.days.map(day => {
+                const row = document.createElement('li');
+                row.textContent = day.date + ' · ' + money(day.charged_minor) + ' − ' + money(day.paid_minor)
+                    + ' · ' + money(day.closing_minor);
+                return row;
+            }));
+        });
+    });
+
+    el('pay-due').addEventListener('click', () => {
+        if (busy || !dueScope || !session || !queue || !navigator.onLine) return announce(labels.open);
+        let amount;
+        try {
+            amount = counterMinor(el('due-only').value);
+            if (!amount || JSON.stringify(memberContext()) !== dueScope) throw new Error();
+            queue.save({ intent: { ...memberContext(), action: 'member_due_payment', session, amount },
+                key: window.crypto.randomUUID(), created: Date.now(), total: amount });
+        } catch {
+            return announce(labels.invalid);
+        }
+        el('due-only').value = '0.00';
+        showQueue();
+        void perform(() => syncCounterQueue(queue, send, receipt));
+    });
+
     el('register').addEventListener('change', () => {
         session = 0;
+        resetDue();
         cart.clear();
         el('results').replaceChildren();
         el('summary').replaceChildren();
@@ -206,14 +293,20 @@ function initializeCounter() {
         drawerStatus();
     });
     for (const id of ['tier', 'method', 'discount', 'member']) el(id).addEventListener('input', invalidate);
+    el('member').addEventListener('input', resetDue);
+    el('method').addEventListener('input', () => { el('khata-sale').hidden = !dueScope || el('method').value !== 'cash'; });
     el('tier').addEventListener('input', () => {
+        resetDue();
         el('member-row').hidden = el('tier').value !== 'member';
         el('member-info').textContent = '';
         if (el('tier').value === 'member') el('member').focus();
     });
     // A card scanner types the code and Enter: review the total straight away.
     el('member').addEventListener('keydown', event => {
-        if (event.key === 'Enter') { event.preventDefault(); el('quote').requestSubmit(); }
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        if (cart.size) el('quote').requestSubmit();
+        else void perform(readDue);
     });
 
     el('search').addEventListener('submit', event => {
@@ -259,21 +352,31 @@ function initializeCounter() {
                 : '';
             el('total').textContent = labels.total + ' ' + money(quote.total);
             el('tender').value = (quote.total / 100).toFixed(2);
+            if (intent.member) {
+                try {
+                    await readDue();
+                } catch {
+                    resetDue();
+                    announce(labels.dueUnavailable);
+                }
+            }
         });
     });
 
     el('sale').addEventListener('submit', event => {
         event.preventDefault();
         if (busy || !quote || !session || !queue) return;
-        let tender;
+        let tender, khata;
         try {
+            khata = khataAmounts();
             tender = counterMinor(el('tender').value);
-            if (tender < quote.total || (quote.intent.method !== 'cash' && tender !== quote.total)) throw new Error();
+            const cash = quote.total + khata.due_payment_minor - khata.credit_minor;
+            if (khata.credit_minor > quote.total || tender < cash || (quote.intent.method !== 'cash' && tender !== cash)) throw new Error();
         } catch {
             announce(labels.invalid);
             return;
         }
-        const intent = { ...quote.intent, action: 'counter_sale', session, tender, digest: quote.digest };
+        const intent = { ...quote.intent, action: 'counter_sale', session, tender, digest: quote.digest, ...khata };
         try {
             queue.save({ intent, key: window.crypto.randomUUID(), created: Date.now(), total: quote.total });
         } catch {
@@ -281,6 +384,7 @@ function initializeCounter() {
             return;
         }
         cart.clear();
+        resetDue();
         drawCart();
         invalidate();
         showQueue();

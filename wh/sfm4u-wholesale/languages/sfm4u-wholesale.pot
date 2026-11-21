@@ -2419,3 +2419,39 @@ msgstr ""
 
 msgid "Customer not found."
 msgstr ""
+
+msgid "Shop due"
+msgstr ""
+
+msgid "Advance"
+msgstr ""
+
+msgid "Khata is unavailable for this shop or card."
+msgstr ""
+
+msgid "Due payment recorded."
+msgstr ""
+
+msgid "Cash to collect"
+msgstr ""
+
+msgid "Due history"
+msgstr ""
+
+msgid "Due-only payment (BDT)"
+msgstr ""
+
+msgid "Pay due only"
+msgstr ""
+
+msgid "Previous due"
+msgstr ""
+
+msgid "Paid toward previous due"
+msgstr ""
+
+msgid "Sale on credit"
+msgstr ""
+
+msgid "New due"
+msgstr ""

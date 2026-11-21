@@ -7,6 +7,7 @@ use DomainException;
 use RuntimeException;
 use SFM4U\Inventory\{ManagedOrderStock, RequestJournal};
 use SFM4U\Wholesale\{Commerce, MemberPrice, Rule};
+use SFM4U\Wholesale\Members\Members;
 
 final class CounterSale
 {
@@ -164,24 +165,57 @@ final class CounterSale
 
     public static function commit(RequestJournal $journal, ReceiptRegister $receipts, RegisterSessions $sessions,
         int $merchant, string $register, string $key, int $actor, string $cashier, int $session, array $intent,
-        string $digest, int $tender): array
+        string $digest, int $tender, int $duePayment = 0, int $credit = 0): array
     {
         if ($session < 1 || $tender < 0 || $tender > 1000000000 || !preg_match('/^[0-9a-f]{64}$/D', $digest)) {
             throw new DomainException('Invalid counter sale details.', 422);
         }
+        if ($duePayment < 0 || $duePayment > 1000000000 || $credit < 0 || $credit > 1000000000
+            || (($duePayment || $credit) && ($intent['tier'] !== 'member' || $intent['method'] !== 'cash'))) {
+            throw new DomainException('Khata needs a member cash sale and valid amounts.', 422);
+        }
         $journal->requirePinnedConnection();
         $orderId = 0;
+        $notifications = [];
+        $request = compact('register', 'actor', 'session', 'intent', 'digest', 'tender');
+        if ($duePayment || $credit) {
+            $request += compact('duePayment', 'credit');
+        }
         try {
-            return $journal->execute($merchant, 'pos', $key, compact('register', 'actor', 'session', 'intent', 'digest', 'tender'),
-                static function () use ($receipts, $sessions, $merchant, $register, $actor, $cashier, $session, $intent, $digest, $tender, &$orderId): array {
+            $result = $journal->execute($merchant, 'pos', $key, $request,
+                static function () use ($receipts, $sessions, $merchant, $register, $actor, $cashier, $session, $intent, $digest, $tender, $key, $duePayment, $credit, &$orderId, &$notifications): array {
                     $sessions->assertActive($merchant, $register, $session);
                     $quote = self::quote($merchant, $intent, true, $memberUserId);
                     if (!hash_equals($quote['digest'], $digest)) {
                         throw new DomainException('Counter price changed. Review the cart.', 409);
                     }
                     $cash = $intent['method'] === 'cash';
-                    if ($tender < $quote['total_minor'] || (!$cash && $tender !== $quote['total_minor'])) {
+                    $payable = $quote['total_minor'] - $credit + $duePayment;
+                    if ($credit > $quote['total_minor'] || $tender < $payable || (!$cash && $tender !== $payable)) {
                         throw new DomainException('Tender does not match the counter amount due.', 422);
+                    }
+                    $khata = [];
+                    if ($duePayment || $credit) {
+                        if (!$memberUserId) {
+                            throw new DomainException('Link the member before using khata.', 409);
+                        }
+                        $store = AuthorizedRegister::khataStore($merchant);
+                        $prefix = 'pos:' . substr(hash('sha256', $merchant . ':' . $key), 0, 48);
+                        $previous = $balance = null;
+                        foreach (['payment' => $duePayment, 'charge' => $credit] as $kind => $amount) {
+                            if (!$amount) {
+                                continue;
+                            }
+                            $row = Members::recordInTransaction($memberUserId, 0, $kind, $amount,
+                                $kind === 'payment' ? 'cash' : '', 'Counter sale', $actor, 'up', $store, $prefix . ':' . $kind);
+                            $previous ??= $row['balance_minor'] - $row['amount_minor'];
+                            $balance = $row['balance_minor'];
+                            if (empty($row['replayed'])) {
+                                $notifications[] = [$memberUserId, $row];
+                            }
+                        }
+                        $khata = ['previous_due_minor' => max(0, $previous), 'due_payment_minor' => $duePayment,
+                            'credit_minor' => $credit, 'due_minor' => max(0, $balance), 'advance_minor' => max(0, -$balance)];
                     }
                     $order = wc_create_order(['created_via' => 'sfm4u-pos-fixture']);
                     if (is_wp_error($order)) {
@@ -189,6 +223,9 @@ final class CounterSale
                     }
                     $orderId = $order->get_id();
                     $order->set_currency('BDT');
+                    if ($khata) {
+                        $order->update_meta_data('_sfm4u_pos_khata', $khata);
+                    }
                     $order->set_payment_method('sfm4u_counter_' . $intent['method']);
                     $order->set_payment_method_title(self::methodLabel($intent['method']));
                     $order->update_meta_data('_sfm4u_pos_register', $register); // ERPNext branch mapping (0.9.5)
@@ -230,7 +267,7 @@ final class CounterSale
                         $before[$line['product']] = (int) $quantity;
                     }
                     wc_reserve_stock_for_order($order);
-                    ManagedOrderStock::reduce($order, static fn() => $order->update_status($cash ? 'processing' : 'on-hold'));
+                    ManagedOrderStock::reduce($order, static fn() => $order->update_status($cash && !$credit ? 'processing' : 'on-hold'));
                     wc_release_stock_for_order($order);
                     $movements = [];
                     foreach ($quote['lines'] as $line) {
@@ -244,11 +281,11 @@ final class CounterSale
                     $sale = array_diff_key($quote, ['digest' => 1]) + [
                         'merchant_profile' => InvoiceProfilePage::profile($merchant), 'currency' => 'BDT', 'issued_at' => gmdate('c'),
                         'cashier' => $cashier, 'actor_id' => $actor, 'session_id' => $session, 'vat_minor' => 0,
-                        'tender_minor' => $tender, 'change_minor' => $tender - $quote['total_minor'],
-                        'cash_received_minor' => $cash ? $quote['total_minor'] : 0,
+                        'tender_minor' => $tender, 'change_minor' => $tender - $payable,
+                        'cash_received_minor' => $cash ? $payable : 0,
                         'tender_type' => $cash ? 'cash' : ($intent['method'] === 'card' ? 'manual_card' : 'manual_mfs'),
                         'method_label' => $intent['method'],
-                    ];
+                    ] + $khata;
                     $receipt = $receipts->issue($merchant, $register, $order->get_id(), $sale);
                     do_action('sfm4u_pos_synthetic_before_commit', $receipt);
                     return ['response' => $receipt, 'movements' => $movements];
@@ -262,5 +299,13 @@ final class CounterSale
             }
             throw $error;
         }
+        foreach ($notifications as [$memberId, $row]) {
+            try {
+                Members::notifyRecorded($memberId, $row);
+            } catch (\Throwable) {
+                wc_get_logger()->warning('POS khata listener failed after commit.', ['source' => 'sfm4u-pos']);
+            }
+        }
+        return $result;
     }
 }
