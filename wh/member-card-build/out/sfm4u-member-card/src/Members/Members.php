@@ -34,6 +34,7 @@ final class Members {
         Rewards::register();
         CardLink::register();
         if (class_exists(MemberLink::class)) { MemberLink::register(); }
+        if (class_exists(Identity::class)) { Identity::register(); }
     }
 
     public static function register(): void {
@@ -901,6 +902,7 @@ final class Members {
 
     public static function idInUse(string $hash, int $userId): bool {
         global $wpdb;
+        if ($wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->usermeta} WHERE meta_key='sfm_wr_id_hash' AND meta_value=%s AND user_id<>%d LIMIT 1", $hash, $userId))) { return true; }
         return (bool) $wpdb->get_var($wpdb->prepare('SELECT 1 FROM ' . self::cards() . ' WHERE id_hash=%s AND user_id<>%d LIMIT 1', $hash, $userId));
     }
 

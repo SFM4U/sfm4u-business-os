@@ -52,6 +52,10 @@ final class MemberPrice {
         if (!$m || !in_array($m['tier'] ?? '', self::TIERS, true) || ($m['status'] ?? '') !== 'active') {
             return false;
         }
+        // Account rules (Skill 227): an account on hold or blocked gets no member benefits.
+        if (isset($m['account_state']) && !in_array($m['account_state'], ['ok', 'grace'], true)) {
+            return false;
+        }
         return !array_key_exists('wholesale_ok', $m) || !empty($m['wholesale_ok']);
     }
 
@@ -121,7 +125,8 @@ final class MemberPrice {
         if (!$card || $card['status'] !== 'active') {
             return null;
         }
-        $ok = $card['tier'] === 'business' || ($card['tier'] === 'black' && Tiers::blackActive($uid));
+        $ok = ($card['tier'] === 'business' || ($card['tier'] === 'black' && Tiers::blackActive($uid)))
+            && (!class_exists(\SFM4U\Wholesale\Members\Identity::class) || \SFM4U\Wholesale\Members\Identity::usable($uid));
         return $ok ? ['member_no' => Members::memberNo($uid), 'tier' => $card['tier'], 'status' => 'active', 'source' => 'local'] : null;
     }
 

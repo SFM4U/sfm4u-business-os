@@ -252,8 +252,15 @@ final class CardLink {
             'since' => substr((string) ($card['created_at'] ?? ''), 0, 10),
             // 0.9.0: tells shops whether this card gives the wholesale price now (Business active, or Business Black paid up).
             'wholesale_ok' => (string) $card['status'] === 'active'
-                && ((string) $card['tier'] === 'business' || ((string) $card['tier'] === 'black' && class_exists(Tiers::class) && Tiers::blackActive($uid))),
-        ];
+                && ((string) $card['tier'] === 'business' || ((string) $card['tier'] === 'black' && class_exists(Tiers::class) && Tiers::blackActive($uid)))
+                && (!class_exists(Identity::class) || Identity::usable($uid)),
+        ] + (class_exists(Identity::class) ? self::accountFields($uid) : []);
+    }
+
+    /** Account rules for shops (Skill 227): state, days left to add the NID/BRN, check result. Never the NID itself. */
+    private static function accountFields(int $uid): array {
+        $a = Identity::accountState($uid);
+        return ['account_state' => $a['state'], 'id_days_left' => $a['id_days_left'], 'id_verified' => $a['id_verified']];
     }
 
     /* ---------------- shop side ---------------- */

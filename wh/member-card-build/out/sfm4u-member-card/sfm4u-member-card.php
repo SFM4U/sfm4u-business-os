@@ -14,7 +14,7 @@ defined('ABSPATH') || exit;
 // Same code as the member-card part of "SFM4U Wholesale & Retail". Load it only once per site.
 if (!class_exists('SFM4U\\Wholesale\\Members\\Members')) {
     define('SFM4U_MEMBERS_FROM', 'card');
-    foreach (['Members', 'Barcode', 'BdMapData', 'BdMap', 'CardView', 'CardGuide', 'CardLink', 'Receipt', 'MembersAdmin', 'MembersFront', 'Rewards', 'Tiers', 'MemberLink'] as $sfm4uMembersFile) {
+    foreach (['Members', 'Barcode', 'BdMapData', 'BdMap', 'CardView', 'CardGuide', 'CardLink', 'Receipt', 'MembersAdmin', 'MembersFront', 'Rewards', 'Tiers', 'MemberLink', 'Identity'] as $sfm4uMembersFile) {
         require_once __DIR__ . '/src/Members/' . $sfm4uMembersFile . '.php';
     }
     unset($sfm4uMembersFile);
