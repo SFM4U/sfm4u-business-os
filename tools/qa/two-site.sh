@@ -1,6 +1,7 @@
 #!/bin/bash
 # L-03: disposable multi-site run for CardLink / pairing / Black StockFeed / BOS master-shop tests (synthetic).
-# Sites: shop = /home/claude/wplocal/site (http://127.0.0.1:8080), master = .../master (:8899), receiver/AlgiBazar = .../recv (:8894).
+# Sites (all rebuilt fresh, own DBs): shop = /home/claude/wplocal/shopq (:8080), master = .../master (:8899), AlgiBazar = .../recv (:8894).
+# The AlgiBazar site runs Business OS for the StockFeed receiver tests, then the AlgiBazar Connector (built from the same source) for the BOS master/shop tests.
 # Needs the MariaDB container from pos-staging.sh (bos-db) and wpcli.phar in /home/claude/wplocal.
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"; L=/home/claude/wplocal; T="$REPO/wh/tests-local"
@@ -21,14 +22,18 @@ PHP
   $W option update woocommerce_currency BDT; $W option update woocommerce_custom_orders_table_enabled yes
 }
 serve() { pkill -f "php -S 127.0.0.1:$1" 2>/dev/null; (cd "$2" && PHP_CLI_SERVER_WORKERS=4 setsid nohup php -S 127.0.0.1:$1 </dev/null >/tmp/claude-0/serve-$1.log 2>&1 &); }
-rm -rf "$L/site/wp-content/plugins/sfm4u-wholesale"; cp -r "$REPO/wh/sfm4u-wholesale" "$L/site/wp-content/plugins/"
-[ "${SKIP_BUILD:-0}" = 1 ] || { mk master 8899 wpmaster; mk recv 8894 wprecv; }
-serve 8080 $L/site; serve 8899 $L/master; serve 8894 $L/recv; sleep 2
-WS="php $L/wpcli.phar --allow-root --path=$L/site"; WM="php $L/wpcli.phar --allow-root --path=$L/master"; WR="php $L/wpcli.phar --allow-root --path=$L/recv"
+[ "${SKIP_BUILD:-0}" = 1 ] || { mk shopq 8080 wpshopq; mk master 8899 wpmaster; mk recv 8894 wprecv; }
+serve 8080 $L/shopq; serve 8899 $L/master; serve 8894 $L/recv; sleep 2
+WS="php $L/wpcli.phar --allow-root --path=$L/shopq"; WM="php $L/wpcli.phar --allow-root --path=$L/master"; WR="php $L/wpcli.phar --allow-root --path=$L/recv"
 run() { local who=$1 f=$2; local W; case $who in shop) W=$WS;; master) W=$WM;; recv) W=$WR;; esac
   printf "%-7s %-22s " "$who" "$f"; timeout 300 $W eval-file "$T/$f.php" 2>&1 | grep -vE "sendmail|^Notice|^Deprecated|^PHP (Notice|Deprecated)" | tail -2 | tr '\n' ' '; echo; }
 rm -f /tmp/link.json /tmp/pair.json /tmp/pair2.json /tmp/stock_pair.json /tmp/stock_pair2.json /tmp/stock_vendor.txt /tmp/bos.json
 echo "== CardLink"; run master link-master-setup; run shop link-shop-test; run shop link-central-test
 echo "== Pairing"; run shop pair-shop-start; run master pair-master-approve; run shop pair-shop-finish
 echo "== Black StockFeed"; run shop stock-send-start; run recv stock-recv-setup; run recv stock-recv-approve; run shop stock-send-test; run recv stock-recv-check
-echo "== BOS master/shop"; run recv bos-master-setup; run shop bos-shop-test; run recv bos-master-check
+echo "== BOS master/shop (AlgiBazar site switches to the Connector)"
+bash "$REPO/wh/receiver-build/build.sh" >/dev/null && git -C "$REPO" checkout -q -- wh/receiver-build/out 2>/dev/null
+ZIPR=$(ls -t /home/claude/SFM4U-Stock-Receiver-*.zip | head -1)
+$WR plugin deactivate sfm4u-wholesale --quiet 2>/dev/null; rm -rf $L/recv/wp-content/plugins/sfm4u-stock-receiver; unzip -q "$ZIPR" -d $L/recv/wp-content/plugins/; $WR plugin activate sfm4u-stock-receiver --quiet 2>/dev/null
+export SFM4U_MASTER_WP=$L/master
+run master bos-master-setup; run recv bos-shop-test; run master bos-master-check
