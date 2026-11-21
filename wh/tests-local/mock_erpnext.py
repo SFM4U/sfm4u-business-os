@@ -37,6 +37,11 @@ class H(BaseHTTPRequestHandler):
         if urllib.parse.unquote(u.path) == '/api/resource/Sales Invoice':
             if body.get('docstatus') != 1 or not body.get('company') or not body.get('items'): return self.send(417, {'exception': 'bad invoice'})
             if WAREHOUSES.get(body.get('set_warehouse')) != body['company']: return self.send(417, {'exception': 'warehouse not in company'})
+            if body.get('is_return') == 1:
+                # ERPNext credit note: must point at an existing invoice and carry negative quantities.
+                names = ['ACC-SINV-%04d' % (i + 1) for i in range(len(INVOICES))]
+                if body.get('return_against') not in names or any(float(it['qty']) >= 0 for it in body['items']):
+                    return self.send(417, {'exception': 'bad return'})
             for it in body['items']:
                 k = (it['item_code'], it['warehouse']); BINS[k] = BINS.get(k, 0.0) - float(it['qty'])
             INVOICES.append(body); return self.send(200, {'data': {'name': 'ACC-SINV-%04d' % len(INVOICES)}})

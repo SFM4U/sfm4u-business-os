@@ -27,12 +27,41 @@ final class ErpSync {
         // 0.9.5: send paid orders to ERPNext when the owner turns it on (option sfmwh_erp_orders = yes; off by default).
         add_action('woocommerce_order_status_processing', [self::class, 'onPaid'], 30);
         add_action('woocommerce_order_status_completed', [self::class, 'onPaid'], 30);
+        // 0.9.9: POS sales and all refunds are exported by a one-off job AFTER their transaction commits,
+        // so ERPNext never receives a sale/refund that the shop rolled back.
+        add_action(self::JOB_ORDER, [self::class, 'runOrderJob']);
+        add_action('woocommerce_order_refunded', [self::class, 'onRefunded'], 30, 2);
+        add_action(self::JOB_REFUND, [self::class, 'runRefundJob']);
+    }
+
+    public const JOB_ORDER = 'sfmwh_erp_export_order';
+    public const JOB_REFUND = 'sfmwh_erp_export_refund';
+
+    private static function ordersOn(): bool {
+        return get_option('sfmwh_erp_orders', 'no') === 'yes' && self::settings()['enabled'] === '1';
+    }
+
+    private static function later(string $hook, int $id, int $delay = 30): void {
+        if (!wp_next_scheduled($hook, [$id])) { wp_schedule_single_event(time() + $delay, $hook, [$id]); }
     }
 
     public static function onPaid($orderId): void {
-        if (get_option('sfmwh_erp_orders', 'no') !== 'yes' || self::settings()['enabled'] !== '1') { return; }
+        if (!self::ordersOn()) { return; }
         $order = wc_get_order((int) $orderId);
         if (!$order) { return; }
+        if (str_starts_with((string) $order->get_created_via(), 'sfm4u-pos')) { self::later(self::JOB_ORDER, $order->get_id()); return; }
+        self::exportNow($order);
+    }
+
+    /** One-off job for a POS sale: re-check the sale still stands, then export once. */
+    public static function runOrderJob($orderId): void {
+        if (!self::ordersOn()) { return; }
+        $order = wc_get_order((int) $orderId);
+        if (!$order || !in_array($order->get_status(), ['processing', 'completed'], true)) { return; }
+        self::exportNow($order);
+    }
+
+    private static function exportNow(\WC_Order $order): void {
         try {
             self::exportOrder($order);
         } catch (\Throwable $e) {
@@ -230,6 +259,74 @@ final class ErpSync {
         $order->update_meta_data('_sfmwh_erp_company', $company);
         $order->update_meta_data('_sfmwh_erp_warehouse', $warehouse);
         $order->save();
+        return $name;
+    }
+
+    /* ---------- 0.9.9: refunds / returns -> ERPNext return Sales Invoice (credit note) ---------- */
+
+    public static function onRefunded($orderId, $refundId): void {
+        if (!self::ordersOn()) { return; }
+        self::later(self::JOB_REFUND, (int) $refundId);
+    }
+
+    public static function runRefundJob($refundId): void {
+        if (!self::ordersOn()) { return; }
+        $refund = wc_get_order((int) $refundId);
+        if (!$refund instanceof \WC_Order_Refund) { return; }
+        try {
+            self::exportRefund($refund);
+        } catch (\Throwable $e) {
+            $parent = wc_get_order($refund->get_parent_id());
+            if ($parent) { $parent->add_order_note('ERPNext return: ' . mb_substr($e->getMessage(), 0, 200)); }
+            self::log('refund ' . $refund->get_id() . ': ' . $e->getMessage());
+            $tries = (int) $refund->get_meta('_sfmwh_erp_return_tries') + 1;
+            $refund->update_meta_data('_sfmwh_erp_return_tries', $tries); $refund->save();
+            if ($tries < 24) { self::later(self::JOB_REFUND, $refund->get_id(), 300 * $tries); }
+        }
+    }
+
+    /** Pure: ERPNext return invoice against the original invoice (quantities negative, rates positive). */
+    public static function returnDoc(array $r, string $against, string $company, string $warehouse, string $customer = 'Walk-in Customer'): array {
+        if ($against === '' || $company === '' || $warehouse === '') {
+            throw new DomainException('ERPNext return needs the original invoice, company and warehouse.');
+        }
+        $scale = (int) ($r['scale'] ?? 2);
+        $items = [];
+        foreach ($r['lines'] as $l) {
+            $qty = abs((int) $l['qty']);
+            if (($l['sku'] ?? '') === '' || $qty < 1) { throw new DomainException('Every returned line needs a SKU and a quantity.'); }
+            $items[] = ['item_code' => (string) $l['sku'], 'qty' => -$qty, 'rate' => round((abs((int) $l['total_minor']) / $qty) / (10 ** $scale), $scale), 'warehouse' => $warehouse];
+        }
+        if (!$items) { throw new DomainException('Amount-only refund: no returned items. Make the credit note in ERPNext by hand.'); }
+        return ['doctype' => 'Sales Invoice', 'docstatus' => 1, 'is_return' => 1, 'return_against' => $against, 'company' => $company,
+            'customer' => $customer, 'posting_date' => (string) $r['date'], 'currency' => (string) $r['currency'], 'update_stock' => 1,
+            'set_warehouse' => $warehouse, 'is_pos' => ($r['source'] ?? '') === 'pos' ? 1 : 0, 'items' => $items,
+            'remarks' => sprintf('WooCommerce refund #%s of order #%s', (string) $r['id'], (string) $r['number']), 'po_no' => 'WC-R-' . (string) $r['id']];
+    }
+
+    /** Send one refund once. The original order must already be in ERPNext (else it throws and the job retries). */
+    public static function exportRefund(\WC_Order_Refund $refund, ?ErpNextClient $client = null): string {
+        $done = (string) $refund->get_meta('_sfmwh_erp_return');
+        if ($done !== '') { return $done; }
+        $order = wc_get_order($refund->get_parent_id());
+        if (!$order) { throw new DomainException('Original order not found.'); }
+        $against = (string) $order->get_meta('_sfmwh_erp_invoice');
+        if ($against === '') { throw new DomainException('Original order is not in ERPNext yet; will retry.'); }
+        $scale = wc_get_price_decimals();
+        $lines = [];
+        foreach ($refund->get_items() as $item) {
+            if (!$item instanceof \WC_Order_Item_Product || (int) $item->get_quantity() === 0) { continue; }
+            $p = $item->get_product();
+            $lines[] = ['sku' => $p ? (string) $p->get_sku() : '', 'qty' => (int) $item->get_quantity(), 'total_minor' => (int) round((float) $item->get_total() * (10 ** $scale))];
+        }
+        $o = self::orderData($order);
+        $r = ['id' => $refund->get_id(), 'number' => $o['number'], 'date' => gmdate('Y-m-d'), 'currency' => $o['currency'], 'scale' => $scale, 'source' => $o['source'], 'lines' => $lines];
+        $client = $client ?? self::client();
+        $name = $client->salesInvoice(self::returnDoc($r, $against, (string) $order->get_meta('_sfmwh_erp_company'),
+            (string) $order->get_meta('_sfmwh_erp_warehouse'), (string) get_option('sfmwh_erp_customer', 'Walk-in Customer')));
+        if ($name === '') { throw new DomainException('ERPNext did not return a credit note number.'); }
+        $refund->update_meta_data('_sfmwh_erp_return', $name);
+        $refund->save();
         return $name;
     }
 
