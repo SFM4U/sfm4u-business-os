@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: SFM4U Business OS — Wholesale, Retail & POS
- * Description: SFM4U main store software: wholesale and retail prices, member cards (regular, business, premium), khata (credit ledger), product QR labels, POS and inventory for WooCommerce.
- * Version: 0.9.10-dev
+ * Plugin Name: SFM4U Business Software — Wholesale, Retail, POS & Membership
+ * Description: SFM4U Business Software (formerly SFM4U Business OS) — one software, separate systems: wholesale and retail prices, member cards (regular, business, premium), khata (credit ledger), product QR labels, POS and inventory for WooCommerce.
+ * Version: 0.9.11-dev
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
  * Author: SFM4U

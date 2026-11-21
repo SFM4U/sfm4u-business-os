@@ -166,7 +166,7 @@ final class Modules {
     /* ---------------- admin ---------------- */
 
     public static function menu(): void {
-        add_menu_page(__('SFM4U Business OS', 'sfm4u-wholesale'), __('SFM4U Business OS', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [self::class, 'page'], 'dashicons-store', 55);
+        add_menu_page(__('SFM4U Business Software', 'sfm4u-wholesale'), __('SFM4U Business Software', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [self::class, 'page'], 'dashicons-store', 55);
         add_submenu_page(self::SLUG, __('Systems', 'sfm4u-wholesale'), __('Systems', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [self::class, 'page']);
     }
 
@@ -217,7 +217,8 @@ final class Modules {
     public static function page(): void {
         if (!current_user_can('manage_options')) { wp_die(esc_html__('Not allowed.', 'sfm4u-wholesale')); }
         $k = 'sfm_bos_mod_msg_' . get_current_user_id();
-        echo '<div class="wrap"><h1>' . esc_html__('SFM4U Business OS — Systems', 'sfm4u-wholesale') . '</h1>';
+        echo '<div class="wrap"><h1>' . esc_html__('SFM4U Business Software — Systems', 'sfm4u-wholesale') . '</h1>'
+            . '<p>' . esc_html__('One software made of separate systems. Each system can be turned on or off and improved on its own without breaking the others. / একটি সফটওয়্যার, আলাদা আলাদা সিস্টেম — প্রতিটি আলাদাভাবে চালু/বন্ধ ও উন্নত করা যায়।', 'sfm4u-wholesale') . '</p>';
         if (is_array($m = get_transient($k))) { delete_transient($k); echo '<div class="notice notice-' . esc_attr((string) $m[0]) . '"><p>' . esc_html((string) $m[1]) . '</p></div>'; }
         echo '<p>' . esc_html__('Each system works on its own. Turn a system on or off for this site, open its own admin, or give it to a shop owner or member below.', 'sfm4u-wholesale') . '</p>'
             . '<style>.sfm-bos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:16px 0}.sfm-bos-card{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:14px}.sfm-bos-card h2{margin:0 0 2px;font-size:16px}.sfm-bos-card .bn{color:#555;margin:0 0 8px}.sfm-bos-on{color:#0a7d3b;font-weight:600}.sfm-bos-off{color:#b32d2e;font-weight:600}.sfm-bos-card .actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}</style><div class="sfm-bos-grid">';
