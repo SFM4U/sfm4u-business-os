@@ -28,10 +28,16 @@ final class StockFeed {
     public const OPT_LOG = 'sfm_wr_stock_log';
     public const META = '_sfm_stockfeed';
     public const CRON = 'sfm_wr_stockfeed_retry';
+    public const CRON_POS = 'sfm_wr_stockfeed_pos';           // one-off send for a paid counter (POS) member sale
+    public const META_MEMBER_USER = '_sfmwh_member_user';     // set by the POS on a member-card sale (user id)
 
     public static function register(): void {
         add_action('rest_api_init', [self::class, 'routes']);
         add_action('woocommerce_order_status_completed', [self::class, 'onCompleted'], 20);
+        // Counter sales are handed over and paid at once but stay "processing": queue a send AFTER the POS
+        // transaction has committed (never call AlgiBazar from inside the sale transaction).
+        add_action('woocommerce_order_status_processing', [self::class, 'onPosPaid'], 20);
+        add_action(self::CRON_POS, [self::class, 'sendPos']);
         add_action(self::CRON, [self::class, 'retry']);
         add_action('init', static function (): void {
             if (self::role() === 'sender' && !wp_next_scheduled(self::CRON)) { wp_schedule_event(time() + 900, 'hourly', self::CRON); }
@@ -244,14 +250,40 @@ final class StockFeed {
             $items[] = ['sku' => $p->get_sku(), 'name' => wp_strip_all_tags($p->get_name()), 'qty' => $qty,
                 'cost' => $qty > 0 ? round((float) $o->get_line_total($it, true) / $qty, 2) : 0, 'retail' => (float) $p->get_regular_price(), 'image' => $img];
         }
-        $uid = (int) $o->get_customer_id();
+        $uid = self::memberUser($o);
         return ['order_ref' => CardLink::hostOf(home_url('/')) . '#' . $o->get_order_number(), 'member_no' => $uid ? Members::memberNo($uid) : '',
             'email' => (string) $o->get_billing_email(), 'items' => $items];
     }
 
     /** Send one order. Returns a status word saved on the order. */
-    public static function send(\WC_Order $o): string {
+    /** The member who bought: the order's customer, else the member whose card was scanned at the counter. */
+    public static function memberUser(\WC_Order $o): int {
         $uid = (int) $o->get_customer_id();
+        if (!$uid && $o->get_meta('_sfmwh_member_source') === 'pos') {
+            $uid = (int) $o->get_meta(self::META_MEMBER_USER);
+        }
+        return $uid;
+    }
+
+    public static function isPosMemberSale(\WC_Order $o): bool {
+        return $o->get_meta('_sfmwh_member_source') === 'pos' && (int) $o->get_meta(self::META_MEMBER_USER) > 0;
+    }
+
+    public static function onPosPaid(int $orderId): void {
+        $o = wc_get_order($orderId);
+        if (!$o || self::role() !== 'sender' || !self::isPosMemberSale($o)) { return; }
+        if (!wp_next_scheduled(self::CRON_POS, [$orderId])) { wp_schedule_single_event(time() + 30, self::CRON_POS, [$orderId]); }
+    }
+
+    /** Runs after the counter sale committed. Re-checks the order still exists and is paid; sends once. */
+    public static function sendPos(int $orderId): string {
+        $o = wc_get_order($orderId);
+        if (!$o || !self::isPosMemberSale($o) || !in_array($o->get_status(), ['processing', 'completed'], true)) { return 'skip'; }
+        return self::send($o);
+    }
+
+    public static function send(\WC_Order $o): string {
+        $uid = self::memberUser($o);
         if (self::role() !== 'sender' || !$uid || !Tiers::blackActive($uid)) { return 'skip'; }
         $done = $o->get_meta(self::META);
         if (is_array($done) && ($done['status'] ?? '') === 'sent') { return 'sent'; }
@@ -278,7 +310,8 @@ final class StockFeed {
 
     public static function retry(): void {
         if (self::role() !== 'sender' || !function_exists('wc_get_orders')) { return; }
-        foreach (wc_get_orders(['limit' => 30, 'status' => ['completed'], 'meta_key' => self::META, 'meta_compare' => 'EXISTS', 'date_created' => '>' . (time() - 14 * DAY_IN_SECONDS)]) as $o) {
+        foreach (wc_get_orders(['limit' => 30, 'status' => ['completed', 'processing'], 'meta_key' => self::META, 'meta_compare' => 'EXISTS', 'date_created' => '>' . (time() - 14 * DAY_IN_SECONDS)]) as $o) {
+            if ($o->get_status() === 'processing' && !self::isPosMemberSale($o)) { continue; }   // online orders wait for "completed"
             $m = $o->get_meta(self::META);
             if (is_array($m) && ($m['status'] ?? '') === 'failed' && (int) ($m['tries'] ?? 0) < 24) { self::send($o); }
         }

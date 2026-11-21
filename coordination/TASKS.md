@@ -21,11 +21,12 @@ Candidate under test: plugin 0.9.8-dev, ZIP SHA-256 171956960dd8ca12d3bee0574a09
 | C-05 | Stock mismatch: insufficient stock at confirm, count difference above the limit needs approval, Daily Close cash variance reported (never auto-fixed). | READY |
 | C-06 | Receipts: 58 mm and 80 mm thermal + A4 invoice in Bangla, reprint = COPY, frozen BIN, unverified manual tender warning. Screenshot or HTML evidence. | READY |
 | C-07 | Fix the first reproducible POS defect found in C-01..C-06 (only `modules/pos`, `modules/inventory-bridge`), rerun the 4-phase workflow + focused tests. Repeat. | READY |
+| C-08 | POS: in `CounterSale::commit`, when the sale has a member card, save `_sfmwh_member_user` = the member user id (alongside the existing `_sfmwh_member_source`/masked number). Needed by L-01 (StockFeed::META_MEMBER_USER). Add a counter test: paid Black card sale → order meta set; non-member sale → not set. | READY |
 
 ## Claude section — wholesale, membership, Black stock, ERP mock
 | ID | Task | Status |
 |---|---|---|
-| L-01 | Black auto stock via POS: a paid Business Black member buying at the wholesale counter (card scan) must also trigger StockFeed (today it fires on `completed`; counter cash sales stay `processing`). Verify, then fix with one-time apply + tests. | READY |
+| L-01 | Black auto stock via POS counter sale | REVIEW (Claude 07:05 UTC) — StockFeed side done: POS member order at `processing` queues a one-off send 30 s later (never inside the sale transaction), re-checks order is still paid, sends once, retries on failure; online orders still wait for `completed`. Test `wh/tests-local/stockfeed-pos-test.php` 15/15; regression suite + unit all PASS. Needs C-08 for the real counter path. Source now ahead of the 0.9.8 ZIP (release bump in L-07). |
 | L-02 | Entitlement: Business membership system only on wholesale shops SFM4U opened (licensed shop flag on the receiver/shop pairing). Non-licensed sites never show member price or card features. Owner to confirm exact rule (see Owner questions). | READY |
 | L-03 | Two-site tests (master :8899 + shop): link-central, link-shop, pair-*, stock-send/recv, bos-master/bos-shop; rerun here (were 16/16 + 11/11 on the Owner's Mac). | READY |
 | L-04 | Dokan compatibility run: activate Dokan Lite 5.3.5 on the shop site; rerun B-002 suite; vendor rule/floor/profit pages. | READY |
