@@ -1,6 +1,6 @@
 # SFM4U account and card rules — LIVING DOCUMENT (one file; revisions listed at the end)
 
-Status: DECIDED by the Owner (MD SHALA UDDIN), not yet built. Owner rule (2026-11-21): keep ONE rules file and add each new revision here (see "Revision history") until the project is complete; no new file per change. Current revision: r4.
+Status: DECIDED by the Owner (MD SHALA UDDIN), not yet built. Owner rule (2026-11-21): keep ONE rules file and add each new revision here (see "Revision history") until the project is complete; no new file per change. Current revision: r5.
 
 ## 1. One person = one SFM4U account for life
 - The 7-digit **member number is the person's account number** (like an SSN). One per person, for life. It never moves to another person.
@@ -65,6 +65,16 @@ Status: DECIDED by the Owner (MD SHALA UDDIN), not yet built. Owner rule (2026-1
 - After 90 days without NID/BRN: the account goes on **hold** (§5) until it is added. Existing accounts without NID count 90 days from the date this rule goes live.
 - Two accounts found for one person (same NID/BRN, or same person by the search of §10): the newer account is **blocked** and the account manager and administrator get a notice; the administrator decides which account stays. The SFM4U CEO AI will watch for duplicates and notices once it is built (it learns these rules from the skill, Skill 227).
 
+## 14. r5 — four member levels (Owner 2026-11-21)
+| Level | Who | What must be in the account | What a scan shows |
+|---|---|---|---|
+| 1. Member (regular) | Anyone who joins SFM4U or AlgiBazar | Account + card (90 days to add NID/BRN, §13) | Member, name, number |
+| 2. Premium member | Members with full details | Full details as on the NID/BRN (names, parents, DOB, address) and the NID/BRN **verified** (§10) | + "NID verified" |
+| 3. Business member | Premium member who has a shop | Everything of Premium + the shop: shop name, address, phone, licence/trade info | + the shop's details |
+| 4. Business Black member | Business member with the paid Black plan | Everything of Business + Black payment up to date | + Black benefits (auto stock to their AlgiBazar store) |
+- A member moves up only when the level's requirements are met (the system checks; the administrator approves).
+- Levels are shown on the card (front badge) and in every scan; the member number never changes when the level changes.
+
 ## 9. Build plan (after the Owner's "go")
 - Claude (src/**, account site): date of birth + NID/BRN required at sign-up and card issue; account manager role (no private details); search by number → DOB → NID → BRN; duplicate alert to admin; verification states + warning → hold → block with deadline; one-NID-one-account check with the safe message; admin "open account with chosen number"; number change only with reason + log; account hold; role-based visibility; card back badges; Golden Club link (opt-in).
 - Codex (modules/pos): counter shows "on hold" / "NID missing" clearly; khata refused for accounts without NID.
@@ -78,3 +88,4 @@ Status: DECIDED by the Owner (MD SHALA UDDIN), not yet built. Owner rule (2026-1
 | r2 | 2026-11-21 ~16:12 | §10 account manager, government check, search order, duplicate alert, warning → hold → block | Owner, Claude |
 | r3 | 2026-11-21 ~16:17 | §11 card numbers (7-digit member number printed; NID/BRN never printed), §12 legal guidance | Owner, Claude |
 | r4 | 2026-11-21 ~16:30 | §13 90-day grace with countdown, duplicate → block + notice; one living file from now on | Owner, Claude |
+| r5 | 2026-11-21 ~18:00 | §14 four member levels: Member → Premium (full details + NID verified) → Business (shop added) → Business Black | Owner, Claude |
