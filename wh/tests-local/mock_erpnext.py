@@ -44,6 +44,7 @@ class H(BaseHTTPRequestHandler):
             RECOS.append(body); return self.send(200, {'data': {'name': 'MAT-RECO-%04d' % len(RECOS)}})
         if urllib.parse.unquote(u.path) == '/api/resource/Customer':
             if not body.get('customer_name') or body['customer_name'] in CUSTOMERS: return self.send(417, {'exception': 'bad customer'})
+            if body.get('customer_group') in ('All Customer Groups', None) or body.get('territory') == 'All Territories': return self.send(417, {'exception': 'Cannot select a Group type Customer Group'})
             CUSTOMERS.add(body['customer_name']); return self.send(200, {'data': {'name': body['customer_name']}})
         if urllib.parse.unquote(u.path) == '/api/resource/Payment Entry':
             # ERPNext Payment Entry: known customer, cash account on the right side, allocations within invoice outstanding.

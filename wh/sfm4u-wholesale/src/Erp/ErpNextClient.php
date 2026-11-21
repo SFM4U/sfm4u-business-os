@@ -96,11 +96,13 @@ final class ErpNextClient {
     }
 
     /** L-12: make sure a Customer exists (created once, named by us). Returns the customer name. */
-    public function ensureCustomer(string $name, string $group = 'All Customer Groups', string $territory = 'All Territories'): string {
+    public function ensureCustomer(string $name, string $group = 'Individual', string $territory = ''): string {
         $d = $this->request('GET', '/api/resource/Customer', ['fields' => wp_json_encode(['name']), 'filters' => wp_json_encode([['name', '=', $name]]), 'limit_page_length' => 1]);
         if (!empty($d['data'][0]['name'])) { return (string) $d['data'][0]['name']; }
-        $c = $this->request('POST', '/api/resource/Customer', [], ['customer_name' => $name, 'customer_type' => 'Individual',
-            'customer_group' => $group, 'territory' => $territory]);
+        // ERPNext refuses a group node ("All Customer Groups"): use a leaf group (standard "Individual"); territory only when set.
+        $doc = ['customer_name' => $name, 'customer_type' => 'Individual', 'customer_group' => $group];
+        if ($territory !== '') { $doc['territory'] = $territory; }
+        $c = $this->request('POST', '/api/resource/Customer', [], $doc);
         return (string) ($c['data']['name'] ?? $name);
     }
 
