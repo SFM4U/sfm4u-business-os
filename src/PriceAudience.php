@@ -141,6 +141,13 @@ final class PriceAudience {
                 throw new DomainException('A price set needs at least one quantity=price step.');
             }
             ksort($ladder, SORT_NUMERIC);
+            $last = null;
+            foreach ($ladder as $minor) {
+                if ($last !== null && $minor > $last) {
+                    throw new DomainException('A bigger quantity cannot have a higher price. / বেশি পরিমাণে দাম বেশি হতে পারে না।');
+                }
+                $last = $minor;
+            }
             $promo = null;
             if (!empty($s['promo']) && is_array($s['promo'])) {
                 $b = (int) ($s['promo']['buy'] ?? 0); $o = (int) ($s['promo']['off'] ?? 0);
