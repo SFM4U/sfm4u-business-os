@@ -1,0 +1,2463 @@
+# SFM4U Wholesale source-language template.
+# License: GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: SFM4U Wholesale 0.2.1-dev\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: sfm4u-wholesale\n"
+
+msgid "%1$s × %2$d · %3$s base price"
+msgstr ""
+
+
+msgid "%s days · %s"
+msgstr ""
+
+
+msgid "58 mm thermal"
+msgstr ""
+
+
+msgid "A credit account has not been assigned."
+msgstr ""
+
+
+msgid "A rule could not be saved."
+msgstr ""
+
+
+msgid "A selected product is unavailable."
+msgstr ""
+
+
+msgid "A4"
+msgstr ""
+
+
+msgid "AP ageing"
+msgstr ""
+
+
+msgid "Accept offer"
+msgstr ""
+
+
+msgid "Accepted"
+msgstr ""
+
+
+msgid "Access denied."
+msgstr ""
+
+
+msgid "Action"
+msgstr ""
+
+
+msgid "Add a baseline tier with a zero threshold."
+msgstr ""
+
+
+msgid "Add list to cart"
+msgstr ""
+
+
+msgid "Add selected items to cart"
+msgstr ""
+
+
+msgid "Add to cart"
+msgstr ""
+
+
+msgid "Allocate late landed cost"
+msgstr ""
+
+
+msgid "Allocated"
+msgstr ""
+
+
+msgid "Allocated payment %1$s, open balance %2$s"
+msgstr ""
+
+
+msgid "Allocation basis (quantity or value)"
+msgstr ""
+
+
+msgid "Allow credit notes and cash refunds"
+msgstr ""
+
+
+msgid "Allowed cash variance (BDT; larger differences require manager approval)"
+msgstr ""
+
+
+msgid "Amount (minor units)"
+msgstr ""
+
+
+msgid "Ap Aging"
+msgstr ""
+
+
+msgid "Apply for wholesale buying"
+msgstr ""
+
+
+msgid "Apply previewed rules"
+msgstr ""
+
+
+msgid "Approve count"
+msgstr ""
+
+
+msgid "Approved"
+msgstr ""
+
+
+msgid "Approved By"
+msgstr ""
+
+
+msgid "Ar Aging"
+msgstr ""
+
+
+msgid "Ar Credit"
+msgstr ""
+
+
+msgid "As of (UTC)"
+msgstr ""
+
+
+msgid "Automatic (Bronze by default)"
+msgstr ""
+
+
+msgid "Available quantity"
+msgstr ""
+
+
+msgid "B2B Credit Accounts"
+msgstr ""
+
+
+msgid "B2B Hold Review"
+msgstr ""
+
+
+msgid "B2B Spend Tiers"
+msgstr ""
+
+
+msgid "B2B stock hold expired. Staff review is required before releasing this credit order."
+msgstr ""
+
+
+msgid "BDT merchandise only, after item refunds. Older orders may lack retail estimates."
+msgstr ""
+
+
+msgid "Bank deposit"
+msgstr ""
+
+
+msgid "Barcode aliases (piece or pack name, EAN-13; one per line)"
+msgstr ""
+
+
+msgid "Barcode labels"
+msgstr ""
+
+
+msgid "Barcode units and codes must be unique."
+msgstr ""
+
+
+msgid "Base price in minor units"
+msgstr ""
+
+
+msgid "Before tax, shipping and fees. Retail estimates do not change checkout or POS charges."
+msgstr ""
+
+
+msgid "Bill #%d · %s"
+msgstr ""
+
+
+msgid "Bill a receipt"
+msgstr ""
+
+
+msgid "Bronze"
+msgstr ""
+
+
+msgid "Bronze, Silver and Gold prices in minor units, e.g. {\"bronze\":1000,\"silver\":900,\"gold\":800}"
+msgstr ""
+
+
+msgid "Bulk wholesale order"
+msgstr ""
+
+
+msgid "Buy cost"
+msgstr ""
+
+
+msgid "Buyer"
+msgstr ""
+
+
+msgid "Buyer BIN"
+msgstr ""
+
+
+msgid "Buyer group (everyone, logged_in, approved, role:customer, approved:customer or tier:gold)"
+msgstr ""
+
+
+msgid "Buyer user ID"
+msgstr ""
+
+
+msgid "By goods value"
+msgstr ""
+
+
+msgid "By received quantity"
+msgstr ""
+
+
+msgid "COPY"
+msgstr ""
+
+
+msgid "CSV rules"
+msgstr ""
+
+
+msgid "Cancel"
+msgstr ""
+
+
+msgid "Cancelled"
+msgstr ""
+
+
+msgid "Card"
+msgstr ""
+
+
+msgid "Card (manual record)"
+msgstr ""
+
+
+msgid "Cart changed. Review its total again."
+msgstr ""
+
+
+msgid "Cart is empty."
+msgstr ""
+
+
+msgid "Cash"
+msgstr ""
+
+
+msgid "Cash Expense"
+msgstr ""
+
+
+msgid "Cash In"
+msgstr ""
+
+
+msgid "Cash Out"
+msgstr ""
+
+
+msgid "Cash Return Rounding"
+msgstr ""
+
+
+msgid "Cash Returns"
+msgstr ""
+
+
+msgid "Cash Sale Rounding"
+msgstr ""
+
+
+msgid "Cash Sales"
+msgstr ""
+
+
+msgid "Cash drawer"
+msgstr ""
+
+
+msgid "Cash in"
+msgstr ""
+
+
+msgid "Cash out"
+msgstr ""
+
+
+msgid "Cash refunds"
+msgstr ""
+
+
+msgid "Cash rounding"
+msgstr ""
+
+
+msgid "Cash sale"
+msgstr ""
+
+
+msgid "Cash sales"
+msgstr ""
+
+
+msgid "Cash sales support BDT, untaxed simple products and whole units. Use WooCommerce checkout for other tenders or taxes."
+msgstr ""
+
+
+msgid "Cash tender"
+msgstr ""
+
+
+msgid "Cash tender (BDT)"
+msgstr ""
+
+
+msgid "Cash transfer in"
+msgstr ""
+
+
+msgid "Cash transfer out"
+msgstr ""
+
+
+msgid "Cashier"
+msgstr ""
+
+
+msgid "Cashier permission required."
+msgstr ""
+
+
+msgid "Catalogue discount"
+msgstr ""
+
+
+msgid "Change"
+msgstr ""
+
+
+msgid "Change (BDT)"
+msgstr ""
+
+
+msgid "Change float"
+msgstr ""
+
+
+msgid "Charged"
+msgstr ""
+
+
+msgid "Check current price and stock"
+msgstr ""
+
+
+msgid "Check order status"
+msgstr ""
+
+
+msgid "Check the POS policy fields and permission."
+msgstr ""
+
+
+msgid "Check the amount, payment reference and open balance."
+msgstr ""
+
+
+msgid "Check the buyer, credit limit and terms."
+msgstr ""
+
+
+msgid "Check the cart and amounts."
+msgstr ""
+
+
+msgid "Check the columns in each line."
+msgstr ""
+
+
+msgid "Check the margin dates and try again."
+msgstr ""
+
+
+msgid "Check the merchant and unique uppercase register/cashier codes."
+msgstr ""
+
+
+msgid "Check the merchant name and invoice field lengths."
+msgstr ""
+
+
+msgid "Check the product, pack and configured EAN barcode."
+msgstr ""
+
+
+msgid "Check the request and try again."
+msgstr ""
+
+
+msgid "Check the request and your register assignment. Retry with the same key."
+msgstr ""
+
+
+msgid "Check the request fields."
+msgstr ""
+
+
+msgid "Check the selected products and quantities. The bulk order was not added."
+msgstr ""
+
+
+msgid "Check the submitted fields and stock balances, then retry with the same request key."
+msgstr ""
+
+
+msgid "Check the submitted fields and try again."
+msgstr ""
+
+
+msgid "Choose A4 or 58 mm and a total of 1–100 labels."
+msgstr ""
+
+
+msgid "Choose a configured pack name or piece."
+msgstr ""
+
+
+msgid "Choose a valid purchase month."
+msgstr ""
+
+
+msgid "Choose an incoming quote."
+msgstr ""
+
+
+msgid "Choose products from reorder suggestions"
+msgstr ""
+
+
+msgid "Choose reason"
+msgstr ""
+
+
+msgid "Close date (UTC)"
+msgstr ""
+
+
+msgid "Close drawer"
+msgstr ""
+
+
+msgid "Closed"
+msgstr ""
+
+
+msgid "Closed register sessions"
+msgstr ""
+
+
+msgid "Closed short"
+msgstr ""
+
+
+msgid "Configure piece and carton barcodes in product inventory. Print at 100% scale using the browser. Check-digit validation does not certify barcode allocation or physical print quality."
+msgstr ""
+
+
+msgid "Confirm sale"
+msgstr ""
+
+
+msgid "Copies (1–100)"
+msgstr ""
+
+
+msgid "Copies per product"
+msgstr ""
+
+
+msgid "Cost posted. Stock +%s, COGS +%s"
+msgstr ""
+
+
+msgid "Count ID"
+msgstr ""
+
+
+msgid "Count type"
+msgstr ""
+
+
+msgid "Counted"
+msgstr ""
+
+
+msgid "Counted cash (BDT)"
+msgstr ""
+
+
+msgid "Counter cart"
+msgstr ""
+
+
+msgid "Counter sales support untaxed BDT and managed simple products. Payment methods are recorded as labels."
+msgstr ""
+
+
+msgid "Coverage Gaps"
+msgstr ""
+
+
+msgid "Credit Customers"
+msgstr ""
+
+
+msgid "Credit Statement"
+msgstr ""
+
+
+msgid "Credit limit"
+msgstr ""
+
+
+msgid "Credit limit in minor units"
+msgstr ""
+
+
+msgid "Credit note"
+msgstr ""
+
+
+msgid "Credit recorded"
+msgstr ""
+
+
+msgid "Credited"
+msgstr ""
+
+
+msgid "Currency"
+msgstr ""
+
+
+msgid "Currency or precision differs from this store."
+msgstr ""
+
+
+msgid "Customer price used"
+msgstr ""
+
+
+msgid "Cycle"
+msgstr ""
+
+
+msgid "Daily Close"
+msgstr ""
+
+
+msgid "Daily Close access is required."
+msgstr ""
+
+
+msgid "Daily cash summary"
+msgstr ""
+
+
+msgid "Daily close could not be read."
+msgstr ""
+
+
+msgid "Date"
+msgstr ""
+
+
+msgid "Discount"
+msgstr ""
+
+
+msgid "Document reference"
+msgstr ""
+
+
+msgid "Download CSV"
+msgstr ""
+
+
+msgid "Draft"
+msgstr ""
+
+
+msgid "Draft ready. Enter the supplier and unit cost on each line before issuing."
+msgstr ""
+
+
+msgid "Drawer Source"
+msgstr ""
+
+
+msgid "Drawer amount (BDT)"
+msgstr ""
+
+
+msgid "Drawer status"
+msgstr ""
+
+
+msgid "Due"
+msgstr ""
+
+
+msgid "Due date (UTC)"
+msgstr ""
+
+
+msgid "Duplicate SKU."
+msgstr ""
+
+
+msgid "Each pack name must be unique."
+msgstr ""
+
+
+msgid "Each price threshold must be unique."
+msgstr ""
+
+
+msgid "Each tier slug and threshold must be unique."
+msgstr ""
+
+
+msgid "Edit wholesale rules"
+msgstr ""
+
+
+msgid "Enable Work Engine events"
+msgstr ""
+
+
+msgid "Enable wholesale checkout"
+msgstr ""
+
+
+msgid "Enter a JSON object for tiers and packs."
+msgstr ""
+
+
+msgid "Enter a positive price in store currency using digits and a decimal point."
+msgstr ""
+
+
+msgid "Enter a valid 13-digit EAN barcode including its check digit."
+msgstr ""
+
+
+msgid "Enter a valid offer expiry in the store time zone."
+msgstr ""
+
+
+msgid "Enter a valid retail price in Taka."
+msgstr ""
+
+
+msgid "Enter an HTTPS Work Engine webhook URL without credentials, a query or a fragment."
+msgstr ""
+
+
+msgid "Enter at most 30 barcode aliases."
+msgstr ""
+
+
+msgid "Enter at most 30 lines."
+msgstr ""
+
+
+msgid "Enter at most 30 register assignments."
+msgstr ""
+
+
+msgid "Enter at most 30 tiers."
+msgstr ""
+
+
+msgid "Enter one tier slug and a whole amount in %s minor units per line. Use one zero threshold. Example: base,0 and silver,6000 on separate lines."
+msgstr ""
+
+
+msgid "Enter up to 30 tiers for a two-decimal store currency."
+msgstr ""
+
+
+msgid "Enter valid JSON for tiers and packs."
+msgstr ""
+
+
+msgid "Estimated profit"
+msgstr ""
+
+
+msgid "Expected"
+msgstr ""
+
+
+msgid "Expected BDT %s · Counted BDT %s · Variance BDT %s"
+msgstr ""
+
+
+msgid "Expected Cash"
+msgstr ""
+
+
+msgid "Expected a bounded JSON object."
+msgstr ""
+
+
+msgid "Expected cash (BDT)"
+msgstr ""
+
+
+msgid "Expense memo"
+msgstr ""
+
+
+msgid "Expired"
+msgstr ""
+
+
+msgid "Export CSV"
+msgstr ""
+
+
+msgid "Export supports at most 100 rules in this version."
+msgstr ""
+
+
+msgid "Find count"
+msgstr ""
+
+
+msgid "Find order"
+msgstr ""
+
+
+msgid "Find product"
+msgstr ""
+
+
+msgid "Fixed pack prices, e.g. {\"case\":10000}"
+msgstr ""
+
+
+msgid "For a simple price list, use the header sku,price and one row per product. Example: CASE12,125.50. Enter the pre-tax price per stock unit in store currency."
+msgstr ""
+
+
+msgid "For reconciliation, enter the warehouse book quantity as expected and the verified current WooCommerce balance as counted."
+msgstr ""
+
+
+msgid "From date"
+msgstr ""
+
+
+msgid "Full"
+msgstr ""
+
+
+msgid "Full declared scope"
+msgstr ""
+
+
+msgid "Gold"
+msgstr ""
+
+
+msgid "Goods receipt"
+msgstr ""
+
+
+msgid "Goods receipt ID"
+msgstr ""
+
+
+msgid "Grace days"
+msgstr ""
+
+
+msgid "Gross Profit"
+msgstr ""
+
+
+msgid "Gross margin (%)"
+msgstr ""
+
+
+msgid "Incoming RFQs"
+msgstr ""
+
+
+msgid "Invalid buyer group."
+msgstr ""
+
+
+msgid "Invalid currency."
+msgstr ""
+
+
+msgid "Invalid inventory recovery key."
+msgstr ""
+
+
+msgid "Invalid numeric rule value."
+msgstr ""
+
+
+msgid "Invalid pack name."
+msgstr ""
+
+
+msgid "Invalid wholesale pack."
+msgstr ""
+
+
+msgid "Inventory Adjusted Units"
+msgstr ""
+
+
+msgid "Inventory Value Adjustment"
+msgstr ""
+
+
+msgid "Inventory is still awaiting review. Reconcile stock and original cost before retrying."
+msgstr ""
+
+
+msgid "Inventory recovery"
+msgstr ""
+
+
+msgid "Inventory report could not be read. Check setup and try again."
+msgstr ""
+
+
+msgid "Inventory retry completed."
+msgstr ""
+
+
+msgid "Invoice"
+msgstr ""
+
+
+msgid "Invoice footer"
+msgstr ""
+
+
+msgid "Invoice number"
+msgstr ""
+
+
+msgid "Invoice settings"
+msgstr ""
+
+
+msgid "Invoice settings saved."
+msgstr ""
+
+
+msgid "Invoice settings were not saved. Check permission, nonce and fields."
+msgstr ""
+
+
+msgid "Issue date (UTC)"
+msgstr ""
+
+
+msgid "Issue purchase order"
+msgstr ""
+
+
+msgid "Issued at"
+msgstr ""
+
+
+msgid "Issuing address"
+msgstr ""
+
+
+msgid "Keep the revision note within 1000 bytes."
+msgstr ""
+
+
+msgid "Landed-cost allocation"
+msgstr ""
+
+
+msgid "Late Cogs"
+msgstr ""
+
+
+msgid "Leave blank to exclude this product from POS."
+msgstr ""
+
+
+msgid "Ledger totals · BDT"
+msgstr ""
+
+
+msgid "Legacy manual count"
+msgstr ""
+
+
+msgid "Legacy only · counted cash (minor units)"
+msgstr ""
+
+
+msgid "Legacy only · opening cash (minor units)"
+msgstr ""
+
+
+msgid "Line %d requires a tier slug and a whole amount in minor units."
+msgstr ""
+
+
+msgid "List name"
+msgstr ""
+
+
+msgid "Local storage is unavailable. This device cannot queue sales."
+msgstr ""
+
+
+msgid "Low stock threshold"
+msgstr ""
+
+
+msgid "Manager approval reference"
+msgstr ""
+
+
+msgid "Manual Card Returns"
+msgstr ""
+
+
+msgid "Manual Card Sales"
+msgstr ""
+
+
+msgid "Manual Mfs Returns"
+msgstr ""
+
+
+msgid "Manual Mfs Sales"
+msgstr ""
+
+
+msgid "Manual per-line amounts"
+msgstr ""
+
+
+msgid "Manual tender recorded"
+msgstr ""
+
+
+msgid "Manual tender reference"
+msgstr ""
+
+
+msgid "Maximum quantity"
+msgstr ""
+
+
+msgid "Maximum stock quantity"
+msgstr ""
+
+
+msgid "Merchant #%d"
+msgstr ""
+
+
+msgid "Merchant BIN"
+msgstr ""
+
+
+msgid "Merchant ID"
+msgstr ""
+
+
+msgid "Merchant ID, register code, cashier code (one per line; blank revokes access)"
+msgstr ""
+
+
+msgid "Merchant details are frozen into new POS receipts. Editing these settings does not rewrite previous invoices. Review fiscal requirements before statutory use."
+msgstr ""
+
+
+msgid "Merchant information was not recorded with this receipt."
+msgstr ""
+
+
+msgid "Merchant name"
+msgstr ""
+
+
+msgid "Mid-shift count"
+msgstr ""
+
+
+msgid "Minimum quantity"
+msgstr ""
+
+
+msgid "Minimum stock quantity"
+msgstr ""
+
+
+msgid "Minimum wholesale subtotal in minor currency units (0 disables)"
+msgstr ""
+
+
+msgid "Mobile financial service (manual record)"
+msgstr ""
+
+
+msgid "Mode"
+msgstr ""
+
+
+msgid "More products"
+msgstr ""
+
+
+msgid "Moving-average warehouse value. Reorder suggestions use available stock after active reservations and do not place purchase orders."
+msgstr ""
+
+
+msgid "Multi-product count"
+msgstr ""
+
+
+msgid "My Quotes"
+msgstr ""
+
+
+msgid "Nagad"
+msgstr ""
+
+
+msgid "Needs reconciliation"
+msgstr ""
+
+
+msgid "Net Cogs"
+msgstr ""
+
+
+msgid "Net Sales"
+msgstr ""
+
+
+msgid "Net days"
+msgstr ""
+
+
+msgid "Net sales"
+msgstr ""
+
+
+msgid "Net value"
+msgstr ""
+
+
+msgid "Net30 Refund"
+msgstr ""
+
+
+msgid "New rules are for approved buyers. Existing buyer groups, quantity limits, tiers and pack prices are kept."
+msgstr ""
+
+
+msgid "Next page"
+msgstr ""
+
+
+msgid "No credit customers with an order from your shop."
+msgstr ""
+
+
+msgid "No eligible wholesale products found."
+msgstr ""
+
+
+msgid "No incoming RFQs."
+msgstr ""
+
+
+msgid "No orders to review on this page."
+msgstr ""
+
+
+msgid "No pending inventory events."
+msgstr ""
+
+
+msgid "No products below their configured threshold on this page."
+msgstr ""
+
+
+msgid "No products found."
+msgstr ""
+
+
+msgid "No stock or price is reserved. Resume using this same key."
+msgstr ""
+
+
+msgid "Offer accepted."
+msgstr ""
+
+
+msgid "Offer lines (SKU, quantity, unit price in minor units)"
+msgstr ""
+
+
+msgid "Offer sent."
+msgstr ""
+
+
+msgid "Offer valid until %s"
+msgstr ""
+
+
+msgid "Offered"
+msgstr ""
+
+
+msgid "On-hand stock"
+msgstr ""
+
+
+msgid "One SKU,quantity pair per line. Example: WATER,5"
+msgstr ""
+
+
+msgid "One or more Z-reports differ from the cash ledger."
+msgstr ""
+
+
+msgid "Only an inventory manager may change operations metadata."
+msgstr ""
+
+
+msgid "Only site administrators can change Work Engine settings."
+msgstr ""
+
+
+msgid "Open"
+msgstr ""
+
+
+msgid "Open account"
+msgstr ""
+
+
+msgid "Open balance"
+msgstr ""
+
+
+msgid "Open drawer"
+msgstr ""
+
+
+msgid "Open drawer before confirming a sale."
+msgstr ""
+
+
+msgid "Open merchant"
+msgstr ""
+
+
+msgid "Open rule"
+msgstr ""
+
+
+msgid "Open sessions are excluded from closed drawer totals."
+msgstr ""
+
+
+msgid "Opening"
+msgstr ""
+
+
+msgid "Opening float"
+msgstr ""
+
+
+msgid "Operating expense"
+msgstr ""
+
+
+msgid "Operations setup is incomplete. Ask an administrator to verify transactional tables and retry activation."
+msgstr ""
+
+
+msgid "Order"
+msgstr ""
+
+
+msgid "Order %d · %s"
+msgstr ""
+
+
+msgid "Order ID"
+msgstr ""
+
+
+msgid "Order created"
+msgstr ""
+
+
+msgid "Order lines (product ID, quantity, unit cost in minor units)"
+msgstr ""
+
+
+msgid "Ordered"
+msgstr ""
+
+
+msgid "Original receipt"
+msgstr ""
+
+
+msgid "Overdue"
+msgstr ""
+
+
+msgid "Overdue balance"
+msgstr ""
+
+
+msgid "PO number"
+msgstr ""
+
+
+msgid "POS cashier"
+msgstr ""
+
+
+msgid "POS counter"
+msgstr ""
+
+
+msgid "POS merchant ID"
+msgstr ""
+
+
+msgid "POS register"
+msgstr ""
+
+
+msgid "POS register assignments"
+msgstr ""
+
+
+msgid "POS settings"
+msgstr ""
+
+
+msgid "POS settings saved."
+msgstr ""
+
+
+msgid "POS supports BDT untaxed simple products and whole units. Manual card/mobile records remain unverified and do not change cash; no transfer is initiated. Use WooCommerce checkout for taxes."
+msgstr ""
+
+
+msgid "Pack (enter quantity in stock units)"
+msgstr ""
+
+
+msgid "Pack name (piece for single units)"
+msgstr ""
+
+
+msgid "Pack price requires a configured pack."
+msgstr ""
+
+
+msgid "Packs (name, stock units, optional price in minor units)"
+msgstr ""
+
+
+msgid "Paid"
+msgstr ""
+
+
+msgid "Paper size"
+msgstr ""
+
+
+msgid "Park basket"
+msgstr ""
+
+
+msgid "Parked basket key"
+msgstr ""
+
+
+msgid "Partial"
+msgstr ""
+
+
+msgid "Partially credited"
+msgstr ""
+
+
+msgid "Partially paid"
+msgstr ""
+
+
+msgid "Partially_credited"
+msgstr ""
+
+
+msgid "Payment amount in minor units"
+msgstr ""
+
+
+msgid "Payment date (UTC)"
+msgstr ""
+
+
+msgid "Payment entry could not be confirmed. Retry the same submission."
+msgstr ""
+
+
+msgid "Payment method"
+msgstr ""
+
+
+msgid "Payment recorded"
+msgstr ""
+
+
+msgid "Payment reference"
+msgstr ""
+
+
+msgid "Pending"
+msgstr ""
+
+
+msgid "Pending inventory events retry automatically. Review failed stock and cost reconciliation before fulfilling an order."
+msgstr ""
+
+
+msgid "Pending review"
+msgstr ""
+
+
+msgid "Pending sales"
+msgstr ""
+
+
+msgid "Pending sales on this device"
+msgstr ""
+
+
+msgid "Physical count"
+msgstr ""
+
+
+msgid "Post late landed cost"
+msgstr ""
+
+
+msgid "Prepare purchase order draft"
+msgstr ""
+
+
+msgid "Preview CSV"
+msgstr ""
+
+
+msgid "Preview SKU labels"
+msgstr ""
+
+
+msgid "Preview labels"
+msgstr ""
+
+
+msgid "Preview profit"
+msgstr ""
+
+
+msgid "Preview the file before importing."
+msgstr ""
+
+
+msgid "Previous page"
+msgstr ""
+
+
+msgid "Previous products"
+msgstr ""
+
+
+msgid "Price per stock unit in minor currency units"
+msgstr ""
+
+
+msgid "Price tier"
+msgstr ""
+
+
+msgid "Price tiers (minimum quantity, unit price in minor units)"
+msgstr ""
+
+
+msgid "Print 80mm receipt"
+msgstr ""
+
+
+msgid "Print from the recorded invoice snapshot. No new payment or stock movement is created."
+msgstr ""
+
+
+msgid "Print invoice"
+msgstr ""
+
+
+msgid "Print receipt"
+msgstr ""
+
+
+msgid "Print-friendly statement"
+msgstr ""
+
+
+msgid "Product"
+msgstr ""
+
+
+msgid "Product %d has no catalogue price."
+msgstr ""
+
+
+msgid "Product %d needs a printable ASCII SKU that fits this label size."
+msgstr ""
+
+
+msgid "Product ID"
+msgstr ""
+
+
+msgid "Product ID, expected quantity, counted quantity (one per line)"
+msgstr ""
+
+
+msgid "Product IDs, separated by commas"
+msgstr ""
+
+
+msgid "Purchase Lists"
+msgstr ""
+
+
+msgid "Purchase list added to your cart."
+msgstr ""
+
+
+msgid "Purchase list saved."
+msgstr ""
+
+
+msgid "Purchase month"
+msgstr ""
+
+
+msgid "Purchase order"
+msgstr ""
+
+
+msgid "Purchase order number"
+msgstr ""
+
+
+msgid "Purchase order saved."
+msgstr ""
+
+
+msgid "Quantity"
+msgstr ""
+
+
+msgid "Quantity in stock units"
+msgstr ""
+
+
+msgid "Quantity must meet the wholesale minimum, maximum, step and pack size."
+msgstr ""
+
+
+msgid "Quantity step"
+msgstr ""
+
+
+msgid "Reason"
+msgstr ""
+
+
+msgid "Reason code"
+msgstr ""
+
+
+msgid "Reason to close with units outstanding (optional)"
+msgstr ""
+
+
+msgid "Receipt copy"
+msgstr ""
+
+
+msgid "Receipt lines (product ID, actual quantity, total landed cost allocated to this line in minor units)"
+msgstr ""
+
+
+msgid "Receipt number"
+msgstr ""
+
+
+msgid "Receive goods"
+msgstr ""
+
+
+msgid "Received"
+msgstr ""
+
+
+msgid "Received landed cost (minor units)"
+msgstr ""
+
+
+msgid "Reconcile"
+msgstr ""
+
+
+msgid "Reconcile an existing WooCommerce stock change"
+msgstr ""
+
+
+msgid "Reconciled"
+msgstr ""
+
+
+msgid "Record a supplier bill"
+msgstr ""
+
+
+msgid "Record a supplier credit"
+msgstr ""
+
+
+msgid "Record a supplier payment"
+msgstr ""
+
+
+msgid "Record manual payment"
+msgstr ""
+
+
+msgid "Record receipt"
+msgstr ""
+
+
+msgid "Recorded Payments"
+msgstr ""
+
+
+msgid "Recorded tender amount"
+msgstr ""
+
+
+msgid "Records a payment already received. No money is moved."
+msgstr ""
+
+
+msgid "Refresh the page and try again."
+msgstr ""
+
+
+msgid "Refresh the page before responding to the offer."
+msgstr ""
+
+
+msgid "Refresh the page before saving."
+msgstr ""
+
+
+msgid "Refresh the page before submitting."
+msgstr ""
+
+
+msgid "Refresh this page before submitting."
+msgstr ""
+
+
+msgid "Refund"
+msgstr ""
+
+
+msgid "Register"
+msgstr ""
+
+
+msgid "Register result"
+msgstr ""
+
+
+msgid "Rejected"
+msgstr ""
+
+
+msgid "Released"
+msgstr ""
+
+
+msgid "Remove"
+msgstr ""
+
+
+msgid "Reorder point (stock units)"
+msgstr ""
+
+
+msgid "Reorder target (stock units; zero disables suggestions)"
+msgstr ""
+
+
+msgid "Reorder target must be at least the reorder point."
+msgstr ""
+
+
+msgid "Request revision"
+msgstr ""
+
+
+msgid "Respond to offer"
+msgstr ""
+
+
+msgid "Resume basket"
+msgstr ""
+
+
+msgid "Retail"
+msgstr ""
+
+
+msgid "Retry inventory event"
+msgstr ""
+
+
+msgid "Return items to saleable stock"
+msgstr ""
+
+
+msgid "Returns"
+msgstr ""
+
+
+msgid "Reversed Cogs"
+msgstr ""
+
+
+msgid "Review cart total"
+msgstr ""
+
+
+msgid "Revision note (optional)"
+msgstr ""
+
+
+msgid "Revision requested."
+msgstr ""
+
+
+msgid "Row %d: %s"
+msgstr ""
+
+
+msgid "Rules CSV"
+msgstr ""
+
+
+msgid "Rules, SKUs or currency changed after preview. Preview again."
+msgstr ""
+
+
+msgid "SFM4U B2B requires the loss-aware database connection and initialized InnoDB tables."
+msgstr ""
+
+
+msgid "SKU"
+msgstr ""
+
+
+msgid "SKU price labels"
+msgstr ""
+
+
+msgid "SKU, product name or barcode"
+msgstr ""
+
+
+msgid "Sale"
+msgstr ""
+
+
+msgid "Sale Cogs"
+msgstr ""
+
+
+msgid "Sale confirmed."
+msgstr ""
+
+
+msgid "Sale needs review. Keep its request key and contact the manager."
+msgstr ""
+
+
+msgid "Sale saved on this device. Stock and receipt are pending until sync."
+msgstr ""
+
+
+msgid "Sales"
+msgstr ""
+
+
+msgid "Save POS settings"
+msgstr ""
+
+
+msgid "Save Work Engine settings"
+msgstr ""
+
+
+msgid "Save a purchase list"
+msgstr ""
+
+
+msgid "Save credit account"
+msgstr ""
+
+
+msgid "Save invoice settings"
+msgstr ""
+
+
+msgid "Save list"
+msgstr ""
+
+
+msgid "Save retail estimate"
+msgstr ""
+
+
+msgid "Save retail estimate (blank resets it)"
+msgstr ""
+
+
+msgid "Save settings"
+msgstr ""
+
+
+msgid "Save tiers"
+msgstr ""
+
+
+msgid "Save wholesale rule"
+msgstr ""
+
+
+msgid "Save wholesale rules"
+msgstr ""
+
+
+msgid "Saved."
+msgstr ""
+
+
+msgid "Scope"
+msgstr ""
+
+
+msgid "Search"
+msgstr ""
+
+
+msgid "Search by product name or exact SKU"
+msgstr ""
+
+
+msgid "Select"
+msgstr ""
+
+
+msgid "Select 1–100 valid product IDs."
+msgstr ""
+
+
+msgid "Select a simple product or variation you can edit."
+msgstr ""
+
+
+msgid "Select each product only once."
+msgstr ""
+
+
+msgid "Select products in the Products list or enter product IDs. Print at actual size with browser headers and footers off."
+msgstr ""
+
+
+msgid "Send offer"
+msgstr ""
+
+
+msgid "Send wholesale.low_stock for explicit product thresholds"
+msgstr ""
+
+
+msgid "Session Cash Expense"
+msgstr ""
+
+
+msgid "Session Cash Returns"
+msgstr ""
+
+
+msgid "Session Cash Sales"
+msgstr ""
+
+
+msgid "Session ID"
+msgstr ""
+
+
+msgid "Session Ledger Mismatches"
+msgstr ""
+
+
+msgid "Sessions Open At Cutoff"
+msgstr ""
+
+
+msgid "Set SFM4U_WORK_ENGINE_KEY in wp-config.php before enabling delivery."
+msgstr ""
+
+
+msgid "Set a positive Low stock threshold in the WooCommerce product or variation inventory settings. Shared variations use the stock-owning product. This list compares on-hand stock with that threshold."
+msgstr ""
+
+
+msgid "Settlement date (UTC)"
+msgstr ""
+
+
+msgid "Shopkeeper profit estimate"
+msgstr ""
+
+
+msgid "Show ageing"
+msgstr ""
+
+
+msgid "Show month"
+msgstr ""
+
+
+msgid "Sign in with a wholesale buyer account."
+msgstr ""
+
+
+msgid "Silver"
+msgstr ""
+
+
+msgid "Simple product or variation ID"
+msgstr ""
+
+
+msgid "Some historical entries lack original cost or currency. Gross profit is incomplete."
+msgstr ""
+
+
+msgid "Spend tiers could not be saved. Try again."
+msgstr ""
+
+
+msgid "Spend tiers saved."
+msgstr ""
+
+
+msgid "Status"
+msgstr ""
+
+
+msgid "Stock count variance"
+msgstr ""
+
+
+msgid "Stock counts"
+msgstr ""
+
+
+msgid "Stock units per pack, e.g. {\"case\":12}"
+msgstr ""
+
+
+msgid "Stock valuation and reorder"
+msgstr ""
+
+
+msgid "Stock value"
+msgstr ""
+
+
+msgid "Stock variance report unavailable."
+msgstr ""
+
+
+msgid "Stock when counted"
+msgstr ""
+
+
+msgid "Store-wide BDT inventory ledger. Select up to 31 days in UTC."
+msgstr ""
+
+
+msgid "Submit count for review"
+msgstr ""
+
+
+msgid "Submit register action"
+msgstr ""
+
+
+msgid "Submit session for review"
+msgstr ""
+
+
+msgid "Submitted"
+msgstr ""
+
+
+msgid "Submitted By"
+msgstr ""
+
+
+msgid "Suggested customer price"
+msgstr ""
+
+
+msgid "Suggested reorder"
+msgstr ""
+
+
+msgid "Supplier Payables"
+msgstr ""
+
+
+msgid "Supplier Purchase Orders"
+msgstr ""
+
+
+msgid "Supplier bill number"
+msgstr ""
+
+
+msgid "Supplier payable access is required."
+msgstr ""
+
+
+msgid "Supplier payables could not be updated. Check the request before retrying."
+msgstr ""
+
+
+msgid "Supplier purchase order access is required."
+msgstr ""
+
+
+msgid "Supplier reference"
+msgstr ""
+
+
+msgid "Suspended"
+msgstr ""
+
+
+msgid "Sync pending sales before closing the drawer."
+msgstr ""
+
+
+msgid "Sync sales"
+msgstr ""
+
+
+msgid "Tender amount (BDT)"
+msgstr ""
+
+
+msgid "Tender status"
+msgstr ""
+
+
+msgid "Tender type"
+msgstr ""
+
+
+msgid "Terms (days)"
+msgstr ""
+
+
+msgid "The CSV does not contain any wholesale rules."
+msgstr ""
+
+
+msgid "The CSV must contain at most 100 complete rules."
+msgstr ""
+
+
+msgid "The connection is unavailable. Try again."
+msgstr ""
+
+
+msgid "The credit account could not be saved."
+msgstr ""
+
+
+msgid "The data could not be loaded."
+msgstr ""
+
+
+msgid "The operation could not be confirmed. Retry with the same key."
+msgstr ""
+
+
+msgid "The preview expired. Preview it again."
+msgstr ""
+
+
+msgid "The purchase order could not be saved. Retry with the same submission."
+msgstr ""
+
+
+msgid "The report could not be exported."
+msgstr ""
+
+
+msgid "The row must have one value for each CSV column."
+msgstr ""
+
+
+msgid "The selected pack is unavailable."
+msgstr ""
+
+
+msgid "The selected wholesale pack is unavailable for this buyer."
+msgstr ""
+
+
+msgid "The vendor sent a new offer. Review it before responding."
+msgstr ""
+
+
+msgid "The wholesale price is zero or exceeds the allowed limit."
+msgstr ""
+
+
+msgid "The wholesale quote changed. Refresh the cart and try again."
+msgstr ""
+
+
+msgid "The wholesale request could not be completed. Try again."
+msgstr ""
+
+
+msgid "The wholesale rule uses a different store currency or precision."
+msgstr ""
+
+
+msgid "The wholesale subtotal must reach %1$s %2$s."
+msgstr ""
+
+
+msgid "This barcode is already assigned to another product."
+msgstr ""
+
+
+msgid "This basket already has a committed sale."
+msgstr ""
+
+
+msgid "This offer could not be updated. Check its current status."
+msgstr ""
+
+
+msgid "Through date"
+msgstr ""
+
+
+msgid "Tier prices by stock threshold, e.g. {\"24\":900}"
+msgstr ""
+
+
+msgid "Tier thresholds"
+msgstr ""
+
+
+msgid "Too many packs or tiers."
+msgstr ""
+
+
+msgid "Total"
+msgstr ""
+
+
+msgid "Total (BDT)"
+msgstr ""
+
+
+msgid "Total landed cost (minor units; use zero per-line cost for automatic allocation)"
+msgstr ""
+
+
+msgid "Unable to submit the wholesale application. Reload your account and try again."
+msgstr ""
+
+
+msgid "Unapproved"
+msgstr ""
+
+
+msgid "Unavailable"
+msgstr ""
+
+
+msgid "Unavailable product"
+msgstr ""
+
+
+msgid "Unit cost (minor units)"
+msgstr ""
+
+
+msgid "Unit price"
+msgstr ""
+
+
+msgid "Unknown wholesale action."
+msgstr ""
+
+
+msgid "Unverified manual record; no transfer initiated."
+msgstr ""
+
+
+msgid "Upload a CSV of up to 128 KB."
+msgstr ""
+
+
+msgid "Upload a valid CSV within the size limit."
+msgstr ""
+
+
+msgid "Use SKU,quantity on each line."
+msgstr ""
+
+
+msgid "Use a nonempty, spreadsheet-safe SKU."
+msgstr ""
+
+
+msgid "Use the SKU exactly as it appears on the product."
+msgstr ""
+
+
+msgid "Use the sku,price header or the full wholesale export header."
+msgstr ""
+
+
+msgid "Use your browser’s Print menu to print or save a PDF."
+msgstr ""
+
+
+msgid "VAT amount"
+msgstr ""
+
+
+msgid "VAT rate"
+msgstr ""
+
+
+msgid "Valid until (store time)"
+msgstr ""
+
+
+msgid "Value Delta Micros"
+msgstr ""
+
+
+msgid "Value change (micros)"
+msgstr ""
+
+
+msgid "Variance"
+msgstr ""
+
+
+msgid "Variance (BDT)"
+msgstr ""
+
+
+msgid "Variance units"
+msgstr ""
+
+
+msgid "Variation #%s"
+msgstr ""
+
+
+msgid "View daily close"
+msgstr ""
+
+
+msgid "View margin"
+msgstr ""
+
+
+msgid "View order"
+msgstr ""
+
+
+msgid "Walk-in customer"
+msgstr ""
+
+
+msgid "Warehouse quantity"
+msgstr ""
+
+
+msgid "Wholesale"
+msgstr ""
+
+
+msgid "Wholesale Product Rules"
+msgstr ""
+
+
+msgid "Wholesale buyer approval"
+msgstr ""
+
+
+msgid "Wholesale buying"
+msgstr ""
+
+
+msgid "Wholesale due ledger"
+msgstr ""
+
+
+msgid "Wholesale low stock"
+msgstr ""
+
+
+msgid "Wholesale margin"
+msgstr ""
+
+
+msgid "Wholesale pack"
+msgstr ""
+
+
+msgid "Wholesale price group"
+msgstr ""
+
+
+msgid "Wholesale purchase history"
+msgstr ""
+
+
+msgid "Wholesale rules"
+msgstr ""
+
+
+msgid "Wholesale rules saved."
+msgstr ""
+
+
+msgid "Wholesale saving"
+msgstr ""
+
+
+msgid "Wholesale vendor access is required."
+msgstr ""
+
+
+msgid "WooCommerce quantity"
+msgstr ""
+
+
+msgid "WooCommerce stock unit (piece, g, ml, cm)"
+msgstr ""
+
+
+msgid "Work Engine delivery could not be confirmed."
+msgstr ""
+
+
+msgid "Work Engine events"
+msgstr ""
+
+
+msgid "Writeoff"
+msgstr ""
+
+
+msgid "X-report"
+msgstr ""
+
+
+msgid "You cannot edit this product."
+msgstr ""
+
+
+msgid "You cannot export wholesale rules."
+msgstr ""
+
+
+msgid "You cannot manage spend tiers."
+msgstr ""
+
+
+msgid "You cannot manage wholesale rules."
+msgstr ""
+
+
+msgid "You have no quotes yet."
+msgstr ""
+
+
+msgid "Your retail price per unit (BDT)"
+msgstr ""
+
+
+msgid "Z-report"
+msgstr ""
+
+
+msgid "bKash"
+msgstr ""
+
+
+msgid "n8n webhook URL"
+msgstr ""
+
+msgid "Find cart credit lines"
+msgstr ""
+
+msgid "Credit cart items"
+msgstr ""
+
+msgid "Cart credit lines (item ID, quantity per line)"
+msgstr ""
+
+msgid "%1$d · %2$s · %3$d available to credit"
+msgstr ""
+
+msgid "Membership changed. Scan the card again and review the cart."
+msgstr ""
+
+msgid "Counter stock is unavailable."
+msgstr ""
+
+msgid "Round-off account"
+msgstr ""
+
+msgid "ERPNext account for cash rounding (poisha differences). Sales and returns with rounding wait until this is set."
+msgstr ""
+
+msgid "Invalid khata request key."
+msgstr ""
+
+msgid "Customer not found."
+msgstr ""
+
+msgid "Shop due"
+msgstr ""
+
+msgid "Advance"
+msgstr ""
+
+msgid "Khata is unavailable for this shop or card."
+msgstr ""
+
+msgid "Due payment recorded."
+msgstr ""
+
+msgid "Cash to collect"
+msgstr ""
+
+msgid "Due history"
+msgstr ""
+
+msgid "Due-only payment (BDT)"
+msgstr ""
+
+msgid "Pay due only"
+msgstr ""
+
+msgid "Previous due"
+msgstr ""
+
+msgid "Paid toward previous due"
+msgstr ""
+
+msgid "Sale on credit"
+msgstr ""
+
+msgid "New due"
+msgstr ""
+
+msgid "Cash account"
+msgstr ""
+
+msgid "ERPNext account that receives POS cash and khata payments (Payment Entry). Payments wait until this is set."
+msgstr ""
