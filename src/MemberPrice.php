@@ -52,6 +52,10 @@ final class MemberPrice {
         if (!$m || !in_array($m['tier'] ?? '', self::TIERS, true) || ($m['status'] ?? '') !== 'active') {
             return false;
         }
+        // Account rules (Skill 227): an account on hold or blocked gets no member benefits.
+        if (isset($m['account_state']) && !in_array($m['account_state'], ['ok', 'grace'], true)) {
+            return false;
+        }
         return !array_key_exists('wholesale_ok', $m) || !empty($m['wholesale_ok']);
     }
 
@@ -121,7 +125,8 @@ final class MemberPrice {
         if (!$card || $card['status'] !== 'active') {
             return null;
         }
-        $ok = $card['tier'] === 'business' || ($card['tier'] === 'black' && Tiers::blackActive($uid));
+        $ok = ($card['tier'] === 'business' || ($card['tier'] === 'black' && Tiers::blackActive($uid)))
+            && (!class_exists(\SFM4U\Wholesale\Members\Identity::class) || \SFM4U\Wholesale\Members\Identity::usable($uid));
         return $ok ? ['member_no' => Members::memberNo($uid), 'tier' => $card['tier'], 'status' => 'active', 'source' => 'local'] : null;
     }
 
@@ -145,7 +150,8 @@ final class MemberPrice {
             }
             if ($reached) {
                 update_user_meta($uid, 'sfmwh_member_checked', time());
-                if (!$m || (string) ($m['member_no'] ?? '') !== $l['member_no']) {
+                $sameKey = $m && ($m['member_key'] ?? '') !== '' && (string) $m['member_key'] === (string) get_user_meta($uid, 'sfm_wr_member_key', true);
+                if (!$m || ((string) ($m['member_no'] ?? '') !== $l['member_no'] && !$sameKey)) {
                     update_user_meta($uid, 'sfmwh_member_ok', 'no');
                     return null;
                 }
@@ -192,7 +198,7 @@ final class MemberPrice {
                 return null;
             }
             $m['source'] = 'remote';
-            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? (int) Members::userByMemberNo((string) $m['member_no'], Members::isLinkedShop()) : 0;
+            $m['user_id'] = preg_match('/^\d{7}$/', (string) ($m['member_no'] ?? '')) ? CardLink::localUserFor($m) : 0;
         } else {
             return null;
         }

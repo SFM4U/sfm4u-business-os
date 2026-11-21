@@ -1,1 +1,1 @@
-TEST SITE BUILD ONLY (thenoakhali.com). Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.9-dev.zip from main f95e592, ZIP SHA-256 1f4e95e7cada6f13bb77682fff8a67549f53b67b1ed58eb741bb8255398d02e1.
+TEST SITE BUILD ONLY (thenoakhali.com). Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.9-dev.zip from main af032bd, ZIP SHA-256 abd14a688ac906ced26a12b636072086e3eb90e2db92c946394ed72725d97672.

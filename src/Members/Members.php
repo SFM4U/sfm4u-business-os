@@ -34,6 +34,7 @@ final class Members {
         Rewards::register();
         CardLink::register();
         if (class_exists(MemberLink::class)) { MemberLink::register(); }
+        if (class_exists(Identity::class)) { Identity::register(); }
     }
 
     public static function register(): void {
@@ -308,6 +309,103 @@ final class Members {
         return str_pad((string) $n, 7, '0', STR_PAD_LEFT);
     }
 
+    /** Member numbers 1..RESERVED_MAX are family numbers: only an administrator gives them, by hand. */
+    public const RESERVED_MAX = 100;
+    /** Special ("beautiful") numbers kept in the administrator's stock (Owner 2026-11-21); editable list. */
+    public const SPECIAL_OPTION = 'sfm_wr_special_numbers';
+    public const SPECIAL_DEFAULT = [111, 222, 333, 444, 555, 666, 777, 888, 999, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+        1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999];
+
+    /** @return int[] special numbers (administrator stock), sorted. */
+    public static function specialNumbers(): array {
+        $v = get_option(self::SPECIAL_OPTION, null);
+        $list = is_array($v) ? $v : self::SPECIAL_DEFAULT;
+        $list = array_values(array_unique(array_filter(array_map('intval', $list), fn($n) => $n > self::RESERVED_MAX && $n <= 9999999)));
+        sort($list);
+        return $list;
+    }
+
+    /** Family (1..100) or special number: never handed out automatically; only an administrator gives it. */
+    public static function isReservedNumber(int $n): bool {
+        return ($n >= 1 && $n <= self::RESERVED_MAX) || in_array($n, self::specialNumbers(), true);
+    }
+
+    public static function isReservedNo(string $no): bool {
+        return (bool) preg_match('/^\d{7}$/', $no) && self::isReservedNumber((int) $no);
+    }
+
+    /** Stable member key: never changes, even when the member number changes. Shops use it to follow a number change. */
+    public static function memberKey(int $userId): string {
+        $k = (string) get_user_meta($userId, 'sfm_wr_member_key', true);
+        if (!preg_match('/^[a-f0-9]{32}$/', $k)) {
+            $k = bin2hex(random_bytes(16));
+            if (!add_user_meta($userId, 'sfm_wr_member_key', $k, true)) { $k = (string) get_user_meta($userId, 'sfm_wr_member_key', true); }
+        }
+        return $k;
+    }
+
+    /** Local user holding this stable member key (0 when none). */
+    public static function userByMemberKey(string $key): int {
+        if (!preg_match('/^[a-f0-9]{32}$/', $key)) { return 0; }
+        $u = get_users(['meta_key' => 'sfm_wr_member_key', 'meta_value' => $key, 'number' => 2, 'fields' => 'ID']);
+        return count($u) === 1 ? (int) $u[0] : 0;
+    }
+
+    /**
+     * Administrator changes (or gives) a member number. Owner 2026-11-21: the administrator has full control; a change
+     * reaches every linked shop and AlgiBazar automatically (they follow the stable member key on their next contact).
+     * Family (1..100) and special numbers are only given here. A number held now or before by another member is refused.
+     * The old number is retired (kept in sfm_wr_member_no_old and never handed out again); an old printed card still finds
+     * the member on the SFM4U account site.
+     */
+    public static function assignNumber(int $userId, int $n, int $staffId): string {
+        if (!user_can($staffId, 'manage_options')) {
+            throw new DomainException(__('Only an administrator can change a member number.', 'sfm4u-wholesale'), 403);
+        }
+        if (class_exists(CardLink::class) && CardLink::role() === 'shop') {
+            throw new DomainException(__('Member numbers are changed on the SFM4U account site.', 'sfm4u-wholesale'), 409);
+        }
+        if (!get_userdata($userId) || $n < 1 || $n > 9999999) {
+            throw new DomainException(__('Enter a member number from 1 to 9999999.', 'sfm4u-wholesale'), 422);
+        }
+        $no = self::formatMemberNo($n);
+        $holder = self::userByMemberNo($no);
+        if ($holder && $holder !== $userId) {
+            throw new DomainException(__('This number already belongs to another member (now or before).', 'sfm4u-wholesale'), 409);
+        }
+        self::memberKey($userId);
+        $old = (string) get_user_meta($userId, 'sfm_wr_member_no', true);
+        if ($old === $no) { return $no; }
+        if ($old !== '') {
+            update_user_meta($userId, 'sfm_wr_member_no_prev', $old);
+            add_user_meta($userId, 'sfm_wr_member_no_old', $old);
+        }
+        update_user_meta($userId, 'sfm_wr_member_no', $no);
+        update_user_meta($userId, 'sfm_wr_member_no_by', $staffId . '@' . gmdate('Y-m-d H:i:s'));
+        do_action('sfm_wr_member_no_changed', $userId, $old, $no, $staffId);
+        return $no;
+    }
+
+    /** @deprecated 0.9.9 name kept for callers: same as assignNumber(). */
+    public static function assignReservedNo(int $userId, int $n, int $staffId): string {
+        return self::assignNumber($userId, $n, $staffId);
+    }
+
+    /** Shop side: follow a number change made on the SFM4U account site (same stable key, new number). */
+    public static function followNumberChange(int $userId, string $newNo): void {
+        $old = (string) get_user_meta($userId, 'sfm_wr_member_no', true);
+        if (!preg_match('/^\d{7}$/', $newNo) || $old === $newNo) { return; }
+        if ($old !== '') { add_user_meta($userId, 'sfm_wr_member_no_old', $old); update_user_meta($userId, 'sfm_wr_member_no_prev', $old); }
+        update_user_meta($userId, 'sfm_wr_member_no', $newNo);
+        update_user_meta($userId, 'sfm_wr_central', 1);
+        do_action('sfm_wr_member_no_followed', $userId, $old, $newNo);
+    }
+
+    /** @return int[] special numbers nobody holds yet (the administrator's stock). */
+    public static function freeSpecialNumbers(): array {
+        return array_values(array_filter(self::specialNumbers(), fn($n) => self::userByMemberNo(self::formatMemberNo($n)) === 0));
+    }
+
     /** Returns the member's number, assigning the next one atomically the first time. */
     public static function memberNo(int $userId): string {
         global $wpdb;
@@ -331,8 +429,11 @@ final class Members {
             $n = 0;
             for ($try = 0; $try < 25 && $n === 0; $try++) {
                 $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));
-                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) ($cur + 1), 'sfm_wr_member_seq', (string) $cur));
-                if ($done === 1) { $n = $cur + 1; }
+                // Owner 2026-11-21: 1-100 are family numbers given by the admin only; automatic numbers start at 101.
+                $next = max($cur, self::RESERVED_MAX) + 1;
+                while (self::isReservedNumber($next)) { $next++; }   // special numbers stay in the administrator's stock
+                $done = $wpdb->query($wpdb->prepare("UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s", (string) $next, 'sfm_wr_member_seq', (string) $cur));
+                if ($done === 1) { $n = $next; }
             }
             wp_cache_delete('sfm_wr_member_seq', 'options');
             wp_cache_delete('notoptions', 'options');
@@ -350,6 +451,12 @@ final class Members {
         $u = get_users(['meta_key' => 'sfm_wr_member_no', 'meta_value' => $no, 'number' => 20, 'fields' => 'ID', 'orderby' => 'ID']);
         foreach ($u as $id) {
             if (!$centralOnly || self::hasCentralNo((int) $id)) { return (int) $id; }
+        }
+        // A number changed by the administrator stays retired: an old printed card still finds the member here,
+        // and the number is never given to anyone else. (A linked shop asks the account site instead.)
+        if (!$centralOnly && !self::isLinkedShop()) {
+            $o = get_users(['meta_key' => 'sfm_wr_member_no_old', 'meta_value' => $no, 'number' => 2, 'fields' => 'ID']);
+            if (count($o) === 1) { return (int) $o[0]; }
         }
         return 0;
     }
@@ -795,6 +902,7 @@ final class Members {
 
     public static function idInUse(string $hash, int $userId): bool {
         global $wpdb;
+        if ($wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->usermeta} WHERE meta_key='sfm_wr_id_hash' AND meta_value=%s AND user_id<>%d LIMIT 1", $hash, $userId))) { return true; }
         return (bool) $wpdb->get_var($wpdb->prepare('SELECT 1 FROM ' . self::cards() . ' WHERE id_hash=%s AND user_id<>%d LIMIT 1', $hash, $userId));
     }
 
