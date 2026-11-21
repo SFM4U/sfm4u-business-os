@@ -964,4 +964,8 @@ return ['language' => 'bn_BD', 'messages' => [
     '%1$d · %2$s · %3$d available to credit' => '%1$d · %2$s · %3$dটি ফেরত নেওয়া যাবে',
     'Membership changed. Scan the card again and review the cart.' => 'সদস্যতার অবস্থা বদলেছে। কার্ড আবার স্ক্যান করে কার্ট দেখুন।',
     'Counter stock is unavailable.' => 'কাউন্টারে এই বিক্রির জন্য পর্যাপ্ত স্টক নেই।',
+    'Round-off account' => 'রাউন্ড-অফ অ্যাকাউন্ট',
+    'ERPNext account for cash rounding (poisha differences). Sales and returns with rounding wait until this is set.' => 'নগদ রাউন্ডিং (পয়সার পার্থক্য)-এর জন্য ERPNext অ্যাকাউন্ট। এটি না দেওয়া পর্যন্ত রাউন্ডিংসহ বিক্রি ও ফেরত ERP-তে যাবে না, অপেক্ষায় থাকবে।',
+    'Invalid khata request key.' => 'খাতার অনুরোধ-কী সঠিক নয়।',
+    'Customer not found.' => 'গ্রাহক পাওয়া যায়নি।',
 ]];

@@ -2407,3 +2407,15 @@ msgstr ""
 
 msgid "Counter stock is unavailable."
 msgstr ""
+
+msgid "Round-off account"
+msgstr ""
+
+msgid "ERPNext account for cash rounding (poisha differences). Sales and returns with rounding wait until this is set."
+msgstr ""
+
+msgid "Invalid khata request key."
+msgstr ""
+
+msgid "Customer not found."
+msgstr ""

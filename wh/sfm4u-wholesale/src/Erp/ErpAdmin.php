@@ -29,6 +29,7 @@ final class ErpAdmin {
                 check_admin_referer('sfm_wr_erp');
                 ErpSync::save(['url' => self::p('url'), 'key' => self::p('key'), 'secret' => self::p('secret'), 'warehouse' => self::p('warehouse'),
                     'direction' => self::p('direction'), 'enabled' => self::p('enabled'), 'auto' => self::p('auto')]);
+                update_option(ErpSync::OPT_ROUND_OFF, sanitize_text_field(self::p('round_off')), false);
                 $msg(__('Saved.', 'sfm4u-wholesale'));
             } elseif (isset($_POST['sfm_wr_erp_test'])) {
                 check_admin_referer('sfm_wr_erp');
@@ -63,6 +64,7 @@ final class ErpAdmin {
             . '<tr><th>' . esc_html__('API key', 'sfm4u-wholesale') . '</th><td><input name="key" class="regular-text" autocomplete="off" value="' . esc_attr($s['key']) . '"></td></tr>'
             . '<tr><th>' . esc_html__('API secret', 'sfm4u-wholesale') . '</th><td><input name="secret" type="password" class="regular-text" autocomplete="off" placeholder="' . esc_attr($s['secret_enc'] !== '' ? __('(saved — type again to change)', 'sfm4u-wholesale') : '') . '"><p class="description">' . esc_html__('Make an ERPNext user only for the website, with stock permissions only. Type the secret here yourself; it is stored encrypted.', 'sfm4u-wholesale') . '</p></td></tr>'
             . '<tr><th>' . esc_html__('Warehouse', 'sfm4u-wholesale') . '</th><td><input name="warehouse" class="regular-text" placeholder="Stores - SFM" value="' . esc_attr($s['warehouse']) . '"></td></tr>'
+            . '<tr><th>' . esc_html__('Round-off account', 'sfm4u-wholesale') . '</th><td><input name="round_off" class="regular-text" placeholder="Round Off - SFM" value="' . esc_attr((string) get_option(ErpSync::OPT_ROUND_OFF, '')) . '"><p class="description">' . esc_html__('ERPNext account for cash rounding (poisha differences). Sales and returns with rounding wait until this is set.', 'sfm4u-wholesale') . '</p></td></tr>'
             . '<tr><th>' . esc_html__('Stock master', 'sfm4u-wholesale') . '</th><td>'
             . '<label style="display:block"><input type="radio" name="direction" value="pull"' . checked($s['direction'], 'pull', false) . '> ' . esc_html__('ERPNext is the master: set website stock from ERPNext', 'sfm4u-wholesale') . '</label>'
             . '<label style="display:block"><input type="radio" name="direction" value="push"' . checked($s['direction'], 'push', false) . '> ' . esc_html__('Website is the master: send website stock to ERPNext (Stock Reconciliation)', 'sfm4u-wholesale') . '</label></td></tr>'
