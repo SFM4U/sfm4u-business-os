@@ -49,7 +49,7 @@ final class CounterSale
         return compact('items', 'tier', 'discount', 'method') + ($tier === 'member' ? ['member' => $member] : []);
     }
 
-    public static function quote(int $merchant, array $intent): array
+    public static function quote(int $merchant, array $intent, bool $confirming = false): array
     {
         if (!Runtime::allowedContext() || get_woocommerce_currency() !== 'BDT' || wc_get_price_decimals() !== 2 || wc_tax_enabled()) {
             throw new DomainException('Counter sales require untaxed BDT with two decimals.', 422);
@@ -61,6 +61,9 @@ final class CounterSale
         if ($intent['tier'] === 'member') {
             // Plan section 4 step 1 at the counter: the scanned card decides; checked again when the sale is confirmed.
             $member = MemberPrice::fromScan((string) $intent['member']);
+            if ($confirming && (!$member || !$member['qualifies'])) {
+                throw new DomainException('Membership changed. Scan the card again and review the cart.', 409);
+            }
             if (!$member) {
                 throw new DomainException('Card not found.', 404);
             }
@@ -170,7 +173,7 @@ final class CounterSale
             return $journal->execute($merchant, 'pos', $key, compact('register', 'actor', 'session', 'intent', 'digest', 'tender'),
                 static function () use ($receipts, $sessions, $merchant, $register, $actor, $cashier, $session, $intent, $digest, $tender, &$orderId): array {
                     $sessions->assertActive($merchant, $register, $session);
-                    $quote = self::quote($merchant, $intent);
+                    $quote = self::quote($merchant, $intent, true);
                     if (!hash_equals($quote['digest'], $digest)) {
                         throw new DomainException('Counter price changed. Review the cart.', 409);
                     }

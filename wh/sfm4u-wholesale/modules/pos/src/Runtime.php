@@ -100,6 +100,7 @@ final class Runtime
                         $status = in_array($error->getCode(), [403, 404, 409, 422], true) ? $error->getCode() : 422;
                         // Messages a cashier can act on (card problems, prices) are shown as they are; the rest stay generic.
                         $clear = ['Card not found.', 'This card does not get the member price. Only an active Business card or a paid Business Black card does.',
+                            'Membership changed. Scan the card again and review the cart.',
                             'Wholesale pricing is unavailable.', 'Wholesale pricing is unavailable for a cart line.'];
                         if (in_array($error->getMessage(), $clear, true) || str_contains($error->getMessage(), 'below the lowest price the shop accepts')) {
                             return new \WP_Error('counter_rejected', __($error->getMessage(), 'sfm4u-wholesale'), ['status' => $status]);
