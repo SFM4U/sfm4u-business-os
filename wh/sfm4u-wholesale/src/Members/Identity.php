@@ -103,6 +103,11 @@ final class Identity {
                 if ($act === 'identity') { self::setIdentity($uid, self::p('id_type'), self::p('id_number'), self::p('dob'), $me, self::p('consent') === 'yes', self::p('reason')); $note(__('Saved.', 'sfm4u-wholesale')); }
                 elseif ($act === 'check') { self::recordCheck($uid, self::p('result'), $me, absint($_POST['days'] ?? 30), self::p('note')); $note(__('Saved.', 'sfm4u-wholesale')); }
                 elseif ($act === 'state') { self::setState($uid, self::p('state'), self::p('reason'), $me); $note(__('Saved.', 'sfm4u-wholesale')); }
+                elseif ($act === 'open') {
+                    $idn = self::p('id_number') !== '' ? ['type' => self::p('id_type'), 'number' => self::p('id_number'), 'dob' => self::p('dob'), 'consent' => self::p('consent') === 'yes'] : [];
+                    $uid = self::openAccount(self::p('email'), self::p('name'), $me, absint($_POST['number'] ?? 0), $idn);
+                    $note(sprintf(__('Account opened: member %s', 'sfm4u-wholesale'), Members::memberNo($uid)));
+                }
                 elseif ($act === 'scan') { $note(sprintf(__('%d new duplicate alerts.', 'sfm4u-wholesale'), self::scanDuplicates())); }
             }
         } catch (DomainException $e) {
@@ -144,6 +149,15 @@ final class Identity {
             }
             echo '<details><summary>' . esc_html__('History', 'sfm4u-wholesale') . '</summary><pre>' . esc_html(implode("\n", self::history($id))) . '</pre></details></div>';
         }
+        echo '<h2>' . esc_html__('Open a new account', 'sfm4u-wholesale') . '</h2><form method="post">';
+        wp_nonce_field('sfm_wr_accounts');
+        echo '<input type="hidden" name="sfm_wr_acc_action" value="open"><p><input type="email" name="email" required placeholder="' . esc_attr__('Email', 'sfm4u-wholesale') . '"> '
+            . '<input name="name" required placeholder="' . esc_attr__('Name', 'sfm4u-wholesale') . '"> '
+            . (current_user_can('manage_options') ? '<input type="number" name="number" min="1" max="9999999" placeholder="' . esc_attr__('Number (admin, optional)', 'sfm4u-wholesale') . '" style="width:170px"> ' : '')
+            . '</p><p><select name="id_type"><option value="nid">NID</option><option value="brn">' . esc_html__('Birth registration', 'sfm4u-wholesale') . '</option></select> '
+            . '<input name="id_number" autocomplete="off" placeholder="' . esc_attr__('Number (optional: 90 days)', 'sfm4u-wholesale') . '"> <input type="date" name="dob"> '
+            . '<label><input type="checkbox" name="consent" value="yes"> ' . esc_html__('Customer agreed (signed consent kept)', 'sfm4u-wholesale') . '</label> '
+            . '<button class="button button-primary">' . esc_html__('Open account', 'sfm4u-wholesale') . '</button></p></form>';
         $alerts = array_filter((array) get_option(self::OPT_ALERTS, []), fn($a) => ($a['status'] ?? '') === 'open');
         echo '<h2>' . esc_html__('Duplicate alerts', 'sfm4u-wholesale') . '</h2>';
         if (!$alerts) { echo '<p>' . esc_html__('None.', 'sfm4u-wholesale') . '</p>'; }
@@ -176,7 +190,7 @@ final class Identity {
         $raw = trim($raw);
         if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) || !checkdate((int) $m[2], (int) $m[3], (int) $m[1])) { return ''; }
         $t = strtotime($raw . ' 00:00:00 UTC');
-        return ($t && $t <= time() && (int) $m[1] >= 1900) ? $raw : '';
+        return ($t !== false && $t <= time() && (int) $m[1] >= 1900) ? $raw : '';
     }
 
     public static function hasIdentity(int $uid): bool {
@@ -351,6 +365,44 @@ final class Identity {
             if ($p && ($u = self::holderOf(Members::idHash($p[1], Members::idKey()), 0))) { return [$u]; }
         }
         return [];
+    }
+
+    /**
+     * Account manager / administrator opens an account (owner rule §3). Only an administrator may choose the number
+     * (1-100, special or any free number); otherwise the next normal number is given. NID/BRN + date of birth are optional
+     * here (90 days rule) but, when given, need the customer's consent. Returns the new user id.
+     */
+    public static function openAccount(string $email, string $name, int $staffId, int $number = 0, array $identity = []): int {
+        if (!user_can($staffId, self::CAP_MANAGER)) { throw new DomainException(__('You cannot manage accounts.', 'sfm4u-wholesale'), 403); }
+        if ($number > 0 && !user_can($staffId, 'manage_options')) { throw new DomainException(__('Only an administrator can change a member number.', 'sfm4u-wholesale'), 403); }
+        $email = sanitize_email($email); $name = trim(sanitize_text_field($name));
+        if (!is_email($email) || $name === '') { throw new DomainException(__('Give the email and the name.', 'sfm4u-wholesale'), 422); }
+        if (email_exists($email)) { throw new DomainException(__('This email already has an account. Search for it instead.', 'sfm4u-wholesale'), 409); }
+        if ($identity) {   // check the NID/BRN BEFORE creating anything, so a duplicate leaves no new account behind
+            $nid = Members::parseNationalId((string) ($identity['number'] ?? ''), ($identity['type'] ?? '') === 'brn' ? 'brn' : 'nid');
+            if ($nid && self::holderOf(Members::idHash($nid[1], Members::idKey()), 0)) {
+                throw new DomainException(__(self::SAFE_DUPLICATE, 'sfm4u-wholesale'), 409);
+            }
+        }
+        $base = sanitize_user(strtok($email, '@'), true) ?: 'member';
+        $login = $base; for ($i = 2; username_exists($login); $i++) { $login = $base . $i; }
+        $uid = wp_insert_user(['user_login' => $login, 'user_pass' => wp_generate_password(32, true, true), 'user_email' => $email, 'display_name' => $name, 'first_name' => $name, 'role' => 'subscriber']);
+        if (is_wp_error($uid)) { throw new DomainException($uid->get_error_message()); }
+        $uid = (int) $uid;
+        try {
+            if ($number > 0) { Members::assignNumber($uid, $number, $staffId); }
+            Members::memberNo($uid);
+            if (!Members::cardsOf($uid)) { Members::issue($uid, 'regular', 0, $staffId, 'main', null, '', 'main'); }
+            if ($identity) {
+                self::setIdentity($uid, (string) ($identity['type'] ?? 'nid'), (string) ($identity['number'] ?? ''), (string) ($identity['dob'] ?? ''), $staffId, !empty($identity['consent']));
+            }
+        } catch (DomainException $e) {
+            if (!function_exists('wp_delete_user')) { require_once ABSPATH . 'wp-admin/includes/user.php'; }
+            wp_delete_user($uid);   // nothing half-made stays behind
+            throw $e;
+        }
+        self::log($uid, $staffId, 'account opened by staff' . ($number > 0 ? ' with number ' . Members::formatMemberNo($number) : ''));
+        return $uid;
     }
 
     /** What a viewer may see of the stored NID/BRN. */

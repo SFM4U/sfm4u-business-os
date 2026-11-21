@@ -425,7 +425,7 @@ final class Members {
         // 0.9.9: a number already held by someone else (e.g. a central number kept from when this site was a linked
         // shop) is skipped, so two people never share a member number.
         $no = '';
-        for ($skip = 0; $skip < 50 && $no === ''; $skip++) {
+        for ($skip = 0; $skip < 1000 && $no === ''; $skip++) {   // skips held, retired and reserved numbers
             $n = 0;
             for ($try = 0; $try < 25 && $n === 0; $try++) {
                 $cur = (int) $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'sfm_wr_member_seq'));

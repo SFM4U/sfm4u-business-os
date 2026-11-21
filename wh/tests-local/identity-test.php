@@ -69,5 +69,14 @@ $ok(str_contains(Identity::shownId($a, 1), $nid2), 'administrator sees the full 
 $ok(Identity::search(ltrim(Members::memberNo($a), '0')) === [$a], 'search by member number');
 $ok(in_array($a, Identity::search('', '1990-05-01', 'Person a'), true), 'search by date of birth + name');
 $ok(Identity::search('', '', '', '', '12345678901234567') === [], 'unknown birth registration: nothing');
+// admin / account manager opens accounts (owner rule §3)
+$spec = Members::freeSpecialNumbers();
+$new1 = Identity::openAccount("open1$r@example.com", "Store $r", 1, $spec[0] ?? 0);
+$ok($new1 > 0 && (!$spec || Members::memberNo($new1) === Members::formatMemberNo($spec[0])) && Members::cardsOf($new1) && Identity::accountState($new1)['state'] === 'grace', 'admin opens an account with a chosen special number (card issued, 90 days running)');
+$ok($bad(fn() => Identity::openAccount("open2$r@example.com", 'X', $mgr, 5), 403), 'account manager cannot choose the number');
+$new2 = Identity::openAccount("open3$r@example.com", "Cust $r", $mgr, 0, ['type' => 'nid', 'number' => $nid3 = (string) wp_rand(1000000000, 9999999999), 'dob' => '1970-01-01', 'consent' => true]);
+$ok(Identity::hasIdentity($new2) && (int) Members::memberNo($new2) > 100, 'account manager opens an account with NID (normal number)');
+$ok($bad(fn() => Identity::openAccount("open4$r@example.com", 'Y', $mgr, 0, ['type' => 'nid', 'number' => $nid3, 'dob' => '1970-01-01', 'consent' => true]), 409) && !email_exists("open4$r@example.com"), 'duplicate NID at opening: refused, no account left behind');
+$ok($bad(fn() => Identity::openAccount("open1$r@example.com", 'Z', 1), 409), 'existing email: refused (search instead)');
 $oldRole !== false ? update_option(CardLink::OPT_ROLE, $oldRole) : delete_option(CardLink::OPT_ROLE);
 echo "pass $p fail $f\n";
