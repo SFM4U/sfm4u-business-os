@@ -1,7 +1,11 @@
 <?php
 if (!defined('WP_CLI') || !WP_CLI || wp_parse_url(home_url(), PHP_URL_HOST) !== '127.0.0.1') exit(1);
 $mode = $args[0];
-$path = '/fixture-out/khata-parallel.json';
+$barrier = realpath($args[1] ?? '');
+if (!$barrier || !is_dir($barrier) || dirname($barrier) !== '/fixture-out') {
+    throw new RuntimeException('Use a fresh khata barrier directory under /fixture-out');
+}
+$path = $barrier . '/seed.json';
 if ($mode === 'seed') {
     require __DIR__ . '/counter-khata-rest.php';
     wp_set_current_user(1);
@@ -20,7 +24,7 @@ if ($mode === 'seed') {
 define('SFM4U_POS_KHATA_STORES', [763122 => 'test-main', 763123 => 'test-other']);
 $fixture = json_decode(file_get_contents($path), true, 16, JSON_THROW_ON_ERROR);
 if ($mode === 'worker') {
-    $index = (int) $args[1];
+    $index = (int) $args[2];
     wp_set_current_user($fixture['actors'][$index]);
     $request = new WP_REST_Request('POST', '/sfm4u-pos/v1/register');
     $request->set_header('Content-Type', 'application/json');
@@ -28,8 +32,8 @@ if ($mode === 'worker') {
     $request->set_header('Idempotency-Key', 'khata-parallel-payment-' . $index);
     $request->set_body(wp_json_encode(['action'=>'member_due_payment','merchant'=>$fixture['merchant'],
         'register'=>['MEM','MEM2'][$index],'session'=>$fixture['sessions'][$index], 'member'=>$fixture['member'],'amount'=>5000]));
-    touch("/fixture-out/khata-ready-$index");
-    for ($tries=0; !is_file('/fixture-out/khata-go'); ++$tries) {
+    touch("$barrier/ready-$index");
+    for ($tries=0; !is_file($barrier . '/go'); ++$tries) {
         if ($tries>=180) throw new RuntimeException('Khata barrier timeout');
         usleep(100000);
     }
@@ -38,14 +42,14 @@ if ($mode === 'worker') {
         if ($response->get_status() !== 503) break;
         usleep(250000);
     }
-    file_put_contents("/fixture-out/khata-result-$index", wp_json_encode([
+    file_put_contents("$barrier/result-$index", wp_json_encode([
         'status'=>$response->get_status(),'data'=>$response->get_data(),
     ]));
     return;
 }
 $results=[];
 foreach ([0,1] as $index) {
-    $result = json_decode(file_get_contents("/fixture-out/khata-result-$index"), true, 16, JSON_THROW_ON_ERROR);
+    $result = json_decode(file_get_contents("$barrier/result-$index"), true, 16, JSON_THROW_ON_ERROR);
     if ($result['status'] !== 200) throw new RuntimeException('Parallel payment failed: ' . $result['status']);
     $results[] = $result['data'];
 }
