@@ -231,10 +231,22 @@ check((int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE order_i
     $wpdb->prefix . 'wc_reserved_stock', $thirdId)) === 1, 'failed job rolls back reservation removal');
 check($quotes->statement($buyer)['balance_minor'] === 11500, 'failed job rolls back credit release');
 add_filter('woocommerce_hold_stock_for_checkout', '__return_false');
-check($runExpiry() === ActionScheduler_Store::STATUS_FAILED, 'scheduler does not report a skipped reservation removal as success');
-remove_filter('woocommerce_hold_stock_for_checkout', '__return_false');
-check(wc_get_order($thirdId)->has_status('pending') && $quotes->statement($buyer)['balance_minor'] === 11500,
-    'skipped reservation removal preserves pending order and its credit charge');
+try {
+    $disabledHoldResult = $runExpiry();
+} finally {
+    remove_filter('woocommerce_hold_stock_for_checkout', '__return_false');
+}
+if (version_compare(WC_VERSION, '11.3.1', '>=')) {
+    check($disabledHoldResult === ActionScheduler_Store::STATUS_COMPLETE, 'scheduler releases an old reservation while holds are disabled');
+    check(wc_get_order($thirdId)->has_status('cancelled') && $quotes->statement($buyer)['balance_minor'] === 5500
+        && (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i WHERE order_id=%d',
+            $wpdb->prefix . 'wc_reserved_stock', $thirdId)) === 0,
+        'disabled holds still cancel the unpaid order, remove its reservation, and release the credit');
+} else {
+    check($disabledHoldResult === ActionScheduler_Store::STATUS_FAILED, 'scheduler does not report a skipped reservation removal as success');
+    check(wc_get_order($thirdId)->has_status('pending') && $quotes->statement($buyer)['balance_minor'] === 11500,
+        'skipped reservation removal preserves pending order and its credit charge');
+}
 check($runExpiry() === ActionScheduler_Store::STATUS_COMPLETE && $runExpiry() === ActionScheduler_Store::STATUS_COMPLETE,
     'scheduler retries and duplicate execution completes');
 check(wc_get_order($secondId)->has_status('pending') && $wpdb->get_var($wpdb->prepare(

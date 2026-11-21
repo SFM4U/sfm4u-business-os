@@ -15,7 +15,7 @@ $W core install --url=http://127.0.0.1 --title=SFM4U-POS-Staging --admin_user=fi
 $W plugin activate woocommerce dokan-lite >/dev/null 2>&1
 $W option update woocommerce_custom_orders_table_enabled yes; $W option update woocommerce_currency BDT
 mv /tmp/claude-0/db.php.hold "$P/wp-content/db.php"
-ln -sfn "$P" /wordpress; ln -sfn "$REPO/tests/codex" /tests; ln -sfn "$P/wp-content/plugins/sfm4u-wholesale/modules" /modules
+ln -sfn "$P" /wordpress; ln -sfn "$P/wp-content/plugins" /source; ln -sfn "$REPO/tests/codex" /tests; ln -sfn "$P/wp-content/plugins/sfm4u-wholesale/modules" /modules
 mkdir -p /fixture-out && rm -f /fixture-out/*
 cd /tmp/claude-0 && php -d memory_limit=1024M activate.php >/dev/null 2>&1
 R=PASS
