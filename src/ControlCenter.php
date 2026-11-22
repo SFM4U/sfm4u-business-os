@@ -20,6 +20,7 @@ defined('ABSPATH') || exit;
 final class ControlCenter {
     public const HIDE_PROMO = 'sfm_cc_hide_promos';
     public const CACHE = 'sfm_cc_stats';
+    public const SHOW_OLD = 'sfm_cc_show_old';
     public const PROMO = '/pro\s*features|black\s*friday|chat\s*with\s*us|upgrade|go\s*pro|get\s*pro|cyber\s*monday|% ?off/i';
 
     /** group => [English, Bangla] (display order). */
@@ -188,6 +189,7 @@ final class ControlCenter {
         $act = sanitize_key(wp_unslash((string) $_POST['sfm_cc']));
         if ($act === 'promos') { update_option(self::HIDE_PROMO, self::hidePromo() ? 'no' : 'yes', true); }
         if ($act === 'refresh') { delete_transient(self::CACHE); }
+        if ($act === 'old') { update_option(self::SHOW_OLD, get_option(self::SHOW_OLD) === 'yes' ? 'no' : 'yes', false); }
         wp_safe_redirect(admin_url('admin.php?page=' . Modules::SLUG));
         exit;
     }
@@ -236,8 +238,12 @@ final class ControlCenter {
                 . '<span style="color:' . ($on ? '#0a7d3b' : '#b32d2e') . '">●</span></a>';
         }
         echo '</div></section>';
+        // Owner r7: the Dashboard shows our own modules. The old Dokan/WooCommerce pages stay reachable only behind this button until our module replaces each one.
+        $showOld = get_option(self::SHOW_OLD) === 'yes';
+        echo '<p><form method="post">' . $nonce . '<input type="hidden" name="sfm_cc" value="old"><button class="button">'
+            . esc_html($showOld ? 'Hide old Dokan / WooCommerce pages' : 'Show old Dokan / WooCommerce pages (temporary, until our modules replace them)') . '</button></form></p>';
         foreach (self::groups() as $g => [$en, $bn]) {
-            if (empty($links[$g])) { continue; }
+            if (!$showOld || empty($links[$g])) { continue; }
             echo '<section class="grp"><h2>' . esc_html($en) . ' <small>/ ' . esc_html($bn) . '</small></h2><div class="grid">';
             foreach ($links[$g] as $l) {
                 echo '<a class="lnk" href="' . esc_url($l['url']) . '"><span>' . esc_html($l['title']) . '<small>' . esc_html($l['from']) . '</small></span>'
