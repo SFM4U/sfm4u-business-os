@@ -1,6 +1,8 @@
 /* SFM4U design kit (A01) — brand from the Owner's logo. Applied only on SFM4U Business Software pages (body.sfm4u-ui). */
 body.sfm4u-ui{--s-bg:#020202;--s-bg2:#001A12;--s-line:#0b3326;--s-teal:#00E0B0;--s-glow:#00F0C0;--s-mid:#00B080;--s-g4:#00A070;--s-silver:#F1F3F3;--s-muted:#9fb5ad}
-body.sfm4u-ui,body.sfm4u-ui #wpwrap,body.sfm4u-ui #wpcontent,body.sfm4u-ui #wpbody-content{background:#070c0b}
+body.sfm4u-ui,body.sfm4u-ui #wpwrap,body.sfm4u-ui #wpcontent{background:#070c0b}
+/* content layer must be see-through, otherwise it hides the background image (Owner: image only showed below the content) */
+body.sfm4u-ui #wpbody-content,body.sfm4u-ui #wpbody-content .wrap{background:transparent}
 /* same background as sfm4u.com: soft green glow + SFM4U background image, faint and fixed */
 body.sfm4u-ui #wpbody{position:relative;isolation:isolate}
 body.sfm4u-ui #wpbody::before{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 10% 0%,#16423544,transparent 60%),url("https://sfm4u.com/wp-content/uploads/2026/10/SFM4U-Home-Background.jpeg") center/min(850px,90vw) auto no-repeat;opacity:.14;z-index:-1;pointer-events:none}
@@ -10,12 +12,12 @@ body.sfm4u-ui .wrap p,body.sfm4u-ui .wrap li,body.sfm4u-ui .wrap td{color:#d9e4e
 body.sfm4u-ui .wrap small,body.sfm4u-ui .wrap .description{color:var(--s-muted)}
 body.sfm4u-ui .wrap a{color:var(--s-teal)}body.sfm4u-ui .wrap a:hover{color:var(--s-glow)}
 /* cards / tiles / boxes used by our pages */
-body.sfm4u-ui .wrap .tile,body.sfm4u-ui .wrap .lnk,body.sfm4u-ui .wrap .box,body.sfm4u-ui .wrap .sfm-bos-card,body.sfm4u-ui .wrap .card,body.sfm4u-ui .wrap .postbox,body.sfm4u-ui .wrap .sfm-card{background:rgba(0,26,18,.85)!important;border:1px solid var(--s-line)!important;color:var(--s-silver)!important;border-radius:12px}
+body.sfm4u-ui .wrap .tile,body.sfm4u-ui .wrap .lnk,body.sfm4u-ui .wrap .box,body.sfm4u-ui .wrap .sfm-bos-card,body.sfm4u-ui .wrap .card,body.sfm4u-ui .wrap .postbox,body.sfm4u-ui .wrap .sfm-card{background:rgba(0,26,18,.55)!important;border:1px solid var(--s-line)!important;color:var(--s-silver)!important;border-radius:12px}
 body.sfm4u-ui .wrap .lnk:hover,body.sfm4u-ui .wrap a.tile:hover{border-color:var(--s-mid)!important;box-shadow:0 0 18px rgba(0,224,176,.15)}
 body.sfm4u-ui .wrap .tile b{color:var(--s-teal)}
 /* tables */
-body.sfm4u-ui .wrap table.widefat,body.sfm4u-ui .wrap .widefat td,body.sfm4u-ui .wrap .widefat th{background:var(--s-bg2);border-color:var(--s-line);color:var(--s-silver)}
-body.sfm4u-ui .wrap .striped>tbody>:nth-child(odd){background:#00130d}
+body.sfm4u-ui .wrap table.widefat,body.sfm4u-ui .wrap .widefat td,body.sfm4u-ui .wrap .widefat th{background:rgba(0,26,18,.55);border-color:var(--s-line);color:var(--s-silver)}
+body.sfm4u-ui .wrap .striped>tbody>:nth-child(odd){background:rgba(0,19,13,.6)}
 /* forms */
 body.sfm4u-ui .wrap input[type=text],body.sfm4u-ui .wrap input[type=number],body.sfm4u-ui .wrap input[type=search],body.sfm4u-ui .wrap input[type=email],body.sfm4u-ui .wrap input[type=date],body.sfm4u-ui .wrap input[type=url],body.sfm4u-ui .wrap select,body.sfm4u-ui .wrap textarea{background:#000;color:var(--s-silver);border:1px solid var(--s-line);border-radius:8px}
 body.sfm4u-ui .wrap input:focus,body.sfm4u-ui .wrap select:focus,body.sfm4u-ui .wrap textarea:focus{border-color:var(--s-teal);box-shadow:0 0 0 1px var(--s-teal)}
