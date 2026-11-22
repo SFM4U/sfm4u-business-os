@@ -1,1 +1,1 @@
-algibazar.com build. Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.21-dev.zip from main 2286dd3, ZIP SHA-256 a15a4000b8f8203d27ad77a40fabb3fe901aaf5cc22b6739545bab49bbc36783.
+algibazar.com build. Plugin tree of SFM4U-BusinessOS-sfm4u-wholesale-0.9.22-dev.zip from main 7f5f21f, ZIP SHA-256 bcfd055f16a22aaf6b710ba5138e7a752d7a1dd280328676328fff62851a9a97.
