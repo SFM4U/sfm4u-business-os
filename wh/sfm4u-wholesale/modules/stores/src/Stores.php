@@ -23,14 +23,19 @@ final class Stores implements ModuleContract
         }
         add_action('init', [self::class, 'postType']);
         add_action('admin_menu', [self::class, 'menu']);
+        add_filter('woocommerce_prevent_admin_access', [self::class, 'allowStorePage']);
         add_action('admin_post_sfm_stores_save', [self::class, 'save']);
         add_shortcode('sfm4u_stores', [self::class, 'directory']);
     }
 
     public static function postType(): void
     {
-        register_post_type(self::TYPE, ['public' => false, 'show_ui' => false,
-            'show_in_rest' => false, 'supports' => ['title', 'author']]);
+        // All writes must go through the module's approval and owner checks.
+        $writes = array_fill_keys(['create_posts', 'edit_post', 'edit_posts', 'edit_others_posts',
+            'edit_private_posts', 'edit_published_posts', 'publish_posts', 'delete_post', 'delete_posts',
+            'delete_private_posts', 'delete_published_posts', 'delete_others_posts'], 'do_not_allow');
+        register_post_type(self::TYPE, ['public' => false, 'show_ui' => false, 'show_in_rest' => false,
+            'map_meta_cap' => false, 'capabilities' => $writes, 'supports' => ['title', 'author']]);
     }
 
     public static function dashboard(): array
@@ -52,10 +57,21 @@ final class Stores implements ModuleContract
 
     public static function menu(): void
     {
-        if (self::canOpen()) {
-            add_submenu_page(Modules::SLUG, self::label('Stores', 'দোকান'), self::label('Stores', 'দোকান'),
-                'read', self::PAGE, [self::class, 'page']);
+        $title = self::label('Stores', 'দোকান');
+        if (self::manager()) {
+            add_submenu_page(Modules::SLUG, $title, $title, 'read', self::PAGE, [self::class, 'page']);
+        } elseif (self::canOpen()) {
+            add_menu_page($title, $title, 'read', self::PAGE, [self::class, 'page'], 'dashicons-store');
         }
+    }
+
+    public static function allowStorePage(bool $prevent): bool
+    {
+        if (($GLOBALS['pagenow'] ?? '') === 'admin.php' && ($_GET['page'] ?? '') === self::PAGE
+            && Modules::on('stores') && self::canOpen()) {
+            return false;
+        }
+        return $prevent;
     }
 
     private static function manager(): bool
@@ -220,10 +236,12 @@ final class Stores implements ModuleContract
             }
             $fields[$key] = sanitize_text_field($value);
         }
+        $previous = self::fields($id);
         foreach (['logo_id', 'banner_id'] as $key) {
             $attachment = absint($input[$key] ?? 0);
             if ($attachment && (!wp_attachment_is_image($attachment)
-                || (!$manager && (int) get_post_field('post_author', $attachment) !== $owner))) {
+                || (!$manager && $attachment !== (int) ($previous[$key] ?? 0)
+                    && (int) get_post_field('post_author', $attachment) !== $owner))) {
                 return new \WP_Error('sfm_store_image', 'Choose an image you own.', 422);
             }
             $fields[$key] = $attachment;
