@@ -24,8 +24,8 @@ Owner: MD SHALA UDDIN. Written by Claude on 2026-11-22.
 ## A. Platform (the base every module uses)
 | ID | Module (EN / বাংলা) | What it does | P | Status |
 |---|---|---|---|---|
-| A01 | Brand design kit / ডিজাইন কিট | SFM4U logo, colours, fonts and components used on every page | P1 | READY |
-| A02 | Module Manager / মডিউল ম্যানেজার | add a module by ZIP, update, roll back, on/off, versions | P1 | READY |
+| A01 | Brand design kit / ডিজাইন কিট | SFM4U logo, colours, fonts and components used on every page | P1 | BUILT |
+| A02 | Module Manager / মডিউল ম্যানেজার | add a module by ZIP, update, roll back, on/off, versions | P1 | BUILT |
 | A03 | Licence & updates / লাইসেন্স ও আপডেট | licence key per domain, update check, plans | P1 | READY |
 | A04 | Main Dashboard / মূল ড্যাশবোর্ড | numbers and every module in one place | P1 | BUILT |
 | A05 | Module dashboards / মডিউল ড্যাশবোর্ড | each module's own home page: numbers, pages, settings, access, help | P1 | BUILT |

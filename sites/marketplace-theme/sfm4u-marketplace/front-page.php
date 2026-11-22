@@ -21,7 +21,7 @@ $built = 0; $all = 0; foreach ($groups as $g) { foreach ($g[2] as $b) { $all++; 
       <p><span class="badge">SFM4U Software Marketplace</span></p>
       <h1><span class="brk">‹</span> SFM4U Business Software <span class="brk">›</span></h1>
       <p class="lead">One software for a whole marketplace and every shop in it: shops, products, wholesale and retail prices, POS counter, member cards, khata, stock, buying cost, delivery and reports, in Bangla and English.<br><span lang="bn">একটি সফটওয়্যার — পুরো মার্কেটপ্লেস ও প্রতিটি দোকানের সব কাজ।</span></p>
-      <div class="btns"><a class="btn solid" href="#modules">See all modules</a><a class="btn" href="#plans">Plans</a></div>
+      <div class="btns"><a class="btn solid" href="<?php echo esc_url(home_url('/modules/')); ?>">See all modules</a><a class="btn" href="#plans">Plans</a></div>
     </div>
   </section>
 
@@ -40,7 +40,7 @@ $built = 0; $all = 0; foreach ($groups as $g) { foreach ($g[2] as $b) { $all++; 
 
   <section class="s" id="modules"><div class="wrap">
     <h2>Modules <span class="badge"><?php echo (int) $built; ?> ready today · <?php echo (int) ($all - $built); ?> being built</span></h2>
-    <p class="sub">মডিউল — সবুজ চিহ্ন = আজ চালু, ধূসর = তৈরি হচ্ছে।</p>
+    <p class="sub">মডিউল — সবুজ চিহ্ন = আজ চালু, ধূসর = তৈরি হচ্ছে। <a href="<?php echo esc_url(home_url('/modules/')); ?>">Every module, one by one →</a></p>
     <div class="grid">
       <?php foreach ($groups as [$en, $bn, $mods]) { ?>
         <div class="card"><h3><?php echo esc_html($en); ?></h3><p class="bn"><?php echo esc_html($bn); ?></p>

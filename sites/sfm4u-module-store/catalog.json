@@ -1,0 +1,1222 @@
+[
+{
+"code": "A01",
+"en": "Brand design kit",
+"bn": "ডিজাইন কিট",
+"what": "SFM4U logo, colours, fonts and components used on every page",
+"p": "P1",
+"status": "BUILT",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A02",
+"en": "Module Manager",
+"bn": "মডিউল ম্যানেজার",
+"what": "add a module by ZIP, update, roll back, on/off, versions",
+"p": "P1",
+"status": "BUILT",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A03",
+"en": "Licence & updates",
+"bn": "লাইসেন্স ও আপডেট",
+"what": "licence key per domain, update check, plans",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A04",
+"en": "Main Dashboard",
+"bn": "মূল ড্যাশবোর্ড",
+"what": "numbers and every module in one place",
+"p": "P1",
+"status": "BUILT",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A05",
+"en": "Module dashboards",
+"bn": "মডিউল ড্যাশবোর্ড",
+"what": "each module's own home page: numbers, pages, settings, access, help",
+"p": "P1",
+"status": "BUILT",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A06",
+"en": "Roles & permissions",
+"bn": "রোল ও অনুমতি",
+"what": "owner, admin, manager, cashier, vendor, vendor staff, customer, wholesaler",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A07",
+"en": "Notifications centre",
+"bn": "নোটিফিকেশন",
+"what": "SMS, WhatsApp, email and app push from one place, with templates in Bangla and English",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A08",
+"en": "Language BN/EN",
+"bn": "ভাষা",
+"what": "one-click Bangla/English across the whole software",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A09",
+"en": "Activity log",
+"bn": "কার্যকলাপ লগ",
+"what": "who changed what and when",
+"p": "P2",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A10",
+"en": "Import",
+"bn": "export / ইমপোর্ট-এক্সপোর্ট",
+"what": "CSV/Excel for products, customers and orders",
+"p": "P2",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A11",
+"en": "About SFM4U & policies",
+"bn": "কোম্পানি ও নীতি",
+"what": "company details, policies (5% policy), support",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "A12",
+"en": "One SFM4U login",
+"bn": "এক অ্যাকাউন্ট",
+"what": "\"Login with SFM4U\" through accounts.sfm4u.com",
+"p": "P2",
+"status": "LATER",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
+"code": "B01",
+"en": "Stores",
+"bn": "দোকান",
+"what": "shop list, approval, store and owner profile, store page",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B02",
+"en": "Vendor registration",
+"bn": "দোকান খোলা",
+"what": "sign-up form, documents, plan choice, onboarding steps",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B03",
+"en": "Vendor panel",
+"bn": "দোকানদারের ড্যাশবোর্ড",
+"what": "the seller's own dashboard (web and app)",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B04",
+"en": "Seller verification",
+"bn": "যাচাই",
+"what": "NID, trade licence, phone OTP, address; Verified badge",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B05",
+"en": "Vendor staff",
+"bn": "দোকানের স্টাফ",
+"what": "staff per shop; the cost price stays hidden from them",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B06",
+"en": "Vendor plans",
+"bn": "দোকানের প্ল্যান",
+"what": "subscription, product limit, commission per plan",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B07",
+"en": "Commission",
+"bn": "কমিশন",
+"what": "per shop, category or plan",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B08",
+"en": "Earnings & statements",
+"bn": "আয় ও হিসাব",
+"what": "admin earnings, shop balance, statement",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B09",
+"en": "Withdraw",
+"bn": "উইথড্র",
+"what": "bKash, Nagad or bank; approval; schedule; never pays twice",
+"p": "P1",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B10",
+"en": "Reverse withdrawal",
+"bn": "উল্টো উইথড্র",
+"what": "the shop pays commission due on cash sales",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B11",
+"en": "Store reviews",
+"bn": "দোকানের রিভিউ",
+"what": "only verified buyers can review; the shop can reply",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B12",
+"en": "Store follow",
+"bn": "দোকান ফলো",
+"what": "customers follow a shop and get its offers",
+"p": "P3",
+"status": "LATER",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B13",
+"en": "Store support tickets",
+"bn": "সাপোর্ট টিকিট",
+"what": "customer ↔ shop ↔ admin",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B14",
+"en": "Announcements",
+"bn": "ঘোষণা",
+"what": "admin → all shops or chosen shops",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B15",
+"en": "Report abuse",
+"bn": "ভুয়া পণ্য রিপোর্ট",
+"what": "report a product, admin review, hold",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B16",
+"en": "One product, many sellers",
+"bn": "এক পণ্য অনেক দোকান",
+"what": "compare price, delivery and rating",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B17",
+"en": "Vacation mode",
+"bn": "ছুটি মোড",
+"what": "close the shop for a few days",
+"p": "P3",
+"status": "LATER",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B18",
+"en": "Store search by location",
+"bn": "কাছের দোকান",
+"what": "find nearby shops on a map",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "B19",
+"en": "Brands",
+"bn": "ব্র্যান্ড",
+"what": "brand pages and the brand dashboard",
+"p": "P2",
+"status": "READY",
+"group": "Marketplace (shops)",
+"type": "module"
+},
+{
+"code": "C01",
+"en": "Product sheet A–Z",
+"bn": "প্রোডাক্ট শিট",
+"what": "photos, 15-second video, prices, stock, label, delivery",
+"p": "P1",
+"status": "BUILT",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C02",
+"en": "Categories & attributes",
+"bn": "ক্যাটাগরি",
+"what": "sizes, colours and variations",
+"p": "P1",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C03",
+"en": "Bulk edit",
+"bn": "একসাথে এডিট",
+"what": "change price and stock of many products at once",
+"p": "P2",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C04",
+"en": "Bundles & combos",
+"bn": "কম্বো",
+"what": "packs sold together",
+"p": "P2",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C05",
+"en": "Product add-ons",
+"bn": "অতিরিক্ত অপশন",
+"what": "gift wrap, engraving and similar extras",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C06",
+"en": "Digital products",
+"bn": "ডিজিটাল পণ্য",
+"what": "files, e-books, software licences",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C07",
+"en": "Booking & rental",
+"bn": "বুকিং",
+"what": "services, rooms, rentals",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C08",
+"en": "Auction",
+"bn": "নিলাম",
+"what": "bids",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C09",
+"en": "Product subscription",
+"bn": "নিয়মিত অর্ডার",
+"what": "monthly delivery (milk, groceries)",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C10",
+"en": "Product Q&A",
+"bn": "প্রশ্নোত্তর",
+"what": "questions and answers on the product page",
+"p": "P2",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C11",
+"en": "Wishlist & compare",
+"bn": "পছন্দ ও তুলনা",
+"what": "save products and compare them",
+"p": "P2",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C12",
+"en": "Product page experience",
+"bn": "প্রোডাক্ট পেজ",
+"what": "video, seller box, delivery info",
+"p": "P1",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C13",
+"en": "Barcode/QR labels",
+"bn": "লেবেল",
+"what": "print labels",
+"p": "P1",
+"status": "BUILT",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C14",
+"en": "Expiry & batch",
+"bn": "মেয়াদ ও ব্যাচ",
+"what": "expiry warnings, sell oldest stock first (FEFO)",
+"p": "P2",
+"status": "READY",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "C15",
+"en": "AI product intake",
+"bn": "AI দিয়ে পণ্য",
+"what": "read the label from a photo, fill the sheet (any AI provider)",
+"p": "P3",
+"status": "LATER",
+"group": "Products",
+"type": "module"
+},
+{
+"code": "D01",
+"en": "Retail price sets",
+"bn": "খুচরা দাম",
+"what": "who sees and who buys; quantity steps",
+"p": "P1",
+"status": "BUILT",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D02",
+"en": "Wholesale",
+"bn": "B2B",
+"what": "wholesale price, approved buyers, credit",
+"p": "P1",
+"status": "BUILT",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D03",
+"en": "Member price",
+"bn": "মেম্বার দাম",
+"what": "Business/Black wholesale with the card",
+"p": "P1",
+"status": "BUILT",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D04",
+"en": "Offers (buy X get Y)",
+"bn": "অফার",
+"what": "7+1 and similar offers",
+"p": "P1",
+"status": "BUILT",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D05",
+"en": "Coupons",
+"bn": "কুপন",
+"what": "shop coupons and member coupons",
+"p": "P1",
+"status": "READY",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D06",
+"en": "Gift cards",
+"bn": "গিফট কার্ড",
+"what": "sell and redeem gift cards",
+"p": "P3",
+"status": "LATER",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D07",
+"en": "Friday",
+"bn": "flash offers / শুক্রবারের অফার",
+"what": "timed special offers",
+"p": "P2",
+"status": "READY",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D08",
+"en": "Dynamic price rules",
+"bn": "দামের নিয়ম",
+"what": "rules by category, member or time",
+"p": "P2",
+"status": "READY",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D09",
+"en": "VAT & tax (Bangladesh)",
+"bn": "ভ্যাট",
+"what": "VAT per product, VAT invoice",
+"p": "P2",
+"status": "READY",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "D10",
+"en": "Multi-currency",
+"bn": "মুদ্রা",
+"what": "BDT and USD view",
+"p": "P3",
+"status": "LATER",
+"group": "Prices & offers",
+"type": "module"
+},
+{
+"code": "E01",
+"en": "Marketplace orders",
+"bn": "অর্ডার",
+"what": "sub-order per shop, status, packing",
+"p": "P1",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E02",
+"en": "Invoices & packing slips",
+"bn": "ইনভয়েস",
+"what": "per shop, A4 and 80 mm",
+"p": "P1",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E03",
+"en": "Receipt auto-print",
+"bn": "রিসিট",
+"what": "print new orders",
+"p": "P1",
+"status": "BUILT",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E04",
+"en": "Cash on delivery control",
+"bn": "COD",
+"what": "COD limits, verification, fake-order guard",
+"p": "P1",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E05",
+"en": "Advance",
+"bn": "partial payment / অগ্রিম",
+"what": "pay part now, the rest on delivery",
+"p": "P2",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E06",
+"en": "Pre-order & backorder",
+"bn": "প্রি-অর্ডার",
+"what": "sell before stock arrives",
+"p": "P3",
+"status": "LATER",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E07",
+"en": "Order tracking page",
+"bn": "অর্ডার ট্র্যাকিং",
+"what": "the customer sees where the order is",
+"p": "P1",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E08",
+"en": "Returns & warranty",
+"bn": "রিটার্ন ও ওয়ারেন্টি",
+"what": "requests with photos, exchange, warranty",
+"p": "P2",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E09",
+"en": "Refunds",
+"bn": "রিফান্ড",
+"what": "never refunds twice",
+"p": "P2",
+"status": "READY",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "E10",
+"en": "Abandoned cart",
+"bn": "ফেলে রাখা কার্ট",
+"what": "reminder by SMS/WhatsApp",
+"p": "P3",
+"status": "LATER",
+"group": "Orders & checkout",
+"type": "module"
+},
+{
+"code": "F01",
+"en": "bKash",
+"bn": "Nagad / Rocket",
+"what": "mobile wallet payment",
+"p": "P1",
+"status": "READY",
+"group": "Payments",
+"type": "module"
+},
+{
+"code": "F02",
+"en": "SSLCommerz",
+"bn": "card",
+"what": "card and online banking",
+"p": "P2",
+"status": "READY",
+"group": "Payments",
+"type": "module"
+},
+{
+"code": "F03",
+"en": "Wallet & store credit",
+"bn": "ওয়ালেট",
+"what": "customer balance",
+"p": "P2",
+"status": "BUILT (points & wallet)",
+"group": "Payments",
+"type": "module"
+},
+{
+"code": "F04",
+"en": "Khata (due)",
+"bn": "খাতা",
+"what": "credit for known customers",
+"p": "P1",
+"status": "BUILT",
+"group": "Payments",
+"type": "module"
+},
+{
+"code": "F05",
+"en": "Payout split",
+"bn": "টাকা ভাগ",
+"what": "split each order between shop and admin",
+"p": "P2",
+"status": "READY",
+"group": "Payments",
+"type": "module"
+},
+{
+"code": "G01",
+"en": "Delivery zones & charges",
+"bn": "ডেলিভারি চার্জ",
+"what": "areas, weight, distance, flat rate",
+"p": "P1",
+"status": "READY",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "G02",
+"en": "Pickup points",
+"bn": "পিকআপ",
+"what": "store location, pickup, map",
+"p": "P1",
+"status": "READY",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "G03",
+"en": "Couriers",
+"bn": "কুরিয়ার",
+"what": "Steadfast (built), Pathao, RedX",
+"p": "P1",
+"status": "PARTLY BUILT",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "G04",
+"en": "Delivery man app",
+"bn": "ডেলিভারি ম্যান",
+"what": "assign, collect COD, proof photo",
+"p": "P2",
+"status": "READY",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "G05",
+"en": "Delivery time slots",
+"bn": "সময় বাছাই",
+"what": "choose a delivery time",
+"p": "P3",
+"status": "LATER",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "G06",
+"en": "Live tracking",
+"bn": "লাইভ লোকেশন",
+"what": "rider on a map (app)",
+"p": "P3",
+"status": "LATER",
+"group": "Delivery",
+"type": "module"
+},
+{
+"code": "H01",
+"en": "POS counter",
+"bn": "কাউন্টার",
+"what": "sell at the counter",
+"p": "P1",
+"status": "BUILT",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H02",
+"en": "Registers & cashiers",
+"bn": "রেজিস্টার",
+"what": "several counters and cashiers",
+"p": "P1",
+"status": "BUILT",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H03",
+"en": "Cash drawer & daily close",
+"bn": "দিনের হিসাব",
+"what": "open, close, variance",
+"p": "P1",
+"status": "BUILT",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H04",
+"en": "Offline POS",
+"bn": "অফলাইন",
+"what": "sell without internet, sync later",
+"p": "P2",
+"status": "READY",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H05",
+"en": "Weight barcode scale",
+"bn": "ওজন স্কেল",
+"what": "read barcodes from the label scale",
+"p": "P2",
+"status": "READY",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H06",
+"en": "Bluetooth printer & scanner",
+"bn": "প্রিন্টার",
+"what": "tablet shop kit",
+"p": "P1",
+"status": "READY",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "H07",
+"en": "Supported devices list",
+"bn": "ডিভাইস তালিকা",
+"what": "which devices work",
+"p": "P1",
+"status": "READY",
+"group": "POS (shop counter)",
+"type": "module"
+},
+{
+"code": "I01",
+"en": "Stock & warehouses",
+"bn": "স্টক",
+"what": "stock per shop and per store room",
+"p": "P1",
+"status": "PARTLY BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I02",
+"en": "Stock counts",
+"bn": "স্টক গণনা",
+"what": "count and approve differences",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I03",
+"en": "Stock transfer",
+"bn": "স্টক ট্রান্সফার",
+"what": "move stock between shops",
+"p": "P2",
+"status": "READY",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I04",
+"en": "Purchase & cost",
+"bn": "কেনা ও খরচ",
+"what": "buying trip, real cost",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I05",
+"en": "Suppliers & payables",
+"bn": "সাপ্লায়ার",
+"what": "purchase orders, what we owe",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I06",
+"en": "Reorder & low stock",
+"bn": "কম স্টক",
+"what": "alerts and suggested reorder",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I07",
+"en": "Stock link to member stores",
+"bn": "স্টক লিংক",
+"what": "Black purchases go into the member's store",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I08",
+"en": "ERP link",
+"bn": "ERPNext",
+"what": "ledger sync",
+"p": "P2",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "I09",
+"en": "Partner site mirror",
+"bn": "পার্টনার সাইট",
+"what": "show stock on a partner website",
+"p": "P1",
+"status": "BUILT",
+"group": "Stock & buying",
+"type": "module"
+},
+{
+"code": "J01",
+"en": "Customer panel",
+"bn": "কাস্টমার ড্যাশবোর্ড",
+"what": "orders, card, khata, points, addresses",
+"p": "P1",
+"status": "READY",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J02",
+"en": "Member cards",
+"bn": "মেম্বার কার্ড",
+"what": "Regular, Premium, Business, Black",
+"p": "P1",
+"status": "BUILT",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J03",
+"en": "Points & rewards",
+"bn": "পয়েন্ট",
+"what": "earn and redeem",
+"p": "P1",
+"status": "BUILT",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J04",
+"en": "Referral",
+"bn": "রেফারেল",
+"what": "invite and earn",
+"p": "P2",
+"status": "READY",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J05",
+"en": "Premium plans",
+"bn": "প্রিমিয়াম",
+"what": "paid membership",
+"p": "P2",
+"status": "READY",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J06",
+"en": "Customer groups",
+"bn": "কাস্টমার গ্রুপ",
+"what": "segments for offers",
+"p": "P2",
+"status": "READY",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "J07",
+"en": "Live chat",
+"bn": "লাইভ চ্যাট",
+"what": "customer ↔ shop chat",
+"p": "P3",
+"status": "LATER",
+"group": "Customers & members",
+"type": "module"
+},
+{
+"code": "K01",
+"en": "SMS",
+"bn": "WhatsApp / email campaigns",
+"what": "send offers",
+"p": "P2",
+"status": "READY",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "K02",
+"en": "App push",
+"bn": "পুশ নোটিফিকেশন",
+"what": "push to the AlgiBazar app",
+"p": "P2",
+"status": "READY",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "K03",
+"en": "Affiliates",
+"bn": "অ্যাফিলিয়েট",
+"what": "commission for promoters",
+"p": "P3",
+"status": "LATER",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "K04",
+"en": "SEO tools",
+"bn": "SEO",
+"what": "store and product SEO",
+"p": "P2",
+"status": "READY",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "K05",
+"en": "Banners & popups",
+"bn": "ব্যানার",
+"what": "home banners, offer popups",
+"p": "P2",
+"status": "READY",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "K06",
+"en": "Facebook",
+"bn": "Google catalog",
+"what": "product feed",
+"p": "P3",
+"status": "LATER",
+"group": "Marketing",
+"type": "module"
+},
+{
+"code": "L01",
+"en": "Sales reports",
+"bn": "বিক্রির রিপোর্ট",
+"what": "by day, shop and product",
+"p": "P1",
+"status": "READY",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "L02",
+"en": "Profit reports",
+"bn": "লাভের রিপোর্ট",
+"what": "cost vs price (cost hidden from staff)",
+"p": "P1",
+"status": "READY",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "L03",
+"en": "Shop analytics",
+"bn": "দোকানের রিপোর্ট",
+"what": "for each vendor",
+"p": "P2",
+"status": "READY",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "L04",
+"en": "Expenses",
+"bn": "খরচ",
+"what": "shop expenses",
+"p": "P2",
+"status": "READY",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "L05",
+"en": "VAT report",
+"bn": "ভ্যাট রিপোর্ট",
+"what": "for filing",
+"p": "P3",
+"status": "LATER",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "L06",
+"en": "Staff performance",
+"bn": "স্টাফের কাজ",
+"what": "sales per cashier",
+"p": "P3",
+"status": "LATER",
+"group": "Reports & money",
+"type": "module"
+},
+{
+"code": "M01",
+"en": "REST API & app",
+"bn": "অ্যাপ",
+"what": "AlgiBazar app screens for every module",
+"p": "P1",
+"status": "READY",
+"group": "Apps & connections",
+"type": "module"
+},
+{
+"code": "M02",
+"en": "Webhooks",
+"bn": "ওয়েবহুক",
+"what": "send events to other systems",
+"p": "P2",
+"status": "READY",
+"group": "Apps & connections",
+"type": "module"
+},
+{
+"code": "M03",
+"en": "AI assistant (any provider)",
+"bn": "AI সহকারী",
+"what": "OpenAI, Claude, Grok, Hermes or a local model, swappable",
+"p": "P3",
+"status": "LATER",
+"group": "Apps & connections",
+"type": "module"
+},
+{
+"code": "M04",
+"en": "WhatsApp bot",
+"bn": "হোয়াটসঅ্যাপ বট",
+"what": "order status, catalog",
+"p": "P3",
+"status": "LATER",
+"group": "Apps & connections",
+"type": "module"
+},
+{
+"code": "N01",
+"en": "Noakhali Builder",
+"bn": "",
+"what": "website builder",
+"p": "P3",
+"status": "LATER",
+"group": "Future SFM4U products (separate products, same account, same design)",
+"type": "product"
+},
+{
+"code": "N02",
+"en": "SFM4U theme",
+"bn": "",
+"what": "our own theme",
+"p": "P3",
+"status": "LATER",
+"group": "Future SFM4U products (separate products, same account, same design)",
+"type": "product"
+},
+{
+"code": "N03",
+"en": "Delivery platform",
+"bn": "",
+"what": "riders, zones, tracking (app + server)",
+"p": "P3",
+"status": "LATER",
+"group": "Future SFM4U products (separate products, same account, same design)",
+"type": "product"
+},
+{
+"code": "N04",
+"en": "Ride share (Noakhali)",
+"bn": "",
+"what": "Uber-like (mobile apps + server, not WordPress)",
+"p": "P3",
+"status": "LATER",
+"group": "Future SFM4U products (separate products, same account, same design)",
+"type": "product"
+},
+{
+"code": "N05",
+"en": "Booking services",
+"bn": "",
+"what": "doctors, salons, rooms",
+"p": "P3",
+"status": "LATER",
+"group": "Future SFM4U products (separate products, same account, same design)",
+"type": "product"
+},
+{
+"code": "BP01",
+"en": "SFM4U Business Software plan for shops",
+"bn": "দোকানের জন্য SFM4U বিজনেস প্ল্যান",
+"what": "Tablet shop kit (tablet, Bluetooth printer, scanner, label scale), setup steps, and SFM4U invests with a share (terms decided by SFM4U).",
+"p": "P1",
+"status": "READY",
+"group": "Business plans",
+"type": "plan"
+}
+]
