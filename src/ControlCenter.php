@@ -229,6 +229,13 @@ final class ControlCenter {
             . ' <a class="button button-primary" href="' . esc_url(admin_url('admin.php?page=sfm-product-sheet')) . '">+ Add product / পণ্য যোগ</a>'
             . ' <a class="button" href="' . esc_url(admin_url('admin.php?page=' . Modules::SYSTEMS)) . '">Systems on/off</a>'
             . ' <span style="color:#777">' . esc_html(sprintf(__('Numbers from %s (refresh every 5 minutes).', 'sfm4u-wholesale'), (string) $s['at'])) . '</span></div>';
+        echo '<section class="grp"><h2>Systems — each with its own dashboard <small>/ সিস্টেম — প্রতিটির আলাদা ড্যাশবোর্ড</small></h2><div class="grid">';
+        foreach (Modules::all() as $slug => $sys) {
+            $on = Modules::on($slug);
+            echo '<a class="lnk" href="' . esc_url(ModuleHome::url((string) $slug)) . '"><span>' . esc_html((string) $sys[0]) . '<small>' . esc_html((string) $sys[1]) . '</small></span>'
+                . '<span style="color:' . ($on ? '#0a7d3b' : '#b32d2e') . '">●</span></a>';
+        }
+        echo '</div></section>';
         foreach (self::groups() as $g => [$en, $bn]) {
             if (empty($links[$g])) { continue; }
             echo '<section class="grp"><h2>' . esc_html($en) . ' <small>/ ' . esc_html($bn) . '</small></h2><div class="grid">';
