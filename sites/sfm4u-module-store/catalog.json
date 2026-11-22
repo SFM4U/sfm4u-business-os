@@ -164,6 +164,16 @@
 "type": "module"
 },
 {
+"code": "A13",
+"en": "SFM4U Forms (form builder)",
+"bn": "এসএফএম৪ইউ ফর্ম (ফর্ম বিল্ডার)",
+"what": "One form builder for every SFM4U site: contact, project brief, vendor registration with documents, club member, blood donor, job and service forms. No code; entries and files kept safe.",
+"p": "P1",
+"status": "READY",
+"group": "Platform (the base every module uses)",
+"type": "module"
+},
+{
 "code": "B01",
 "en": "Stores",
 "bn": "দোকান",
