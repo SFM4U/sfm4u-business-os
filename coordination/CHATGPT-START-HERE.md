@@ -2,6 +2,41 @@
 
 Owner: MD SHALA UDDIN. Written by Claude on 2026-11-22. Read this whole page before you start.
 
+
+## 0. MOST IMPORTANT (Owner, 2026-11-22): do NOT rebuild what already exists
+
+**SFM4U Business Software already contains many systems.** Your first job is to **separate them into modules** inside the same plugin, then give each one the SFM4U design. Build new code only for modules that do not exist yet (status READY in the catalog).
+
+- **The source code is the ZIP in this folder:** `SFM4U-BusinessOS-sfm4u-wholesale-0.9.19-dev.zip`. Unzip it; the plugin folder is `sfm4u-wholesale/`.
+- **Where the existing systems live today:**
+
+| System | Files |
+|---|---|
+| Wholesale/B2B rules | `src/Rule.php`, `src/Commerce.php`, `src/B2BRuntime.php`, `src/BulkOrder.php`, `src/BuyerApplication.php`, `src/SellerRules.php`, `src/MemberPrice.php` |
+| Wholesale/B2B extras | `modules/b2b-pro/**` (credit accounts, spend tiers, hold review) |
+| Retail prices (B2C) | `src/PriceAudience.php`, `src/PriceBox.php`, `src/ProfitCard.php` |
+| Product sheet A–Z | `src/ProductSheet.php` |
+| Purchase & cost | `src/Purchase.php`, `src/PurchaseHistory.php` |
+| Member cards, khata, points, accounts | `src/Members/**` |
+| POS, receipts, daily close | `modules/pos/**` |
+| Stock, counts, suppliers, labels | `modules/inventory-bridge/**` |
+| Low stock | `src/LowStock.php` |
+| ERPNext link | `src/Erp/**` |
+| Delivery (Steadfast), WhatsApp, auto print, stock link | `src/Ops/**` |
+| Marketplace link, vendor profit | `src/Market/**` |
+| Systems on/off, Dashboard, module dashboards | `src/Modules.php`, `src/ControlCenter.php`, `src/ModuleHome.php` |
+
+- **For each existing system:**
+  1. Keep it working exactly as it does now, with the same data keys and options. The live shop must not break.
+  2. Give it the module contract and the SFM4U design.
+  3. Write its test, `pass N fail 0`.
+- **Theme and site builder:** use ONLY our own:
+  - **SFM4U Theme** (Showroom: `sfm4u-theme-0.1.10.zip`);
+  - **Noakhali Builder** (Showroom: `noakhali-builder-*` ZIPs).
+
+  No other company's plugins, themes or page builders. The only outside software allowed is WordPress + WooCommerce. Reason: our AI runs here, and outside code is a security risk.
+- If you cannot find something, look in this order: Showroom → Factory → GitHub repo `SFM4U/sfm4u-business-os`.
+
 ## 1. What you are building
 
 **SFM4U Business Software** is ONE WordPress/WooCommerce plugin (slug `sfm4u-wholesale`) made of separate modules.
