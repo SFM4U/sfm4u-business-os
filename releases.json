@@ -1,0 +1,47 @@
+{
+ "generated": "2026-11-22",
+ "releases": [
+  {
+   "slug": "sfm4u-wholesale",
+   "code": "S01",
+   "name": "SFM4U Business Software (core)",
+   "version": "0.9.23-dev",
+   "kind": "core",
+   "file": "sfm4u-wholesale-0.9.23-dev.zip",
+   "sha256": "4195be5679ffaadfad8f591c4cb6d8fd12fe8aec1c91fea7790ce24eae892258",
+   "size": 1008855,
+   "requires_wp": "6.5",
+   "requires_php": "8.1",
+   "requires_wc": "8.0",
+   "released": "2026-11-22"
+  },
+  {
+   "slug": "sfm4u-module-ordertrack",
+   "code": "E07",
+   "name": "SFM4U Module \u2014 Order Tracking",
+   "version": "0.1.0",
+   "kind": "module",
+   "file": "sfm4u-module-ordertrack-0.1.0.zip",
+   "sha256": "0fa1dbcc1b05d9d0763dd74c0acdc8100d5fe5f1dbfaa7f0213689bebabafdd0",
+   "size": 4685,
+   "requires_wp": "6.5",
+   "requires_php": "8.1",
+   "requires_wc": "8.0",
+   "released": "2026-11-22"
+  },
+  {
+   "slug": "sfm4u-module-codguard",
+   "code": "E04",
+   "name": "SFM4U Module \u2014 COD Control",
+   "version": "0.1.0",
+   "kind": "module",
+   "file": "sfm4u-module-codguard-0.1.0.zip",
+   "sha256": "0a1994878cdc461add84706be6fe092564f26e0cf1d9f611ccee3f8547cf48ee",
+   "size": 3775,
+   "requires_wp": "6.5",
+   "requires_php": "8.1",
+   "requires_wc": "8.0",
+   "released": "2026-11-22"
+  }
+ ]
+}

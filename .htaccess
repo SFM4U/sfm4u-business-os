@@ -1,0 +1,6 @@
+# SFM4U release files: never served directly. Downloads only through the SFM4U store (paid order / site licence).
+Require all denied
+<IfModule !mod_authz_core.c>
+Order allow,deny
+Deny from all
+</IfModule>
