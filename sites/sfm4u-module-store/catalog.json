@@ -8,7 +8,17 @@
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
 "type": "module",
-"version": "0.9.22"
+"version": "0.9.22",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "A02",
@@ -19,7 +29,17 @@
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
 "type": "module",
-"version": "0.9.22"
+"version": "0.9.22",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "A03",
@@ -40,7 +60,17 @@
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
 "type": "module",
-"version": "0.9.22"
+"version": "0.9.22",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "A05",
@@ -51,7 +81,17 @@
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
 "type": "module",
-"version": "0.9.22"
+"version": "0.9.22",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "A06",
@@ -321,7 +361,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Products",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "C02",
@@ -441,7 +491,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Products",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "C14",
@@ -471,7 +531,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Prices & offers",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "D02",
@@ -481,7 +551,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Prices & offers",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "D03",
@@ -491,7 +571,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Prices & offers",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "D04",
@@ -501,7 +591,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Prices & offers",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "D05",
@@ -591,7 +691,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Orders & checkout",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "E04",
@@ -602,7 +712,24 @@
 "status": "BUILT",
 "group": "Orders & checkout",
 "type": "module",
-"version": "0.1.0"
+"version": "0.1.0",
+"details": "Stops fake or risky cash-on-delivery orders: maximum COD amount, phones with many cancelled orders, and a block list. Other payments stay available.",
+"features": [
+"Max COD amount",
+"Cancelled-orders guard",
+"Block list",
+"Count of refused orders"
+],
+"how": "Turn on and set limits in its dashboard.",
+"live": [
+{
+"label": "Live on AlgiBazar checkout",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "E05",
@@ -633,7 +760,24 @@
 "status": "BUILT",
 "group": "Orders & checkout",
 "type": "module",
-"version": "0.1.0"
+"version": "0.1.0",
+"details": "Customers track an order with the order number and phone; shows status (Bangla/English), date, total, items and courier tracking code. Safe: wrong data shows the same message, and tries are limited.",
+"features": [
+"Order number + phone check",
+"Bangla status",
+"Courier code",
+"Try limit"
+],
+"how": "Put [sfm4u_order_tracking] on a page.",
+"live": [
+{
+"label": "Try it on AlgiBazar",
+"url": "https://algibazar.com/track-order/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "E08",
@@ -693,7 +837,17 @@
 "p": "P2",
 "status": "BUILT (points & wallet)",
 "group": "Payments",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "F04",
@@ -703,7 +857,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Payments",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "F05",
@@ -783,7 +947,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "POS (shop counter)",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "H02",
@@ -793,7 +967,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "POS (shop counter)",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "H03",
@@ -803,7 +987,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "POS (shop counter)",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "H04",
@@ -863,7 +1057,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I03",
@@ -883,7 +1087,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I05",
@@ -893,7 +1107,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I06",
@@ -903,7 +1127,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I07",
@@ -913,7 +1147,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I08",
@@ -923,7 +1167,17 @@
 "p": "P2",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "I09",
@@ -933,7 +1187,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Stock & buying",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "J01",
@@ -953,7 +1217,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Customers & members",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "J03",
@@ -963,7 +1237,17 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Customers & members",
-"type": "module"
+"type": "module",
+"used_on": [
+"algibazar.com (inside SFM4U Business Software)"
+],
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"how": "Part of SFM4U Business Software. Turn it on in SFM4U Business Software → Systems."
 },
 {
 "code": "J04",
@@ -1234,7 +1518,27 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "core",
-"version": "0.9.22"
+"version": "0.9.22",
+"details": "The core of SFM4U Business Software: one plugin for WooCommerce that runs a whole shop or marketplace. It brings wholesale and retail prices, the one-page product sheet, purchase and real cost, member cards with khata, the POS counter, receipts, ERP link, delivery and messages, a main Dashboard, a dashboard for every module and the Module Manager.",
+"features": [
+"Wholesale (B2B) and retail (B2C) prices with packs and quantity steps",
+"Member cards: Regular, Premium, Business, Business Black; khata (due), points",
+"POS counter with registers, cash drawer and daily close",
+"Purchase & real cost per piece; private cost hidden from staff",
+"Product sheet A–Z with photos, 15-second video, QR/barcode labels",
+"Module Manager: add, update, roll back SFM4U modules",
+"Bangla and English"
+],
+"how": "Install the plugin on a WordPress + WooCommerce site. Turn each system on or off in SFM4U Business Software → Systems. Every system has its own dashboard with numbers, pages, settings and help.",
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "S02",
@@ -1245,7 +1549,25 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0-dev.96"
+"version": "0.1.0-dev.96",
+"details": "Noakhali Builder is SFM4U's own page builder. Build and edit pages with blocks — no code, no Elementor. Bangla and English, mobile-first, with templates for shops and services.",
+"features": [
+"Drag-and-drop sections and blocks",
+"Ready templates (Template Library)",
+"Mobile and desktop views",
+"Backup and import of pages",
+"Shop blocks with the WooCommerce add-on"
+],
+"how": "Install Noakhali Builder (core), then add Pro, Template Library, WooCommerce or Marketplace add-ons as needed. Open any page and edit it visually.",
+"live": [
+{
+"label": "Running on this marketplace",
+"url": "https://marketplace.sfm4u.com/"
+}
+],
+"used_on": [
+"marketplace.sfm4u.com"
+]
 },
 {
 "code": "S03",
@@ -1256,7 +1578,24 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0-dev.20"
+"version": "0.1.0-dev.20",
+"details": "Pro features for Noakhali Builder: theme parts, forms, popups, site kit, starter sites, import/backup and shop settings.",
+"features": [
+"Theme header/footer builder",
+"Forms and popups",
+"Site kit and starter sites",
+"Backup and import"
+],
+"how": "Needs Noakhali Builder core.",
+"live": [
+{
+"label": "Running on this marketplace",
+"url": "https://marketplace.sfm4u.com/"
+}
+],
+"used_on": [
+"marketplace.sfm4u.com"
+]
 },
 {
 "code": "S04",
@@ -1267,7 +1606,16 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0-dev.4"
+"version": "0.1.0-dev.4",
+"details": "WooCommerce add-on for Noakhali Builder: product grids, latest and sale rows, category rows and shop sections, while cart, checkout and account pages stay native and safe.",
+"features": [
+"Product and category blocks",
+"Sale and latest rows",
+"Protected shop pages stay native"
+],
+"how": "Needs Noakhali Builder core and WooCommerce.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S05",
@@ -1278,7 +1626,23 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0-dev.3"
+"version": "0.1.0-dev.3",
+"details": "Template Library for Noakhali Builder: ready-made pages (home, shop, services, about) in Bangla and English.",
+"features": [
+"66+ templates",
+"Home, shop, service and contact pages",
+"Bangla/English"
+],
+"how": "Needs Noakhali Builder core.",
+"live": [
+{
+"label": "Running on this marketplace",
+"url": "https://marketplace.sfm4u.com/"
+}
+],
+"used_on": [
+"marketplace.sfm4u.com"
+]
 },
 {
 "code": "S06",
@@ -1289,7 +1653,15 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0-dev.3"
+"version": "0.1.0-dev.3",
+"details": "Marketplace add-on for Noakhali Builder: featured stores and marketplace sections for multi-vendor sites.",
+"features": [
+"Featured stores rows",
+"Marketplace sections"
+],
+"how": "Needs Noakhali Builder core and a marketplace (WooCommerce).",
+"live": [],
+"used_on": []
 },
 {
 "code": "S07",
@@ -1300,7 +1672,17 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "theme",
-"version": "0.1.10"
+"version": "0.1.10",
+"details": "SFM4U Theme: the shared SFM4U family theme. Approved sfm4u.com header and footer, mobile compact header with side drawer, per-site name, logo, accent colour and menus in the Customizer. No external CDN, no tracking.",
+"features": [
+"Approved SFM4U header and footer",
+"Mobile drawer menu",
+"Per-site logo and colours",
+"Fast, no tracking"
+],
+"how": "Install as a theme; set logo, colours and menus in Appearance → Customize.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S08",
@@ -1311,7 +1693,24 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "theme",
-"version": "0.1.2"
+"version": "0.1.2",
+"details": "The theme of this software marketplace: SFM4U logo wordmark, dark brand background, sfm4u.com header, menu and footer. Texts and menu are editable without code.",
+"features": [
+"SFM4U brand design",
+"Editable texts (Customize → SFM4U texts)",
+"Editable menu (Appearance → Menus)",
+"Mobile friendly"
+],
+"how": "Install as a theme; edit texts in Customize and the menu in Menus.",
+"live": [
+{
+"label": "See it live",
+"url": "https://marketplace.sfm4u.com/"
+}
+],
+"used_on": [
+"marketplace.sfm4u.com"
+]
 },
 {
 "code": "S09",
@@ -1322,7 +1721,20 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "theme",
-"version": ""
+"version": "",
+"details": "Theme made for the AlgiBazar marketplace front.",
+"features": [
+"Marketplace home layout",
+"AlgiBazar branding"
+],
+"how": "Install as a theme on a marketplace site.",
+"live": [
+{
+"label": "AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": []
 },
 {
 "code": "S10",
@@ -1333,7 +1745,23 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.4.0"
+"version": "0.4.0",
+"details": "SFM4U Account Hub: the central account pages for SFM4U customers — profile, membership and linked services.",
+"features": [
+"Customer profile",
+"Membership view",
+"Link to SFM4U services"
+],
+"how": "Install on the accounts site; other sites connect with SFM4U Link.",
+"live": [
+{
+"label": "Live on account.sfm4u.com",
+"url": "https://account.sfm4u.com/"
+}
+],
+"used_on": [
+"account.sfm4u.com (0.2.1)"
+]
 },
 {
 "code": "S11",
@@ -1344,7 +1772,15 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.5.2"
+"version": "0.5.2",
+"details": "SFM4U Link connects a website to the SFM4U account, so a customer can use one SFM4U account across services.",
+"features": [
+"Connect a site to SFM4U Account",
+"Account matching"
+],
+"how": "Install on each site that should use the SFM4U account.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S12",
@@ -1355,7 +1791,17 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.33.0"
+"version": "0.33.0",
+"details": "SFM4U Smart Serial: serial and queue system — customers take a serial number, staff call the next one; useful for doctors, offices and service counters.",
+"features": [
+"Online and counter serials",
+"Call next / skip",
+"Daily list",
+"Bangla/English"
+],
+"how": "Install and set the counters and opening hours.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S13",
@@ -1366,7 +1812,16 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.2"
+"version": "0.1.2",
+"details": "SFM4U Hiring: job posts and applications.",
+"features": [
+"Job posts",
+"Application form",
+"Applicant list"
+],
+"how": "Install and add jobs.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S14",
@@ -1377,7 +1832,16 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.2.2"
+"version": "0.2.2",
+"details": "SFM4U Services: list services and take service requests.",
+"features": [
+"Service listings",
+"Request form",
+"Request list"
+],
+"how": "Install and add services.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S15",
@@ -1388,7 +1852,16 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.3"
+"version": "0.1.3",
+"details": "SFM4U Work: track work and tasks for a team.",
+"features": [
+"Tasks",
+"Status",
+"Team view"
+],
+"how": "Install and add tasks.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S16",
@@ -1399,7 +1872,23 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.0"
+"version": "0.1.0",
+"details": "SFM4U Store Mirror shows a shop's live products and stock from the marketplace on the partner's own website. Buying always goes to the marketplace checkout.",
+"features": [
+"Live products and stock",
+"Cached for speed, works if the marketplace is slow",
+"Buy button goes to the marketplace cart"
+],
+"how": "Install on the partner site; set the marketplace and store number.",
+"live": [
+{
+"label": "Live on nijamlibrary.com",
+"url": "https://nijamlibrary.com/algibazar-store/"
+}
+],
+"used_on": [
+"nijamlibrary.com"
+]
 },
 {
 "code": "S17",
@@ -1410,7 +1899,14 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.8.1"
+"version": "0.8.1",
+"details": "Old AlgiBazar Connector / Stock Receiver: received Business Black stock into the member's marketplace store. Replaced by SFM4U Business Software; kept for history.",
+"features": [
+"Stock feed receiver"
+],
+"how": "Not needed with SFM4U Business Software 0.9+.",
+"live": [],
+"used_on": []
 },
 {
 "code": "S18",
@@ -1421,7 +1917,23 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "2.0.0"
+"version": "2.0.0",
+"details": "Shop and owner profile pages for a marketplace.",
+"features": [
+"Shop page",
+"Owner profile",
+"Shared shop header"
+],
+"how": "Install on a marketplace site.",
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "S19",
@@ -1432,7 +1944,22 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "1.2.0"
+"version": "1.2.0",
+"details": "Store location, map and pickup option for shops.",
+"features": [
+"Store address and map",
+"Pickup at store"
+],
+"how": "Install and set each store's location.",
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "S20",
@@ -1443,7 +1970,22 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "2.0.0"
+"version": "2.0.0",
+"details": "Customer profile pages (orders, details) for the marketplace.",
+"features": [
+"Customer profile",
+"Seller workspace link"
+],
+"how": "Install on the marketplace.",
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/my-account/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "S21",
@@ -1454,7 +1996,22 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "1.1.0"
+"version": "1.1.0",
+"details": "Better product page: details, seller box and layout.",
+"features": [
+"Product details",
+"Seller box"
+],
+"how": "Install on the marketplace.",
+"live": [
+{
+"label": "Live on AlgiBazar",
+"url": "https://algibazar.com/"
+}
+],
+"used_on": [
+"algibazar.com"
+]
 },
 {
 "code": "S22",
@@ -1465,7 +2022,24 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.1.1"
+"version": "0.1.1",
+"details": "This marketplace: every module, plugin and theme with its own page, search, menu bar, private items for admins and a request form.",
+"features": [
+"Item pages",
+"Complete / Upcoming / type menu",
+"Requests",
+"Private items"
+],
+"how": "Install on the marketplace site.",
+"live": [
+{
+"label": "See it live",
+"url": "https://marketplace.sfm4u.com/modules/"
+}
+],
+"used_on": [
+"marketplace.sfm4u.com"
+]
 },
 {
 "code": "S23",
@@ -1476,7 +2050,23 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.2.3"
+"version": "0.2.3",
+"details": "Golden Club Members: club membership — member list, member profiles and cards for a club or community.",
+"features": [
+"Member registration and list",
+"Member profiles",
+"Member cards"
+],
+"how": "Install on a club website.",
+"live": [
+{
+"label": "Live on bdgoldenclub.com",
+"url": "https://bdgoldenclub.com/"
+}
+],
+"used_on": [
+"bdgoldenclub.com (0.1.0)"
+]
 },
 {
 "code": "S24",
@@ -1487,7 +2077,24 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "0.3.1-rc.5"
+"version": "0.3.1-rc.5",
+"details": "Golden Club Event Manager: run club events — event pages, registration, tickets and attendance.",
+"features": [
+"Event pages",
+"Online registration",
+"Tickets",
+"Attendance check-in"
+],
+"how": "Install on a club website and create events.",
+"live": [
+{
+"label": "Live on bdgoldenclub.com",
+"url": "https://bdgoldenclub.com/"
+}
+],
+"used_on": [
+"bdgoldenclub.com"
+]
 },
 {
 "code": "S25",
@@ -1498,6 +2105,22 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
-"version": "1.0.1"
+"version": "1.0.1",
+"details": "Golden Club Blood Bank: blood donor list and blood requests for a club or community.",
+"features": [
+"Donor registration",
+"Search by blood group and area",
+"Blood requests"
+],
+"how": "Install on a club website.",
+"live": [
+{
+"label": "Live on bdgoldenclub.com",
+"url": "https://bdgoldenclub.com/"
+}
+],
+"used_on": [
+"bdgoldenclub.com"
+]
 }
 ]

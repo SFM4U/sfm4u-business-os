@@ -24,7 +24,10 @@ $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(w
       <?php if (has_post_thumbnail()) { the_post_thumbnail('large'); } ?>
       <h2>What it does / কী কাজ করে</h2>
       <div class="entry"><?php the_content(); ?></div>
-      <p class="note">This page shows the module only. Files are not downloadable here. A module is installed by SFM4U after a request.</p>
+      <?php $live = json_decode((string) get_post_meta($id, '_sfm_live', true), true) ?: []; $used = json_decode((string) get_post_meta($id, '_sfm_used_on', true), true) ?: []; ?>
+      <?php if ($live) { echo '<h2>See it live / লাইভ দেখুন</h2><p class="ms-live">'; foreach ($live as $l) { echo '<a class="ms-btn" target="_blank" rel="noopener" href="' . esc_url((string) $l['url']) . '">' . esc_html((string) $l['label']) . ' ↗</a> '; } echo '</p>'; } ?>
+      <?php if ($used) { echo '<h3>Running on / যেখানে চলছে</h3><ul>'; foreach ($used as $u) { echo '<li>' . esc_html((string) $u) . '</li>'; } echo '</ul>'; } ?>
+      <p class="note">Files are not downloadable here. SFM4U installs and updates the software for you after a request or purchase.</p>
     </article>
     <aside class="ms-side">
       <div class="ms-box">
@@ -35,6 +38,10 @@ $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(w
           <dt>Version</dt><dd><?php echo esc_html(meta($id, 'version') ?: '—'); ?></dd>
           <dt>Price</dt><dd><?php echo esc_html(meta($id, 'price') ?: 'Coming soon'); ?></dd>
         </dl>
+      </div>
+      <div class="ms-box">
+        <h3>Payment / পেমেন্ট</h3>
+        <p>Online buying opens soon: PayPal (international) and bKash / Nagad (Bangladesh). Until then, send a request and SFM4U will contact you.</p>
       </div>
       <div class="ms-box" id="request">
         <h3>Request this module / মডিউলটি চাই</h3>
