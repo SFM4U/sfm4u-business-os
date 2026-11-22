@@ -10,8 +10,8 @@
 <header class="mh">
   <div class="wrap row">
     <a class="logo" href="<?php echo esc_url(home_url('/')); ?>" aria-label="SFM4U Marketplace home">
-      <img src="<?php echo esc_url(sfm4u_mp_logo()); ?>" alt="" width="40" height="40">
-      <span class="brand-word"><span class="brk">‹</span>SFM<em>4</em>U<span class="brk">›</span> <small style="font-weight:600;color:var(--muted)">Marketplace</small></span>
+      <img class="wm" src="<?php echo esc_url(get_template_directory_uri() . '/assets/sfm4u-wordmark.png'); ?>" alt="SFM4U" height="40">
+      <span class="brand-word"><small style="font-weight:600;color:var(--muted)">Marketplace</small></span>
     </a>
     <nav aria-label="Main">
       <?php foreach (sfm4u_mp_links() as [$t, $u]) { echo '<a href="' . esc_url($u) . '">' . esc_html($t) . '</a>'; } ?>
@@ -22,7 +22,7 @@
 </header>
 <div class="shade" id="mp-shade"></div>
 <nav class="drawer" id="mp-drawer" aria-label="Mobile menu">
-  <p class="brand-word" style="font-size:20px"><span class="brk">‹</span>SFM<em>4</em>U<span class="brk">›</span></p>
+  <p><img src="<?php echo esc_url(get_template_directory_uri() . '/assets/sfm4u-wordmark.png'); ?>" alt="SFM4U" height="40" style="height:40px;width:auto"></p>
   <?php foreach (sfm4u_mp_links() as [$t, $u]) { echo '<a href="' . esc_url($u) . '">' . esc_html($t) . '</a>'; } ?>
   <a href="<?php echo esc_url(home_url('/#plans')); ?>">Get the software</a>
 </nav>
