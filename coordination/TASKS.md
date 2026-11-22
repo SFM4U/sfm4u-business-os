@@ -115,7 +115,7 @@ Order for Codex: C1 stores → C2 vendorpanel → C3 orders → C4 earnings → 
 Per module: build → test (`pass N fail 0`) → connect through ModuleContract and sfm4u_bos_modules → mark DONE here with the commit and tests. Claude: review each module + M-Z (join, full regression, release).
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| C1 | stores | Codex | DONE (implementation; commit 26f77b1; synthetic unit pass 9 fail 0, WordPress integration pass 15 fail 0; Claude review/release pending) |
+| C1 | stores | Codex | DONE (implementation; commit 8566760; synthetic unit pass 9 fail 0, WordPress integration pass 20 fail 0; review fixes applied; r8 integration and release pending) |
 | C2 | vendorpanel | Codex | READY |
 | C3 | orders | Codex | READY |
 | C4 | earnings | Codex | READY |
@@ -129,3 +129,5 @@ Per module: build → test (`pass N fail 0`) → connect through ModuleContract 
 
 
 C1 local evidence: `php /fixture/sfm4u-wholesale/modules/stores/tests/profile.php` and `php /setup.php test` (isolated WordPress loading `wh/tests-local/stores-test.php`, MariaDB, synthetic data). Review ZIP SHA-256 `cb24de89c3981804f987f6445ce2348d7801feb3ba50944f0e481cf1dcd8da61`. No live activation or legacy migration.
+
+C1 review follow-up: scoped WooCommerce admin redirect exemption, denied generic store writes, and preserved existing approved media during owner edits. Fresh isolated regression 20/20 plus unit 9/9. Prior review ZIP is superseded.
