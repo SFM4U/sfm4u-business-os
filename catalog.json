@@ -1333,7 +1333,7 @@
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "product",
-"version": "0.3.2"
+"version": "0.4.0"
 },
 {
 "code": "S11",
@@ -1466,5 +1466,16 @@
 "group": "SFM4U software, themes & builder",
 "type": "product",
 "version": "0.1.1"
+},
+{
+"code": "S23",
+"en": "Golden Club Members",
+"bn": "গোল্ডেন ক্লাব মেম্বার",
+"what": "Member system built for the Golden Club community website.",
+"p": "P2",
+"status": "BUILT",
+"group": "SFM4U software, themes & builder",
+"type": "product",
+"version": "0.2.3"
 }
 ]
