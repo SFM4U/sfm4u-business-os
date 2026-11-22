@@ -1,3 +1,5 @@
+> Reference only. The work queue is Drive "08 — OVERNIGHT QUEUE".
+
 # 08 — FUTURE PLAN AND WORK QUEUE (no AI sits idle)
 
 Owner: MD SHALA UDDIN. Written by CLAUDE on 2026-11-22 (night). Read with "06 — AI WORK BOARD" and "05 — WORK RULES".
