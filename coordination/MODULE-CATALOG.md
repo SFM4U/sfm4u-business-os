@@ -99,7 +99,7 @@ Owner: MD SHALA UDDIN. Written by Claude on 2026-11-22.
 | E01 | Marketplace orders / অর্ডার | sub-order per shop, status, packing | P1 | READY |
 | E02 | Invoices & packing slips / ইনভয়েস | per shop, A4 and 80 mm | P1 | READY |
 | E03 | Receipt auto-print / রিসিট | print new orders | P1 | BUILT |
-| E04 | Cash on delivery control / COD | COD limits, verification, fake-order guard | P1 | READY |
+| E04 | Cash on delivery control / COD | COD limits, verification, fake-order guard | P1 | BUILT |
 | E05 | Advance / partial payment / অগ্রিম | pay part now, the rest on delivery | P2 | READY |
 | E06 | Pre-order & backorder / প্রি-অর্ডার | sell before stock arrives | P3 | LATER |
 | E07 | Order tracking page / অর্ডার ট্র্যাকিং | the customer sees where the order is | P1 | BUILT |

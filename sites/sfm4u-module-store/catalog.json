@@ -599,9 +599,10 @@
 "bn": "COD",
 "what": "COD limits, verification, fake-order guard",
 "p": "P1",
-"status": "READY",
+"status": "BUILT",
 "group": "Orders & checkout",
-"type": "module"
+"type": "module",
+"version": "0.1.0"
 },
 {
 "code": "E05",
