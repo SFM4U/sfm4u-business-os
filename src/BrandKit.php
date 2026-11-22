@@ -39,8 +39,9 @@ final class BrandKit {
 
     public static function bar(): void {
         if (!self::isOurs(self::page())) { return; }
-        echo '<div class="sfm4u-brandbar"><img src="' . esc_url(self::url('brand/sfm4u-logo-128.png')) . '" alt="SFM4U" width="40" height="40">'
-            . '<div><div class="w"><span class="b">‹</span>SFM<em>4</em>U<span class="b">›</span> Business Software</div><div class="t">One software · separate modules · বাংলা / English</div></div>'
+        // Owner 2026-11-22: the wordmark cut from the real logo (brackets at the logo's own size); no separate round logo.
+        echo '<div class="sfm4u-brandbar"><img class="wm" src="' . esc_url(self::url('brand/sfm4u-wordmark.png')) . '" alt="SFM4U" height="44">'
+            . '<div><div class="w">Business Software</div><div class="t">One software · separate modules · বাংলা / English</div></div>'
             . '<div class="r"><a href="' . esc_url(admin_url('admin.php?page=' . Modules::SLUG)) . '">Dashboard</a>'
             . '<a href="' . esc_url(admin_url('admin.php?page=' . Modules::SYSTEMS)) . '">Systems</a>'
             . '<a href="' . esc_url(admin_url('admin.php?page=' . ModuleManager::SLUG)) . '">Module Manager</a></div></div>';
