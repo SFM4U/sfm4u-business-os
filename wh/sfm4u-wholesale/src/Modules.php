@@ -23,9 +23,9 @@ final class Modules {
     public const SYSTEMS = 'sfm-bos-systems';
     public const MU_FILE = 'sfm4u-business-os-pos.php';
 
-    /** slug => [English name, Bangla name, what it does, admin page (admin.php?page=…)] */
+    /** slug => [English name, Bangla name, what it does, admin page (admin.php?page=…), module class (optional, ModuleContract)] */
     public static function all(): array {
-        return [
+        $base = [
             'wholesale' => ['SFM4U Wholesale System', 'SFM4U হোলসেল সিস্টেম', 'Wholesale prices and pack sizes, approved buyers, bulk orders, B2B credit and quotes.', 'sfmwh-rules'],
             'retail' => ['SFM4U Retail Prices (B2C)', 'SFM4U খুচরা দাম (B2C)', 'Price sets per audience: who can see (public, customers, Premium, Business, shops, only me) and who can buy; quantity savings, "buy 7, 1 off" offers, private cost price.', ''],
             'purchase' => ['SFM4U Purchase & Cost', 'SFM4U কেনা ও আসল খরচ', 'Record each buying trip: goods, packs, pieces per pack, your fare, manager/worker fare, truck, labour; real cost per pack and per piece; price sheet with profit. Not ERPNext.', 'sfm-purchases'],
@@ -36,6 +36,13 @@ final class Modules {
             'delivery' => ['SFM4U Delivery & Messages', 'SFM4U ডেলিভারি ও মেসেজ', 'Courier booking (Steadfast) and WhatsApp order messages.', 'sfm-wr-ops'],
             'stocklink' => ['SFM4U AlgiBazar Stock Link', 'SFM4U AlgiBazar স্টক লিংক', 'Business Black purchases go to the member\'s own AlgiBazar store stock.', 'sfm-wr-stockfeed'],
         ];
+        // New modules (plan r6) add themselves here: $list['slug'] = [en, bn, what, page, ModuleClass::class].
+        $list = function_exists('apply_filters') ? apply_filters('sfm4u_bos_modules', $base) : $base;
+        $out = $base;
+        foreach ((array) $list as $k => $v) {
+            if (is_string($k) && preg_match('/^[a-z0-9_]{2,30}$/', $k) === 1 && is_array($v) && count($v) >= 4 && !isset($base[$k])) { $out[$k] = array_values($v); }
+        }
+        return $out;
     }
 
     public static function register(): void {
@@ -228,7 +235,8 @@ final class Modules {
         echo '<p>' . esc_html__('Each system works on its own. Turn a system on or off for this site, open its own admin, or give it to a shop owner or member below.', 'sfm4u-wholesale') . '</p>'
             . '<style>.sfm-bos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin:16px 0}.sfm-bos-card{background:#fff;border:1px solid #dcdcde;border-radius:10px;padding:14px}.sfm-bos-card h2{margin:0 0 2px;font-size:16px}.sfm-bos-card .bn{color:#555;margin:0 0 8px}.sfm-bos-on{color:#0a7d3b;font-weight:600}.sfm-bos-off{color:#b32d2e;font-weight:600}.sfm-bos-card .actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}</style><div class="sfm-bos-grid">';
         $pos = self::posStatus();
-        foreach (self::all() as $slug => [$en, $bn, $what, $pageSlug]) {
+        foreach (self::all() as $slug => $sys) {
+            [$en, $bn, $what] = $sys;
             $on = self::on($slug);
             echo '<div class="sfm-bos-card"><h2>' . esc_html($en) . '</h2><p class="bn">' . esc_html($bn) . '</p><p>' . esc_html($what) . '</p><p>'
                 . ($on ? '<span class="sfm-bos-on">● ' . esc_html__('ON', 'sfm4u-wholesale') . '</span>' : '<span class="sfm-bos-off">● ' . esc_html__('OFF', 'sfm4u-wholesale') . '</span>') . '</p>';
@@ -239,9 +247,7 @@ final class Modules {
                 if ($pos['other_dropin']) { echo '<p class="sfm-bos-off">' . esc_html__('Another db.php is present. POS cannot be installed automatically.', 'sfm4u-wholesale') . '</p>'; }
             }
             echo '<div class="actions">' . self::form('toggle', ['slug' => $slug, 'to' => $on ? 'off' : 'on'], $on ? __('Turn off', 'sfm4u-wholesale') : __('Turn on', 'sfm4u-wholesale'), $on ? 'button' : 'button button-primary');
-            if ($on && $pageSlug !== '' && ($slug !== 'pos' || ($pos['schema'] && self::posReady()))) {
-                echo ' <a class="button" href="' . esc_url(admin_url('admin.php?page=' . $pageSlug)) . '">' . esc_html__('Open', 'sfm4u-wholesale') . '</a>';
-            }
+            echo ' <a class="button" href="' . esc_url(ModuleHome::url($slug)) . '">' . esc_html__('Open dashboard', 'sfm4u-wholesale') . '</a>';
             if ($slug === 'pos' && $on) {
                 if (!$pos['dropin'] && !$pos['other_dropin']) { echo ' ' . self::form('pos_install', [], __('Set up POS database', 'sfm4u-wholesale'), 'button button-primary'); }
                 if ($pos['dropin'] || $pos['mu']) { echo ' ' . self::form('pos_remove', [], __('Remove POS database (rollback)', 'sfm4u-wholesale')); }

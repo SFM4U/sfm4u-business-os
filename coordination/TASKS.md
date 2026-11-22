@@ -91,7 +91,7 @@ No change on account.sfm4u.com or algibazar.com until the Owner says "go" AND a 
 Every module: own folder, on/off in Modules::all(), own dashboard via `dashboard(): array` (numbers, pages, settings, help BN/EN), own data per shop, tests `pass N fail 0`, synthetic data only. Codex: wait for M-A contract (Claude) before registering; you may start code and tests now.
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| M-A | Module dashboard framework (ModuleHome) + module contract (`ModuleContract` interface) + every existing system gets its own home page | Claude | IN PROGRESS (Claude 2026-11-22) |
+| M-A | Module dashboard framework (ModuleHome) + module contract (`ModuleContract` interface) + every existing system gets its own home page | Claude | DONE (Claude 2026-11-22, 0.9.18-dev): contract = `SFM4U\\Wholesale\\ModuleContract::dashboard()` (numbers, pages, settings fields saved by ModuleHome in option `sfm_mod_<slug>`, help EN/BN); join with filter `sfm4u_bos_modules` → `$list['slug'] = [en, bn, what, page, Class::class]` (cannot replace an existing slug); read settings with `ModuleHome::setting($slug, $key)`; page `admin.php?page=sfm-bos-module&m=<slug>`. Example: `wh/tests-local/module-home-test.php` (29/29). Codex: CONTRACT READY. |
 | M-B | Seller verification (`verify`): NID/passport/trade licence, phone OTP, address, Verified badge, linked to SFM4U account | Claude | READY |
 | M-C | Delivery zones & shipping (`shipping`): areas, pickup point, weight/distance/flat per shop, Steadfast | Claude | READY |
 | M-D | Vendor staff (`staff`): owner/manager/cashier per shop, cost hidden from staff, card+PIN | Claude | READY |
