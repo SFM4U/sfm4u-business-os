@@ -7,7 +7,8 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
-"type": "module"
+"type": "module",
+"version": "0.9.22"
 },
 {
 "code": "A02",
@@ -17,7 +18,8 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
-"type": "module"
+"type": "module",
+"version": "0.9.22"
 },
 {
 "code": "A03",
@@ -37,7 +39,8 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
-"type": "module"
+"type": "module",
+"version": "0.9.22"
 },
 {
 "code": "A05",
@@ -47,7 +50,8 @@
 "p": "P1",
 "status": "BUILT",
 "group": "Platform (the base every module uses)",
-"type": "module"
+"type": "module",
+"version": "0.9.22"
 },
 {
 "code": "A06",
@@ -625,9 +629,10 @@
 "bn": "অর্ডার ট্র্যাকিং",
 "what": "the customer sees where the order is",
 "p": "P1",
-"status": "READY",
+"status": "BUILT",
 "group": "Orders & checkout",
-"type": "module"
+"type": "module",
+"version": "0.1.0"
 },
 {
 "code": "E08",

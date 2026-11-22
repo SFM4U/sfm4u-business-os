@@ -102,7 +102,7 @@ Owner: MD SHALA UDDIN. Written by Claude on 2026-11-22.
 | E04 | Cash on delivery control / COD | COD limits, verification, fake-order guard | P1 | READY |
 | E05 | Advance / partial payment / অগ্রিম | pay part now, the rest on delivery | P2 | READY |
 | E06 | Pre-order & backorder / প্রি-অর্ডার | sell before stock arrives | P3 | LATER |
-| E07 | Order tracking page / অর্ডার ট্র্যাকিং | the customer sees where the order is | P1 | READY |
+| E07 | Order tracking page / অর্ডার ট্র্যাকিং | the customer sees where the order is | P1 | BUILT |
 | E08 | Returns & warranty / রিটার্ন ও ওয়ারেন্টি | requests with photos, exchange, warranty | P2 | READY |
 | E09 | Refunds / রিফান্ড | never refunds twice | P2 | READY |
 | E10 | Abandoned cart / ফেলে রাখা কার্ট | reminder by SMS/WhatsApp | P3 | LATER |
