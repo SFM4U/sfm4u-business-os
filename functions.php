@@ -25,7 +25,7 @@ function sfm4u_mp_logo(string $size = '128'): string {
 function sfm4u_mp_links(): array {
     return [
         ['Business Software', home_url('/#software')],
-        ['Modules', home_url('/#modules')],
+        ['Modules', home_url('/modules/')],
         ['Plans', home_url('/#plans')],
         ['AlgiBazar', 'https://algibazar.com/'],
         ['SFM4U', 'https://sfm4u.com/'],
