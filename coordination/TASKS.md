@@ -115,6 +115,15 @@ Order for Codex: C1 stores → C2 vendorpanel → C3 orders → C4 earnings → 
 Per module: build → test (`pass N fail 0`) → connect through ModuleContract and sfm4u_bos_modules → mark DONE here with the commit and tests. Claude: review each module + M-Z (join, full regression, release).
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| C1..C10 | Core modules (see plan r7) | Codex | READY |
+| C1 | stores | Codex | IN PROGRESS (Codex, 2026-11-22 UTC) |
+| C2 | vendorpanel | Codex | READY |
+| C3 | orders | Codex | READY |
+| C4 | earnings | Codex | READY |
+| C5 | withdraw | Codex | READY |
+| C6 | customerpanel | Codex | READY |
+| C7 | brands | Codex | READY |
+| C8 | pickup | Codex | READY |
+| C9 | productpage | Codex | READY |
+| C10 | b2b/b2c | Codex | READY |
 | D-1 | Dashboard shows only SFM4U modules; Dokan/WooCommerce links hidden behind the "old pages (temporary)" button | Claude | DONE in 0.9.19-dev (not deployed; goes out with the next important release) |
 
