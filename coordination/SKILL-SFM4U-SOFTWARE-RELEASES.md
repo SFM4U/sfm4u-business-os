@@ -73,7 +73,7 @@ Owner: MD SHALA UDDIN. Written by Claude, 2026-11-22.
 
 ## Status (2026-11-22)
 - **Part 1** (algibazar.com as the single file host): NOT RECOMMENDED, NOT TESTED (shared hosting, see Facts). No protected-download test was run.
-- **Part 2** (marketplace.sfm4u.com as the release host + update client): NOT BUILT yet.
+- **Part 2** (marketplace.sfm4u.com as the release host + update client): CODE BUILT and tested locally (CL-2, branch `cl2-update-server`: store plugin 0.5.0 `src/ReleaseServer.php`, core 0.9.24-dev `src/UpdateClient.php`). NOT deployed yet.
   - Needs WooCommerce on marketplace and a protected release folder.
   - Needs an update endpoint in the Module Store and an update client in the Module Manager.
 - **Noakhali Builder on marketplace:** BLOCKED. It needs the deploy key, or the Owner's one-time upload.

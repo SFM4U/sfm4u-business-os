@@ -69,8 +69,19 @@ final class ModuleManager {
 
     /* ---------------- ZIP check ---------------- */
 
-    /** Pure-ish: read a ZIP and accept it only if it is one SFM4U module. Returns [folder, name, version]. */
-    public static function inspectZip(string $zip): array {
+    public const CORE_FOLDER = 'sfm4u-wholesale';
+
+    /** Is this a folder name the Module Manager may replace? Core only when $allowCore (marketplace core update). */
+    public static function folderAllowed(string $folder, bool $allowCore = false): bool {
+        return preg_match('/^sfm4u-module-[a-z0-9-]{2,40}$/', $folder) === 1 || ($allowCore && $folder === self::CORE_FOLDER);
+    }
+
+    /**
+     * Pure-ish: read a ZIP and accept it only if it is one SFM4U module. Returns [folder, name, version].
+     * $allowCore (CL-2 marketplace updates only): the ZIP may instead be the core folder "sfm4u-wholesale"
+     * whose main file says "Plugin Name: SFM4U Business Software …".
+     */
+    public static function inspectZip(string $zip, bool $allowCore = false): array {
         if (!class_exists(ZipArchive::class)) { throw new DomainException('ZIP support (ZipArchive) is missing on this server.'); }
         $z = new ZipArchive();
         if ($z->open($zip) !== true) { throw new DomainException('This is not a ZIP file.'); }
@@ -83,12 +94,14 @@ final class ModuleManager {
         }
         if (count($tops) !== 1) { $z->close(); throw new DomainException('The ZIP must contain exactly one module folder.'); }
         $folder = (string) array_key_first($tops);
-        if (preg_match('/^sfm4u-module-[a-z0-9-]{2,40}$/', $folder) !== 1) { $z->close(); throw new DomainException('Only SFM4U modules can be added (folder must be "sfm4u-module-…").'); }
+        if (!self::folderAllowed($folder, $allowCore)) { $z->close(); throw new DomainException('Only SFM4U modules can be added (folder must be "sfm4u-module-…").'); }
+        $isCore = $folder === self::CORE_FOLDER;
         $main = $z->getFromName($folder . '/' . $folder . '.php');
         $z->close();
         if (!is_string($main) || $main === '') { throw new DomainException('Main file ' . $folder . '/' . $folder . '.php is missing.'); }
         $head = substr($main, 0, 8192);
-        if (!preg_match('/^[ \t\/*#@]*Plugin Name:\s*(SFM4U Module[^\r\n]*)/mi', $head, $m)) { throw new DomainException('Only SFM4U modules can be added ("Plugin Name: SFM4U Module …").'); }
+        $nameRe = $isCore ? '/^[ \t\/*#@]*Plugin Name:\s*(SFM4U Business Software[^\r\n]*)/mi' : '/^[ \t\/*#@]*Plugin Name:\s*(SFM4U Module[^\r\n]*)/mi';
+        if (!preg_match($nameRe, $head, $m)) { throw new DomainException($isCore ? 'This is not the SFM4U Business Software core ZIP.' : 'Only SFM4U modules can be added ("Plugin Name: SFM4U Module …").'); }
         $ver = preg_match('/^[ \t\/*#@]*Version:\s*([^\r\n]+)/mi', $head, $v) ? trim($v[1]) : '0';
         return [$folder, trim($m[1]), $ver];
     }
@@ -121,12 +134,12 @@ final class ModuleManager {
     }
 
     /** Put the newest saved version back (the version being replaced is saved first, so nothing is lost). */
-    public static function rollback(string $folder): string {
-        if (preg_match('/^sfm4u-module-[a-z0-9-]{2,40}$/', $folder) !== 1) { throw new DomainException('Unknown module.'); }
+    public static function rollback(string $folder, bool $allowCore = false): string {
+        if (!self::folderAllowed($folder, $allowCore)) { throw new DomainException('Unknown module.'); }
         $list = self::backups($folder);
         if (!$list) { throw new DomainException('No saved version to roll back to.'); }
         $target = $list[0];
-        [, , $ver] = self::inspectZip($target);
+        [, , $ver] = self::inspectZip($target, $allowCore);
         $dst = WP_PLUGIN_DIR . '/' . $folder;
         if (is_dir($dst)) {
             $cur = self::currentVersion($folder);
@@ -153,9 +166,12 @@ final class ModuleManager {
         @rmdir($d);
     }
 
-    /** Install or update a checked SFM4U module ZIP. Returns a message. */
-    public static function install(string $zip): string {
-        [$folder, $name, $ver] = self::inspectZip($zip);
+    /**
+     * Install or update a checked SFM4U module ZIP. Returns a message.
+     * The old version is saved first; if the install fails, it is put back (roll back) automatically.
+     */
+    public static function install(string $zip, bool $allowCore = false): string {
+        [$folder, $name, $ver] = self::inspectZip($zip, $allowCore);
         $existing = is_dir(WP_PLUGIN_DIR . '/' . $folder);
         if ($existing) { self::backup($folder, self::currentVersion($folder) ?: 'old'); }
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -163,7 +179,13 @@ final class ModuleManager {
         require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
         $up = new \Plugin_Upgrader(new \Automatic_Upgrader_Skin());
         $ok = $up->install($zip, ['overwrite_package' => true]);
-        if ($ok !== true) { throw new DomainException('Install failed' . (is_wp_error($ok) ? ': ' . $ok->get_error_message() : '.')); }
+        if ($ok !== true || !is_file(WP_PLUGIN_DIR . '/' . $folder . '/' . $folder . '.php')) {
+            $why = 'Install failed' . (is_wp_error($ok) ? ': ' . $ok->get_error_message() : '.');
+            if ($existing) {
+                try { self::rollback($folder, $allowCore); $why .= ' The old version was put back.'; } catch (DomainException $e) { $why .= ' Roll back also failed: ' . $e->getMessage(); }
+            }
+            throw new DomainException($why);
+        }
         $file = $folder . '/' . $folder . '.php';
         if (!is_plugin_active($file)) {
             $r = activate_plugin($file);
@@ -215,6 +237,7 @@ final class ModuleManager {
             echo '</td></tr>';
         }
         echo '</tbody></table>';
+        if (class_exists(UpdateClient::class)) { UpdateClient::render(); }
         if (current_user_can('install_plugins')) {
             echo '<h2>Add or update a module / মডিউল যোগ বা আপডেট</h2><form method="post" enctype="multipart/form-data">' . $nonce
                 . '<input type="hidden" name="sfm_mm" value="upload"><input type="file" name="module_zip" accept=".zip" required> <button class="button button-primary">Upload module ZIP</button></form>'

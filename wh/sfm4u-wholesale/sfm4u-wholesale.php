@@ -2,12 +2,13 @@
 /**
  * Plugin Name: SFM4U Business Software — Wholesale, Retail, POS & Membership
  * Description: SFM4U Business Software (formerly SFM4U Business OS) — one software, separate systems: wholesale and retail prices, member cards (regular, business, premium), khata (credit ledger), product QR labels, POS and inventory for WooCommerce.
- * Version: 0.9.23-dev
+ * Version: 0.9.24-dev
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
  * Author: SFM4U
  * License: GPL-2.0-or-later
  * Text Domain: sfm4u-wholesale
+ * Update URI: https://marketplace.sfm4u.com
  */
 defined('ABSPATH') || exit;
 require_once __DIR__ . '/src/Rule.php';
@@ -35,8 +36,9 @@ require_once __DIR__ . '/src/Modules.php';
 require_once __DIR__ . '/src/ControlCenter.php';
 require_once __DIR__ . '/src/ModuleHome.php';
 require_once __DIR__ . '/src/ModuleManager.php';
+require_once __DIR__ . '/src/UpdateClient.php';
 require_once __DIR__ . '/src/BrandKit.php';
-if (!defined('SFM4U_WH_VERSION')) { define('SFM4U_WH_VERSION', '0.9.23-dev'); }
+if (!defined('SFM4U_WH_VERSION')) { define('SFM4U_WH_VERSION', '0.9.24-dev'); }
 require_once __DIR__ . '/src/Market/VendorProfit.php';
 require_once __DIR__ . '/src/Erp/ErpSync.php';
 require_once __DIR__ . '/src/Erp/ErpAdmin.php';
@@ -56,11 +58,13 @@ register_activation_hook(__FILE__, [\SFM4U\Wholesale\PosRoles::class, 'activate'
 register_activation_hook(__FILE__, [\SFM4U\Wholesale\B2BRuntime::class, 'install']);
 add_action('admin_init', [\SFM4U\Wholesale\PosRoles::class, 'upgrade']);
 register_deactivation_hook(__FILE__, [\SFM4U\Wholesale\B2BRuntime::class, 'deactivate']);
-register_deactivation_hook(__FILE__, static function () { wp_clear_scheduled_hook(\SFM4U\Wholesale\Erp\ErpSync::CRON); wp_clear_scheduled_hook(\SFM4U\Wholesale\Ops\Courier::CRON); wp_clear_scheduled_hook(\SFM4U\Wholesale\Ops\StockFeed::CRON); });
+register_deactivation_hook(__FILE__, static function () { wp_clear_scheduled_hook(\SFM4U\Wholesale\Erp\ErpSync::CRON); wp_clear_scheduled_hook(\SFM4U\Wholesale\Ops\Courier::CRON); wp_clear_scheduled_hook(\SFM4U\Wholesale\Ops\StockFeed::CRON); \SFM4U\Wholesale\UpdateClient::unschedule(); });
 
 add_action('init', static function () {
     load_plugin_textdomain('sfm4u-wholesale', false, dirname(plugin_basename(__FILE__)) . '/languages');
 });
+// CL-2: updates from marketplace.sfm4u.com (works even while WooCommerce is off, so a fix can always arrive).
+\SFM4U\Wholesale\UpdateClient::register();
 add_action('plugins_loaded', static function () {
     if (class_exists('WooCommerce')) {
         // SFM4U Business OS: each system can be turned on or off (SFM4U Business OS → Systems).

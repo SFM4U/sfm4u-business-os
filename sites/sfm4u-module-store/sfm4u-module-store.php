@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Business Software — Marketplace (module store)
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -17,6 +17,9 @@ const REQ = 'sfm_module_request';
 const TAX_GROUP = 'sfm_module_group';
 const TAX_TYPE = 'sfm_module_type';
 const META = ['code' => 'Code (e.g. B01)', 'name_bn' => 'Name in Bangla', 'status' => 'Status (BUILT / READY / LATER)', 'priority' => 'Priority (P1 / P2 / P3)', 'version' => 'Version', 'price' => 'Price text (e.g. Coming soon)'];
+require_once __DIR__ . '/src/ReleaseServer.php';
+ReleaseServer::register();
+
 const TYPES = ['module' => 'Module', 'plan' => 'Business plan', 'skill' => 'Skill', 'product' => 'SFM4U product', 'core' => 'Business Software', 'plugin' => 'Plugin', 'theme' => 'Theme'];
 
 /* ---------------- data model ---------------- */
@@ -98,6 +101,7 @@ add_action('init', __NAMESPACE__ . '\\sync', 20);
 register_activation_hook(__FILE__, static function (): void {
     register_types();
     seed();
+    ReleaseServer::activate(); // CL-2: signing secret + protected release store
     // New marketplace site: pretty links so /modules/ works (only if the site still uses plain links).
     if ((string) get_option('permalink_structure') === '') { update_option('permalink_structure', '/%postname%/'); }
     flush_rewrite_rules();
@@ -150,7 +154,7 @@ add_filter('template_include', static function (string $t): string {
 
 add_action('wp_enqueue_scripts', static function (): void {
     if (is_front_page() || is_singular(CPT) || is_post_type_archive(CPT) || is_tax([TAX_GROUP, TAX_TYPE])) {
-        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.4.0');
+        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.5.0');
     }
 });
 

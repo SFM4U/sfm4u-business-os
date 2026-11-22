@@ -18,7 +18,8 @@ Owner: MD SHALA UDDIN. Written by CLAUDE on 2026-11-22 (night). Read with "06 â€
   - Other modules send through one call: `do_action('sfm4u_notify', $event, $userId, $data)`.
 - **A03 Licence and updates** (blocked on the release contract): wait for CL-2 (the update server by CLAUDE). Until then, build only the client side against this contract:
   - `GET https://marketplace.sfm4u.com/wp-json/sfm4u-releases/v1/check?site=<host>&items=slug:version,...`
-  - The answer is JSON: `[{slug, version, package_url (signed, 10 min), sha256, requires_core}]`.
+  - The answer is JSON (final, CL-2 built on branch `cl2-update-server`): `{updates: [{slug, version, sha256, size, requires_core, package_url (signed, 10 min)}], new: [{slug, code, name, version}], checked}`.
+  - The client is already built in core 0.9.24-dev (`src/UpdateClient.php`); A03 now only adds licence/plan rules on top of it.
   - The site key is sent in the header `X-SFM4U-Site-Key`. Never store it in code.
 - **B03 Vendor panel** (blocked on the app repo): web panel parts are done. The app screen moves to M01 (REST API and app). Mark B03 REVIEW with the web panel only.
 
