@@ -1471,11 +1471,33 @@
 "code": "S23",
 "en": "Golden Club Members",
 "bn": "গোল্ডেন ক্লাব মেম্বার",
-"what": "Member system built for the Golden Club community website.",
+"what": "Club membership: member list, cards and profiles for a club or community.",
 "p": "P2",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
 "type": "plugin",
 "version": "0.2.3"
+},
+{
+"code": "S24",
+"en": "Golden Club Event Manager",
+"bn": "গোল্ডেন ক্লাব ইভেন্ট ম্যানেজার",
+"what": "Club events: registration, tickets, attendance, event pages.",
+"p": "P2",
+"status": "BUILT",
+"group": "SFM4U software, themes & builder",
+"type": "plugin",
+"version": "0.3.1-rc.5"
+},
+{
+"code": "S25",
+"en": "Golden Club Blood Bank",
+"bn": "গোল্ডেন ক্লাব ব্লাড ব্যাংক",
+"what": "Blood donor list and requests for a club or community.",
+"p": "P2",
+"status": "BUILT",
+"group": "SFM4U software, themes & builder",
+"type": "plugin",
+"version": "1.0.1"
 }
 ]
