@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Business Software — Marketplace (module store)
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -17,7 +17,7 @@ const REQ = 'sfm_module_request';
 const TAX_GROUP = 'sfm_module_group';
 const TAX_TYPE = 'sfm_module_type';
 const META = ['code' => 'Code (e.g. B01)', 'name_bn' => 'Name in Bangla', 'status' => 'Status (BUILT / READY / LATER)', 'priority' => 'Priority (P1 / P2 / P3)', 'version' => 'Version', 'price' => 'Price text (e.g. Coming soon)'];
-const TYPES = ['module' => 'Module', 'plan' => 'Business plan', 'skill' => 'Skill', 'product' => 'SFM4U product'];
+const TYPES = ['module' => 'Module', 'plan' => 'Business plan', 'skill' => 'Skill', 'product' => 'SFM4U product', 'core' => 'Business Software', 'plugin' => 'Plugin', 'theme' => 'Theme'];
 
 /* ---------------- data model ---------------- */
 
@@ -79,6 +79,7 @@ function sync(): int {
         if (!$ids) { continue; }
         update_post_meta($ids[0], '_sfm_status', (string) ($r['status'] ?? ''));
         if (!empty($r['version'])) { update_post_meta($ids[0], '_sfm_version', (string) $r['version']); }
+        if (!empty($r['type']) && isset(TYPES[$r['type']])) { wp_set_object_terms($ids[0], TYPES[$r['type']], TAX_TYPE); }
         $n++;
     }
     update_option('sfm_ms_catalog_hash', $hash, false);
@@ -141,7 +142,7 @@ add_filter('template_include', static function (string $t): string {
 
 add_action('wp_enqueue_scripts', static function (): void {
     if (is_singular(CPT) || is_post_type_archive(CPT) || is_tax([TAX_GROUP, TAX_TYPE])) {
-        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.1.0');
+        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.3.0');
     }
 });
 

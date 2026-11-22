@@ -28,3 +28,9 @@
 .ms-box input,.ms-box textarea{display:block;width:100%;box-sizing:border-box;margin-top:4px;background:#000;color:#F1F3F3;border:1px solid #0b3326;border-radius:10px;padding:10px}
 .ms-box .hp{position:absolute;left:-9999px}.ms-box .ok{color:#00E0B0}.ms-box .err{color:#ff8a8a}
 @media(max-width:860px){.ms-body{grid-template-columns:1fr}.ms-hero{padding:32px 0 16px}}
+/* 0.3.0 top: title + one menu bar, left aligned (Owner 2026-11-22) */
+.ms-top{padding:28px 0 8px}.ms-top h1{font-size:clamp(26px,4vw,42px);color:#fff;margin:0 0 12px;line-height:1.15}
+.ms-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px;-webkit-overflow-scrolling:touch}.ms-tabs::-webkit-scrollbar{display:none}
+.ms-tabs a{flex:0 0 auto;white-space:nowrap;border:1px solid #0b3326;border-radius:999px;padding:7px 14px;color:#F1F3F3;font-size:14px;background:rgba(0,26,18,.55)}
+.ms-tabs a.on,.ms-tabs a:hover{border-color:#00E0B0;color:#00E0B0}
+.ms-top .lead{color:#9fb5ad;margin:8px 0 4px;max-width:900px}
