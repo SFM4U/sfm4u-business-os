@@ -45,14 +45,22 @@ final class Returns implements ModuleContract
             [
                 'methods' => 'GET',
                 'permission_callback' => [self::class, 'mayRead'],
-                'callback' => [self::class, 'read'],
+                'callback' => static fn(WP_REST_Request $request) => self::privateResponse(self::read($request)),
             ],
             [
                 'methods' => 'POST',
                 'permission_callback' => [self::class, 'mayWrite'],
-                'callback' => [self::class, 'write'],
+                'callback' => static fn(WP_REST_Request $request) => self::privateResponse(self::write($request)),
             ],
         ]);
+    }
+
+    private static function privateResponse(array|WP_Error $value): \WP_REST_Response|WP_Error
+    {
+        if ($value instanceof WP_Error) {
+            return $value;
+        }
+        return new \WP_REST_Response($value, 200, ['Cache-Control' => 'private, no-store']);
     }
 
     public static function mayRead(WP_REST_Request $request): bool
@@ -100,19 +108,28 @@ final class Returns implements ModuleContract
             || !is_array($photos) || !array_is_list($photos) || count($photos) > 3) {
             throw new DomainException('Check the request type, reason and photographs.', 422);
         }
-        foreach ($photos as $id) {
-            $photo = is_int($id) && $id > 0 ? get_post($id) : null;
-            if (!$photo || $photo->post_type !== 'attachment' || (int) $photo->post_author !== get_current_user_id()
-                || !in_array($photo->post_mime_type, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-                throw new DomainException('Photographs must be images attached by the buyer.', 422);
-            }
-        }
+        $photos = array_map([self::class, 'photo'], $photos);
         $row = ['kind' => $kind, 'reason' => $reason, 'photos' => $photos];
         $key = self::key($request);
         if (!self::insert($key, $row)) {
             throw new DomainException('A request already exists for this order line.', 409);
         }
         return $row;
+    }
+
+    /** Private inline evidence. It never enters the public WordPress media library. */
+    private static function photo(mixed $encoded): string
+    {
+        if (!is_string($encoded) || strlen($encoded) > 175000) {
+            throw new DomainException('Photographs must be small base64 images.', 422);
+        }
+        $bytes = base64_decode($encoded, true);
+        $image = $bytes === false ? false : @getimagesizefromstring($bytes);
+        if (!$image || strlen($bytes) > 131072 || $image[0] > 2048 || $image[1] > 2048
+            || !in_array($image['mime'], ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            throw new DomainException('Use a JPEG, PNG or WebP image within the size limit.', 422);
+        }
+        return 'data:' . $image['mime'] . ';base64,' . base64_encode($bytes);
     }
 
     private static function resolve(WP_REST_Request $request, WC_Order $order, array $body): array

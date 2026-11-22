@@ -16,12 +16,16 @@ $GLOBALS['wp_rest_server'] = null;
 $check(Modules::all()['returns'][4] === Returns::class && count(ModuleHome::dashboard('returns')['help']) === 2, 'contract');
 $buyer = wp_create_user('returns-buyer-' . wp_generate_uuid4(), wp_generate_password());
 $outsider = wp_create_user('returns-other-' . wp_generate_uuid4(), wp_generate_password());
+$vendor = wp_create_user('returns-vendor-' . wp_generate_uuid4(), wp_generate_password());
+$otherVendor = wp_create_user('returns-vendor-other-' . wp_generate_uuid4(), wp_generate_password());
 $product = new WC_Product_Simple();
 $product->set_name('Synthetic returns item');
 $product->set_regular_price('20.00');
 $product->save();
+wp_update_post(['ID' => $product->get_id(), 'post_author' => $vendor]);
 $order = wc_create_order(['customer_id' => $buyer]);
 $line = $order->add_product($product, 1);
+$order->update_meta_data('_dokan_vendor_id', $vendor);
 $order->calculate_totals();
 $order->save();
 $call = static function (string $method, int $user, array $data = [], bool $nonce = true) use ($order, $line): WP_REST_Response {
@@ -36,11 +40,21 @@ $call = static function (string $method, int $user, array $data = [], bool $nonc
     if ($response->get_status() >= 400) { echo 'HTTP ' . $response->get_status() . ' ' . ($response->get_data()['code'] ?? '') . "\n"; }
     return $response;
 };
+wp_set_current_user(1);
+Modules::grant($vendor, 'returns');
+Modules::grant($otherVendor, 'returns');
+$png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/aqAFzQAAAAASUVORK5CYII=';
 $body = ['kind' => 'return', 'reason' => 'Synthetic damage'];
 $check($call('POST', $outsider, $body)->get_status() === 403, 'unrelated customer cannot submit');
 $check($call('POST', $buyer, $body, false)->get_status() === 403, 'nonce required');
 $check($call('POST', $buyer, $body + ['photos' => [99999999]])->get_status() === 422, 'invalid image refused');
-$check($call('POST', $buyer, $body)->get_status() === 200, 'buyer submits');
+$body['photos'] = [$png];
+$submitted = $call('POST', $buyer, $body);
+$check($submitted->get_status() === 200, 'buyer submits');
+$check(($submitted->get_data()['photos'][0] ?? '') === 'data:image/png;base64,' . $png
+    && ($submitted->get_headers()['Cache-Control'] ?? '') === 'private, no-store', 'private photo returned without a public URL');
+$check($call('GET', $vendor)->get_status() === 200, 'assigned vendor can read');
+$check($call('GET', $otherVendor)->get_status() === 403, 'other granted vendor cannot read');
 $check($call('POST', $buyer, $body)->get_status() === 200, 'same request is replayable');
 $check($call('POST', $buyer, array_replace($body, ['reason' => 'Changed']))->get_status() === 409, 'conflicting request refused');
 $check($call('GET', $outsider)->get_status() === 403, 'unrelated customer cannot read');
@@ -50,7 +64,7 @@ $check($call('POST', 1, $close)->get_status() === 422, 'manager cannot invent a 
 $refund = wc_create_refund(['order_id' => $order->get_id(), 'amount' => 20,
     'line_items' => [$line => ['qty' => 1, 'refund_total' => 20, 'refund_tax' => []]]]);
 $close['refund_id'] = $refund->get_id();
-$check($call('POST', 1, $close)->get_status() === 200, 'manager can link existing refund');
+$check($call('POST', $vendor, $close)->get_status() === 200, 'assigned vendor can link existing refund');
 $check($call('POST', 1, $close)->get_status() === 200 && count(wc_get_order($order->get_id())->get_refunds()) === 1, 'retry does not refund again');
 $check(($call('GET', $buyer)->get_data()['refund_id'] ?? null) === $refund->get_id(), 'buyer sees outcome');
 $check($call('POST', 1, ['action' => 'resolve', 'outcome' => 'declined'])->get_status() === 409, 'outcome cannot be overwritten');
