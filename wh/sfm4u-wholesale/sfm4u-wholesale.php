@@ -34,6 +34,8 @@ require_once __DIR__ . '/src/Erp/ErpNextClient.php';
 require_once __DIR__ . '/src/Modules.php';
 require_once __DIR__ . '/src/ControlCenter.php';
 require_once __DIR__ . '/src/ModuleHome.php';
+require_once __DIR__ . '/modules/brandkit/src/BrandKit.php';
+\SFM4U\Modules\BrandKit\BrandKit::register();
 require_once __DIR__ . '/src/Market/VendorProfit.php';
 require_once __DIR__ . '/src/Erp/ErpSync.php';
 require_once __DIR__ . '/src/Erp/ErpAdmin.php';
