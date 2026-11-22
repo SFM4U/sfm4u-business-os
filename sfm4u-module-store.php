@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Module Store
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -65,6 +65,26 @@ function seed(): int {
     }
     return $n;
 }
+
+/** Keep status/version of seeded items in step with catalog.json (runs once each time the file changes). */
+function sync(): int {
+    $file = __DIR__ . '/catalog.json';
+    if (!is_file($file)) { return 0; }
+    $hash = md5_file($file);
+    if (get_option('sfm_ms_catalog_hash') === $hash) { return 0; }
+    $rows = json_decode((string) file_get_contents($file), true);
+    $n = seed();
+    foreach (is_array($rows) ? $rows : [] as $r) {
+        $ids = get_posts(['post_type' => CPT, 'post_status' => 'any', 'meta_key' => '_sfm_code', 'meta_value' => (string) ($r['code'] ?? ''), 'fields' => 'ids', 'numberposts' => 1]);
+        if (!$ids) { continue; }
+        update_post_meta($ids[0], '_sfm_status', (string) ($r['status'] ?? ''));
+        if (!empty($r['version'])) { update_post_meta($ids[0], '_sfm_version', (string) $r['version']); }
+        $n++;
+    }
+    update_option('sfm_ms_catalog_hash', $hash, false);
+    return $n;
+}
+add_action('init', __NAMESPACE__ . '\\sync', 20);
 
 register_activation_hook(__FILE__, static function (): void {
     register_types();
