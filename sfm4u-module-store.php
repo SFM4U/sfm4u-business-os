@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Business Software — Marketplace (module store)
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.3.1
+ * Version: 0.4.0
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -80,6 +80,14 @@ function sync(): int {
         update_post_meta($ids[0], '_sfm_status', (string) ($r['status'] ?? ''));
         if (!empty($r['version'])) { update_post_meta($ids[0], '_sfm_version', (string) $r['version']); }
         if (!empty($r['type']) && isset(TYPES[$r['type']])) { wp_set_object_terms($ids[0], TYPES[$r['type']], TAX_TYPE); }
+        if (!empty($r['details'])) {
+            $html = '<p>' . esc_html((string) $r['details']) . '</p>';
+            if (!empty($r['features']) && is_array($r['features'])) { $html .= '<h3>Features / যা যা আছে</h3><ul>' . implode('', array_map(static fn($f) => '<li>' . esc_html((string) $f) . '</li>', $r['features'])) . '</ul>'; }
+            if (!empty($r['how'])) { $html .= '<h3>How it works / কীভাবে কাজ করে</h3><p>' . esc_html((string) $r['how']) . '</p>'; }
+            wp_update_post(['ID' => $ids[0], 'post_content' => $html]);
+        }
+        update_post_meta($ids[0], '_sfm_live', wp_json_encode(array_values(array_filter((array) ($r['live'] ?? []), static fn($l) => is_array($l) && !empty($l['url'])))));
+        update_post_meta($ids[0], '_sfm_used_on', wp_json_encode(array_values((array) ($r['used_on'] ?? []))));
         $n++;
     }
     update_option('sfm_ms_catalog_hash', $hash, false);
@@ -142,7 +150,7 @@ add_filter('template_include', static function (string $t): string {
 
 add_action('wp_enqueue_scripts', static function (): void {
     if (is_front_page() || is_singular(CPT) || is_post_type_archive(CPT) || is_tax([TAX_GROUP, TAX_TYPE])) {
-        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.3.0');
+        wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.4.0');
     }
 });
 

@@ -34,3 +34,6 @@
 .ms-tabs a{flex:0 0 auto;white-space:nowrap;border:1px solid #0b3326;border-radius:999px;padding:7px 14px;color:#F1F3F3;font-size:14px;background:rgba(0,26,18,.55)}
 .ms-tabs a.on,.ms-tabs a:hover{border-color:#00E0B0;color:#00E0B0}
 .ms-top .lead{color:#9fb5ad;margin:8px 0 4px;max-width:900px}
+
+.ms-live{display:flex;gap:8px;flex-wrap:wrap}.ms-btn{display:inline-block;background:#00E0B0;color:#012!important;border-radius:10px;padding:10px 14px;font-weight:700}.ms-btn:hover{background:#00F0C0}
+.ms-main .entry h3{margin-top:18px}.ms-main .entry ul{padding-left:20px}
