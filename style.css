@@ -3,7 +3,7 @@ Theme Name: SFM4U Marketplace
 Theme URI: https://marketplace.sfm4u.com
 Author: SFM4U
 Description: SFM4U software marketplace theme — SFM4U brand (dark, teal brackets, silver letters). Home of SFM4U Business Software and its modules.
-Version: 0.3.0
+Version: 0.3.1
 Requires at least: 6.5
 Requires PHP: 8.1
 Text Domain: sfm4u-marketplace
@@ -96,3 +96,12 @@ body::before{content:"";position:fixed;inset:0;background:radial-gradient(ellips
 /* home sections */
 .split{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px}.side .card{margin-bottom:12px}
 @media(max-width:900px){.split{grid-template-columns:1fr}}
+
+/* 0.3.1: logged-in admin bar must not cover the header; home uses the same top as the modules page */
+body.admin-bar .sfm-site-header{top:32px}
+@media(max-width:782px){body.admin-bar .sfm-site-header{top:46px}}
+@media(max-width:600px){body.admin-bar .sfm-site-header{top:0}#wpadminbar{position:absolute}}
+.ms-top{padding:28px 0 8px}.ms-top h1{font-size:clamp(26px,4vw,42px);color:#fff;margin:0 0 12px;line-height:1.15}
+.ms-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 8px}.ms-tabs::-webkit-scrollbar{display:none}
+.ms-tabs a{flex:0 0 auto;white-space:nowrap;border:1px solid #0b3326;border-radius:999px;padding:7px 14px;color:#F1F3F3;font-size:14px;background:rgba(0,26,18,.55)}
+.ms-tabs a.on,.ms-tabs a:hover{border-color:#00E0B0;color:#00E0B0}.ms-top .lead{color:#9fb5ad;margin:8px 0 4px;max-width:900px}

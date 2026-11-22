@@ -36,7 +36,7 @@ function sfm4u_mp_links(): array {
  * Texts: Appearance → Customize → "SFM4U texts". Menu: Appearance → Menus ("Main menu" in "Primary menu"). */
 const SFM4U_MP_TEXTS = [
     'sfm_mp_home_badge' => ['Home: small label', 'SFM4U Business Software'],
-    'sfm_mp_home_title' => ['Home: big title', 'One software for every business'],
+    'sfm_mp_home_title' => ['Home: title', 'SFM4U Business Software'],
     'sfm_mp_home_lead' => ['Home: text (English)', "From buying stock to the customer's door: shop, products, wholesale and retail prices, POS counter, member cards, khata, stock, delivery, reports and ERP link — in Bangla and English. Take the full software, or only the modules you need."],
     'sfm_mp_home_lead_bn' => ['Home: text (Bangla)', 'মাল কেনা থেকে কাস্টমারের বাসা পর্যন্ত — পুরো সফটওয়্যার, অথবা দরকারি মডিউল আলাদা করে।'],
     'sfm_mp_home_btn1' => ['Home: first button', 'Complete modules'],

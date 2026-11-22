@@ -19,14 +19,11 @@ $card = static function (WP_Post $p, bool $ready): string {
 };
 ?>
 <main>
-  <section class="hero">
-    <div class="wrap">
-      <p><span class="badge"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_badge')); ?></span></p>
-      <h1><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_title')); ?></h1>
-      <p class="lead"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead')); ?><br><span lang="bn"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead_bn')); ?></span></p>
-      <div class="btns"><a class="btn solid" href="<?php echo esc_url(home_url('/modules/?status=ready')); ?>"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_btn1')); ?></a><a class="btn" href="<?php echo esc_url(home_url('/modules/')); ?>"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_btn2')); ?></a></div>
-    </div>
-  </section>
+  <section class="ms-top"><div class="wrap">
+    <h1><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_title')); ?></h1>
+    <?php if (function_exists('SFM4U\\ModuleStore\\tabs_html')) { echo \SFM4U\ModuleStore\tabs_html(''); } // phpcs:ignore ?>
+    <p class="lead"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead')); ?><br><span lang="bn"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead_bn')); ?></span></p>
+  </div></section>
 
   <section class="s" id="complete"><div class="wrap split">
     <div>
