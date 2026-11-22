@@ -1,65 +1,50 @@
 <?php defined('ABSPATH') || exit; get_header();
-// Module groups from the SFM4U MODULE CATALOG (Factory). built = already inside the software today.
-$groups = [
-    ['Platform', 'প্ল্যাটফর্ম', ['Main dashboard' => 1, 'Module dashboards' => 1, 'Module Manager' => 0, 'Licence & updates' => 0, 'Roles & permissions' => 0, 'Notifications (SMS / WhatsApp / email)' => 0, 'One-click Bangla / English' => 0]],
-    ['Marketplace & shops', 'মার্কেটপ্লেস ও দোকান', ['Stores & approval' => 0, 'Vendor panel (web + app)' => 0, 'Seller verification' => 0, 'Commission & earnings' => 0, 'Withdraw (bKash / Nagad / bank)' => 0, 'Store reviews & support' => 0, 'Brands' => 0]],
-    ['Products', 'পণ্য', ['Product sheet A–Z (photos, 15 s video)' => 1, 'Barcode / QR labels' => 1, 'Expiry & batch' => 0, 'Bulk edit' => 0, 'Bundles & combos' => 0, 'AI product intake' => 0]],
-    ['Prices & offers', 'দাম ও অফার', ['Retail price sets (who sees, who buys)' => 1, 'Wholesale / B2B' => 1, 'Member price by card' => 1, 'Buy X get Y (7+1)' => 1, 'Coupons' => 0, 'Friday offers' => 0, 'Bangladesh VAT' => 0]],
-    ['Orders & payments', 'অর্ডার ও পেমেন্ট', ['Receipt auto-print' => 1, 'Khata (due)' => 1, 'Points & wallet' => 1, 'Orders per shop' => 0, 'COD control' => 0, 'bKash / Nagad / Rocket' => 0, 'Returns & warranty' => 0]],
-    ['POS (shop counter)', 'POS (দোকানের কাউন্টার)', ['POS counter' => 1, 'Registers & cashiers' => 1, 'Cash drawer & daily close' => 1, 'Tablet shop kit (printer, scanner)' => 0, 'Weight barcode scale' => 0, 'Offline POS' => 0]],
-    ['Stock & buying', 'স্টক ও কেনা', ['Purchase & real cost' => 1, 'Suppliers & payables' => 1, 'Stock counts' => 1, 'Low stock & reorder' => 1, 'Stock link to member stores' => 1, 'ERPNext link' => 1, 'Partner site mirror' => 1]],
-    ['Customers & members', 'কাস্টমার ও মেম্বার', ['Member cards (Regular, Premium, Business, Black)' => 1, 'Customer panel' => 0, 'Referral' => 0, 'Premium plans' => 0]],
-    ['Delivery', 'ডেলিভারি', ['Steadfast courier + WhatsApp' => 1, 'Delivery zones & charges' => 0, 'Pickup points' => 0, 'Delivery man app' => 0]],
-    ['Reports & apps', 'রিপোর্ট ও অ্যাপ', ['Sales & profit reports' => 0, 'Shop analytics' => 0, 'REST API & AlgiBazar app' => 0, 'AI assistant (any AI provider)' => 0]],
-];
-$built = 0; $all = 0; foreach ($groups as $g) { foreach ($g[2] as $b) { $all++; $built += $b; } }
+// SFM4U Business Software home: complete modules first, upcoming next, business plans on the side (Owner 2026-11-22).
+$store = post_type_exists('sfm_module');
+$items = $store ? get_posts(['post_type' => 'sfm_module', 'post_status' => current_user_can('read_private_posts') ? ['publish', 'private'] : 'publish', 'numberposts' => 400, 'orderby' => 'menu_order', 'order' => 'ASC']) : [];
+$done = []; $soon = []; $plans = [];
+foreach ($items as $p) {
+    $types = wp_get_post_terms($p->ID, 'sfm_module_type', ['fields' => 'names']);
+    if (in_array('Business plan', (array) $types, true)) { $plans[] = $p; continue; }
+    $g = wp_get_post_terms($p->ID, 'sfm_module_group', ['fields' => 'names']); $g = $g ? $g[0] : 'Other';
+    $st = strtoupper((string) get_post_meta($p->ID, '_sfm_status', true));
+    if (str_contains($st, 'BUILT')) { $done[$g][] = $p; } else { $soon[$g][] = $p; }
+}
+$count = fn(array $a) => array_sum(array_map('count', $a));
+$card = static function (WP_Post $p, bool $ready): string {
+    $v = (string) get_post_meta($p->ID, '_sfm_version', true); $bn = (string) get_post_meta($p->ID, '_sfm_name_bn', true);
+    return '<a class="card" style="display:block;color:inherit" href="' . esc_url(get_permalink($p)) . '"><span class="chip ' . ($ready ? 'built">Ready' : 'soon">Soon') . '</span>'
+        . '<small style="color:var(--mid);font-weight:700">' . esc_html((string) get_post_meta($p->ID, '_sfm_code', true)) . ($v !== '' ? ' · v' . esc_html($v) : '') . '</small>'
+        . '<h3 style="margin:6px 0 2px">' . esc_html(get_the_title($p)) . '</h3>' . ($bn !== '' ? '<p class="bn">' . esc_html($bn) . '</p>' : '') . '</a>';
+};
 ?>
 <main>
   <section class="hero">
     <div class="wrap">
-      <img class="big" src="<?php echo esc_url(sfm4u_mp_logo('512')); ?>" alt="SFM4U logo" width="150" height="150">
-      <p><span class="badge">SFM4U Software Marketplace</span></p>
-      <h1><span class="brk">‹</span> SFM4U Business Software <span class="brk">›</span></h1>
-      <p class="lead">One software for a whole marketplace and every shop in it: shops, products, wholesale and retail prices, POS counter, member cards, khata, stock, buying cost, delivery and reports, in Bangla and English.<br><span lang="bn">একটি সফটওয়্যার — পুরো মার্কেটপ্লেস ও প্রতিটি দোকানের সব কাজ।</span></p>
-      <div class="btns"><a class="btn solid" href="<?php echo esc_url(home_url('/modules/')); ?>">See all modules</a><a class="btn" href="#plans">Plans</a></div>
+      <p><span class="badge">SFM4U Business Software</span></p>
+      <h1>One software for every business</h1>
+      <p class="lead">From buying stock to the customer's door: shop, products, wholesale and retail prices, POS counter, member cards, khata, stock, delivery, reports and ERP link — in Bangla and English. Take the full software, or only the modules you need.<br><span lang="bn">মাল কেনা থেকে কাস্টমারের বাসা পর্যন্ত — পুরো সফটওয়্যার, অথবা দরকারি মডিউল আলাদা করে।</span></p>
+      <div class="btns"><a class="btn solid" href="#complete">Complete modules</a><a class="btn" href="<?php echo esc_url(home_url('/modules/')); ?>">All modules</a></div>
     </div>
   </section>
 
-  <section class="s" id="software"><div class="wrap">
-    <h2>Why SFM4U Business Software</h2>
-    <p class="sub">Built in Noakhali for Bangladesh, ready for any marketplace.</p>
-    <div class="grid">
-      <div class="card"><h3>One software, many modules</h3><p class="bn">একটি সফটওয়্যার, অনেক মডিউল</p>Turn each module on or off. Each module has its own dashboard, settings and help.</div>
-      <div class="card"><h3>Shop counter + online</h3><p class="bn">দোকান + অনলাইন একসাথে</p>POS counter, receipts and stock stay correct with online orders.</div>
-      <div class="card"><h3>Wholesale and retail</h3><p class="bn">পাইকারি ও খুচরা</p>Business members get wholesale with their card; Premium members get quantity savings.</div>
-      <div class="card"><h3>Real cost, private</h3><p class="bn">আসল খরচ গোপন</p>Fares, truck and labour spread into the real cost per piece. Staff never see it.</div>
-      <div class="card"><h3>Bangla & local payments</h3><p class="bn">বাংলা ও লোকাল পেমেন্ট</p>Bangla/English, bKash and Nagad, local couriers, khata (due) for known customers.</div>
-      <div class="card"><h3>Proven on AlgiBazar</h3><p class="bn">AlgiBazar-এ চলছে</p>Running today on <a href="https://algibazar.com/">AlgiBazar.com</a>, SFM4U's own marketplace.</div>
+  <section class="s" id="complete"><div class="wrap split">
+    <div>
+      <h2>Complete — working now <span class="badge"><?php echo (int) $count($done); ?></span></h2>
+      <p class="sub">সম্পূর্ণ মডিউল — এখনই কাজ করছে।</p>
+      <?php if (!$done) { echo '<p class="note">Modules appear here when the SFM4U Module Store is active.</p>'; } ?>
+      <?php foreach ($done as $g => $ps) { echo '<h3 style="margin:18px 0 8px;color:var(--teal)">' . esc_html($g) . '</h3><div class="grid">'; foreach ($ps as $p) { echo $card($p, true); } echo '</div>'; } ?>
+      <h2 style="margin-top:36px" id="upcoming">Upcoming <span class="badge"><?php echo (int) $count($soon); ?></span></h2>
+      <p class="sub">আসছে — প্রতিদিন একটি একটি করে যোগ হচ্ছে। <a href="<?php echo esc_url(home_url('/modules/?status=soon')); ?>">See all upcoming →</a></p>
+      <div class="grid"><?php foreach ($soon as $g => $ps) { echo '<a class="card" style="display:block;color:inherit" href="' . esc_url(home_url('/modules/?status=soon')) . '"><h3 style="margin:0 0 4px">' . esc_html($g) . '</h3><p class="bn">' . (int) count($ps) . ' modules coming</p></a>'; } ?></div>
     </div>
-  </div></section>
-
-  <section class="s" id="modules"><div class="wrap">
-    <h2>Modules <span class="badge"><?php echo (int) $built; ?> ready today · <?php echo (int) ($all - $built); ?> being built</span></h2>
-    <p class="sub">মডিউল — সবুজ চিহ্ন = আজ চালু, ধূসর = তৈরি হচ্ছে। <a href="<?php echo esc_url(home_url('/modules/')); ?>">Every module, one by one →</a></p>
-    <div class="grid">
-      <?php foreach ($groups as [$en, $bn, $mods]) { ?>
-        <div class="card"><h3><?php echo esc_html($en); ?></h3><p class="bn"><?php echo esc_html($bn); ?></p>
-          <?php foreach ($mods as $m => $b) { echo '<div style="margin:4px 0"><span class="chip ' . ($b ? 'built">Ready' : 'soon">Soon') . '</span>' . esc_html($m) . '</div>'; } ?>
-        </div>
-      <?php } ?>
-    </div>
-  </div></section>
-
-  <section class="s plans" id="plans"><div class="wrap">
-    <h2>Plans</h2>
-    <p class="sub">Prices will be announced soon. Sales are not open yet.</p>
-    <div class="grid">
-      <div class="card"><h3>Free</h3><div class="price">Coming soon</div>Core: dashboard, product sheet, basic prices.</div>
-      <div class="card"><h3>Pro</h3><div class="price">Coming soon</div>POS, member cards, wholesale, purchase cost.</div>
-      <div class="card"><h3>Business</h3><div class="price">Coming soon</div>Full marketplace: shops, commission, withdraw, delivery.</div>
-      <div class="card"><h3>Enterprise</h3><div class="price">Coming soon</div>Many sites, setup help, custom modules.</div>
-    </div>
-    <p class="note" style="margin-top:16px">This page shows the software and its modules. Buying, licence keys and downloads are not open yet. Questions: <a href="mailto:support@sfm4u.com">support@sfm4u.com</a></p>
+    <aside class="side" id="plans">
+      <h2>Plans</h2>
+      <div class="card"><h3>Full software</h3><p>Every module, setup and updates.</p><p class="price" style="color:var(--teal);font-weight:800">Coming soon</p></div>
+      <div class="card"><h3>Single modules</h3><p>Only what your business needs.</p><p class="price" style="color:var(--teal);font-weight:800">Coming soon</p></div>
+      <?php foreach ($plans as $p) { echo $card($p, true); } ?>
+      <p class="note">Buying and downloads open soon. To get the software now, open a module and send a request, or write to <a href="mailto:support@sfm4u.com">support@sfm4u.com</a>.</p>
+    </aside>
   </div></section>
 </main>
 <?php get_footer();
