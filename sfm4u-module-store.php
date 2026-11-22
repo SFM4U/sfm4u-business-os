@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Business Software — Marketplace (module store)
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -141,7 +141,7 @@ add_filter('template_include', static function (string $t): string {
 });
 
 add_action('wp_enqueue_scripts', static function (): void {
-    if (is_singular(CPT) || is_post_type_archive(CPT) || is_tax([TAX_GROUP, TAX_TYPE])) {
+    if (is_front_page() || is_singular(CPT) || is_post_type_archive(CPT) || is_tax([TAX_GROUP, TAX_TYPE])) {
         wp_enqueue_style('sfm4u-module-store', plugins_url('assets/store.css', __FILE__), [], '0.3.0');
     }
 });
@@ -182,3 +182,18 @@ add_action('template_redirect', static function (): void {
     }
     exit;
 });
+
+
+/** One menu bar (All, Complete, Upcoming, types…) used on the home page and the modules page. */
+function tabs_html(string $active = 'all', int $termId = 0): string {
+    $base = (string) get_post_type_archive_link(CPT);
+    $tabs = [['all', 'All', $base], ['ready', 'Complete', add_query_arg('status', 'ready', $base)], ['soon', 'Upcoming', add_query_arg('status', 'soon', $base)]];
+    foreach (['Business plan' => 'Business plans', 'Module' => 'Modules', 'SFM4U product' => 'SFM4U products', 'Business Software' => 'Business Software', 'Plugin' => 'Plugins', 'Theme' => 'Themes'] as $name => $label) {
+        $t = get_term_by('name', $name, TAX_TYPE);
+        if ($t && $t->count > 0) { $tabs[] = ['t' . $t->term_id, $label, (string) get_term_link($t)]; }
+    }
+    $key = $termId ? 't' . $termId : $active;
+    $h = '<nav class="ms-tabs" aria-label="SFM4U Business Software sections">';
+    foreach ($tabs as [$k, $label, $url]) { $on = $k === $key; $h .= '<a class="' . ($on ? 'on' : '') . '" href="' . esc_url($url) . '"' . ($on ? ' aria-current="page"' : '') . '>' . esc_html($label) . '</a>'; }
+    return $h . '</nav>';
+}
