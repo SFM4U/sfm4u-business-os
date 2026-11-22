@@ -15,6 +15,8 @@ ERPNext stays the accounting/stock ledger. Business OS never keeps a parallel ac
 | Repo baseline, CI, releases/ZIP+SHA | `.github/`, `tools/`, `coordination/` | Claude |
 | Pricing, tiers, rescale, member price, cards, CardLink/MemberLink, Black StockFeed, Dokan/Woo compatibility, ERP mock | `wh/sfm4u-wholesale/src/**` (except POS/inventory below), `whtest/`, `wh/tests-local/`, `wh/erp-tests/` | Claude |
 | POS register, tender, receipt, refund/credit, drawer, daily close, stock counts/reconciliation | `wh/sfm4u-wholesale/modules/pos/**`, `wh/sfm4u-wholesale/modules/inventory-bridge/**`, `tests/codex/**` | Codex |
+| Marketplace modules H–Q (returns, support, announce, abuse, earnings, withdrawplus, reviews, shopcoupon, shopstats, vendor dashboard/app) — plan `coordination/MARKETPLACE-MODULES-PLAN.md` | `wh/sfm4u-wholesale/modules/{returns,support,announce,abuse,earnings,withdrawplus,reviews,shopcoupon,shopstats}/**`, `wh/tests-local/<slug>-test.php` for those slugs | Codex |
+| Module dashboards (ModuleHome, Dashboard), module contract, modules A–G (verify, shipping, staff, vendorplan, spmv, AlgiBazar plugin merge), joining and releases | `wh/sfm4u-wholesale/src/**`, `wh/sfm4u-wholesale/modules/{verify,shipping,staff,vendorplan,spmv,algibazar-*}/**` | Claude |
 | Shared fixtures | `tests/fixtures/` | both (add, never silently change the other's) |
 
 Never edit the other AI's area. Need a change there? Add a task in `coordination/TASKS.md` for that AI.

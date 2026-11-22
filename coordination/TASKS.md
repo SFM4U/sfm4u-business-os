@@ -86,3 +86,27 @@ No change on account.sfm4u.com or algibazar.com until the Owner says "go" AND a 
 | L-26 | Business Software Dashboard (Control Center): one page with every marketplace page grouped (Dokan dashboard/withdraw/reverse withdrawal/vendors/modules/tools/status/settings/help, WooCommerce SFM4U pages, POS counter/register, SFM4U Store, AlgiBazar store location), live numbers, search, Dokan ads hidden (toggle); Systems on its own page `sfm-bos-systems` | DONE (Claude 2026-11-22) — 0.9.17-dev main b0d6742, ZIP 4a12adcb…6385; control-center-test 21/21; full regression green (modules-test same 3 known local-env failures); live on algibazar.com + thenoakhali.com; home page OK. NOT TESTED: wp-admin render on live (needs Owner login). |
 | L-27 | Move AlgiBazar plugins inside Business Software, one at a time with tests and rollback: (1) Store Location & Pickup, (2) Shop & Owner Profiles, (3) Customer Profile, (4) Product Experience; old plugin stays installed but off after each move | READY (Claude) — needs their source copied from algibazar.com into the repo first |
 | L-28 | SFM4U Marketplace features (own, not Dokan Pro code): seller verification, store support tickets, vendor staff, announcements, refund/return & warranty, report abuse, vendor subscription plans, table-rate/distance shipping, admin earning reports, auto withdraw schedule, vendor reviews, single product multi-vendor | PLANNED — order to be set by Owner; split Claude/Codex |
+
+## Marketplace modules r6 (Owner 2026-11-22) — plan: `coordination/MARKETPLACE-MODULES-PLAN.md` (read §2 module standard first)
+Every module: own folder, on/off in Modules::all(), own dashboard via `dashboard(): array` (numbers, pages, settings, help BN/EN), own data per shop, tests `pass N fail 0`, synthetic data only. Codex: wait for M-A contract (Claude) before registering; you may start code and tests now.
+| ID | Task | Owner | Status |
+|---|---|---|---|
+| M-A | Module dashboard framework (ModuleHome) + module contract (`ModuleContract` interface) + every existing system gets its own home page | Claude | IN PROGRESS (Claude 2026-11-22) |
+| M-B | Seller verification (`verify`): NID/passport/trade licence, phone OTP, address, Verified badge, linked to SFM4U account | Claude | READY |
+| M-C | Delivery zones & shipping (`shipping`): areas, pickup point, weight/distance/flat per shop, Steadfast | Claude | READY |
+| M-D | Vendor staff (`staff`): owner/manager/cashier per shop, cost hidden from staff, card+PIN | Claude | READY |
+| M-E | Vendor plans & subscription (`vendorplan`): product limit, commission, end date, uses Modules grants | Claude | READY |
+| M-F | One product many sellers (`spmv`) | Claude | READY |
+| M-G | = L-27 bring 4 AlgiBazar plugins inside | Claude | READY |
+| M-H | Returns & warranty (`returns`): requests with photos, exchange/warranty, refund through existing refund rules, never twice | Codex | READY |
+| M-I | Store support tickets (`support`): customer↔shop, admin view, notices | Codex | READY |
+| M-J | Announcements (`announce`): admin → all/chosen shops, BN/EN, read/unread | Codex | READY |
+| M-K | Report abuse (`abuse`): report product, admin review, hold product | Codex | READY |
+| M-L | Commission & earnings (`earnings`): per shop/category/plan, admin earning report, vendor statement, exact to orders | Codex | READY |
+| M-M | Withdraw plus (`withdrawplus`): bKash/Nagad/bank, schedule, minimum, keep reverse withdrawal, never pay twice | Codex | READY |
+| M-N | Store reviews (`reviews`): verified buyers only, shop reply, rating on store + SPMV | Codex | READY |
+| M-O | Shop coupons & marketing (`shopcoupon`): shop/member coupons, Premium offers with Retail Prices | Codex | READY |
+| M-P | Shop analytics (`shopstats`): sales, best products, stock value, profit (cost hidden from staff) | Codex | READY |
+| M-Q | Vendor dashboard + app screens for product sheet and every module (was J3) | Codex | after M-H..M-P |
+| M-Z | Join all modules, full regression, one release, test site → algibazar.com, report | Claude | after all |
+
