@@ -1,0 +1,35 @@
+/* SFM4U design kit (A01) — brand from the Owner's logo. Applied only on SFM4U Business Software pages (body.sfm4u-ui). */
+body.sfm4u-ui{--s-bg:#020202;--s-bg2:#001A12;--s-line:#0b3326;--s-teal:#00E0B0;--s-glow:#00F0C0;--s-mid:#00B080;--s-g4:#00A070;--s-silver:#F1F3F3;--s-muted:#9fb5ad}
+body.sfm4u-ui #wpcontent,body.sfm4u-ui #wpbody-content{background:var(--s-bg)}
+body.sfm4u-ui #wpbody-content .wrap{color:var(--s-silver)}
+body.sfm4u-ui .wrap h1,body.sfm4u-ui .wrap h2,body.sfm4u-ui .wrap h3,body.sfm4u-ui .wrap th,body.sfm4u-ui .wrap label,body.sfm4u-ui .wrap legend{color:var(--s-silver)}
+body.sfm4u-ui .wrap p,body.sfm4u-ui .wrap li,body.sfm4u-ui .wrap td{color:#d9e4e0}
+body.sfm4u-ui .wrap small,body.sfm4u-ui .wrap .description{color:var(--s-muted)}
+body.sfm4u-ui .wrap a{color:var(--s-teal)}body.sfm4u-ui .wrap a:hover{color:var(--s-glow)}
+/* cards / tiles / boxes used by our pages */
+body.sfm4u-ui .wrap .tile,body.sfm4u-ui .wrap .lnk,body.sfm4u-ui .wrap .box,body.sfm4u-ui .wrap .sfm-bos-card,body.sfm4u-ui .wrap .card,body.sfm4u-ui .wrap .postbox,body.sfm4u-ui .wrap .sfm-card{background:var(--s-bg2)!important;border:1px solid var(--s-line)!important;color:var(--s-silver)!important;border-radius:12px}
+body.sfm4u-ui .wrap .lnk:hover,body.sfm4u-ui .wrap a.tile:hover{border-color:var(--s-mid)!important;box-shadow:0 0 18px rgba(0,224,176,.15)}
+body.sfm4u-ui .wrap .tile b{color:var(--s-teal)}
+/* tables */
+body.sfm4u-ui .wrap table.widefat,body.sfm4u-ui .wrap .widefat td,body.sfm4u-ui .wrap .widefat th{background:var(--s-bg2);border-color:var(--s-line);color:var(--s-silver)}
+body.sfm4u-ui .wrap .striped>tbody>:nth-child(odd){background:#00130d}
+/* forms */
+body.sfm4u-ui .wrap input[type=text],body.sfm4u-ui .wrap input[type=number],body.sfm4u-ui .wrap input[type=search],body.sfm4u-ui .wrap input[type=email],body.sfm4u-ui .wrap input[type=date],body.sfm4u-ui .wrap input[type=url],body.sfm4u-ui .wrap select,body.sfm4u-ui .wrap textarea{background:#000;color:var(--s-silver);border:1px solid var(--s-line);border-radius:8px}
+body.sfm4u-ui .wrap input:focus,body.sfm4u-ui .wrap select:focus,body.sfm4u-ui .wrap textarea:focus{border-color:var(--s-teal);box-shadow:0 0 0 1px var(--s-teal)}
+/* buttons */
+body.sfm4u-ui .wrap .button{background:transparent;color:var(--s-teal);border-color:var(--s-mid);border-radius:8px}
+body.sfm4u-ui .wrap .button:hover{background:var(--s-bg2);color:var(--s-glow);border-color:var(--s-teal)}
+body.sfm4u-ui .wrap .button-primary{background:var(--s-teal);color:#012;border-color:var(--s-teal)}
+body.sfm4u-ui .wrap .button-primary:hover{background:var(--s-glow);color:#012}
+body.sfm4u-ui .wrap .nav-tab{background:var(--s-bg2);color:var(--s-muted);border-color:var(--s-line)}
+body.sfm4u-ui .wrap .nav-tab-active{background:var(--s-bg);color:var(--s-teal);border-bottom-color:var(--s-bg)}
+body.sfm4u-ui .notice,body.sfm4u-ui div.updated,body.sfm4u-ui div.error{background:var(--s-bg2)!important;color:var(--s-silver)!important;border-color:var(--s-line)}
+body.sfm4u-ui .notice p,body.sfm4u-ui .notice strong,body.sfm4u-ui .notice a{color:var(--s-silver)!important}body.sfm4u-ui .notice a{color:var(--s-teal)!important}
+/* brand bar */
+.sfm4u-brandbar{display:flex;align-items:center;gap:12px;margin:12px 20px 0 2px;padding:10px 16px;background:linear-gradient(90deg,#000,#001A12);border:1px solid #0b3326;border-radius:14px}
+.sfm4u-brandbar img{width:40px;height:40px;border-radius:50%;box-shadow:0 0 14px rgba(0,224,176,.35)}
+.sfm4u-brandbar .w{font:800 18px/1 system-ui,sans-serif;color:#F1F3F3;letter-spacing:.4px}.sfm4u-brandbar .w em{font-style:normal;color:#00A070}.sfm4u-brandbar .b{color:#00E0B0}
+.sfm4u-brandbar .t{color:#9fb5ad;font-size:13px}.sfm4u-brandbar .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.sfm4u-brandbar .r a{color:#00E0B0;border:1px solid #0b3326;border-radius:8px;padding:5px 10px;text-decoration:none;font-weight:600}
+.sfm4u-brandbar .r a:hover{border-color:#00E0B0;color:#00F0C0}
+@media(max-width:782px){.sfm4u-brandbar{margin:10px 10px 0}.sfm4u-brandbar .t{display:none}}

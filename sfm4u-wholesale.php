@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SFM4U Business Software — Wholesale, Retail, POS & Membership
  * Description: SFM4U Business Software (formerly SFM4U Business OS) — one software, separate systems: wholesale and retail prices, member cards (regular, business, premium), khata (credit ledger), product QR labels, POS and inventory for WooCommerce.
- * Version: 0.9.18-dev
+ * Version: 0.9.20-dev
  * Requires PHP: 8.1
  * Requires Plugins: woocommerce
  * Author: SFM4U
@@ -34,6 +34,9 @@ require_once __DIR__ . '/src/Erp/ErpNextClient.php';
 require_once __DIR__ . '/src/Modules.php';
 require_once __DIR__ . '/src/ControlCenter.php';
 require_once __DIR__ . '/src/ModuleHome.php';
+require_once __DIR__ . '/src/ModuleManager.php';
+require_once __DIR__ . '/src/BrandKit.php';
+if (!defined('SFM4U_WH_VERSION')) { define('SFM4U_WH_VERSION', '0.9.20-dev'); }
 require_once __DIR__ . '/src/Market/VendorProfit.php';
 require_once __DIR__ . '/src/Erp/ErpSync.php';
 require_once __DIR__ . '/src/Erp/ErpAdmin.php';
@@ -65,6 +68,8 @@ add_action('plugins_loaded', static function () {
         \SFM4U\Wholesale\Modules::register();
         \SFM4U\Wholesale\ControlCenter::register();
         \SFM4U\Wholesale\ModuleHome::register();
+        \SFM4U\Wholesale\ModuleManager::register();
+        \SFM4U\Wholesale\BrandKit::register();
         \SFM4U\Wholesale\WorkEngineEvents::register();
         if ($on('wholesale')) {
             \SFM4U\Wholesale\Commerce::register();
