@@ -127,3 +127,34 @@ Systems that already exist stay as they are and each gets its own dashboard in s
 | C10 | `b2b` / `b2c` | Wholesale and customer selling panels that bring together the existing Wholesale, Retail Prices, member price and B2B credit systems in one place. |
 
 ### Pro modules (after the core) — the H–P list in §3 plus B–F (verify, shipping, staff, vendorplan, spmv). All built by Codex, one at a time.
+
+## r8 (Owner, 2026-11-22) — SFM4U brand inside the software, a Module Manager, and a sale-ready setup
+1. **Brand inside the software (design system):**
+   - Every page uses the SFM4U logo, its main colour and its fonts, from one shared design kit (`assets/sfm4u-ui.css` plus PHP helpers for header, cards, tiles, tables and buttons).
+   - Every module uses this kit, so the whole software looks like one premium product.
+   - An "About SFM4U" page holds the company details, the policies (including the Owner's 5% policy, to be filled in) and support contacts.
+2. **Module Manager (inside the plugin):** lists every module with:
+   - version, on/off and "update available";
+   - "Add module" (upload the module ZIP, or later install it from the SFM4U software site);
+   - "Update" and "Roll back to the previous version";
+   - which plan or which shop may use the module (uses the existing access grants).
+
+   Each module can also ship as its own small add-on plugin that joins through `sfm4u_bos_modules`. That lets us sell modules one by one.
+3. **A separate home for the software (recommended): `software.sfm4u.com`.** It is not inside AlgiBazar, because AlgiBazar is only our first customer and its data must stay separate. It holds:
+   - the product page, plans and module store;
+   - licence keys per domain, downloads and the update server;
+   - customer login through accounts.sfm4u.com.
+
+   Every marketplace (AlgiBazar first, others later) installs the plugin and activates it with a licence key.
+4. **Plans (prices to be set by the Owner):**
+   - Free (core), Pro, Business and Enterprise.
+   - Single modules can be bought one by one.
+   - A plan decides which modules a marketplace gets. Inside a marketplace, the owner decides which shops may use which modules.
+5. **Better than Dokan Pro:** POS, member cards, khata, purchase cost, Bangla/English, bKash/Nagad, local delivery and the product sheet A–Z are things Dokan Pro does not have in one product.
+
+| ID | Task | Owner | Status |
+|---|---|---|---|
+| R8-1 | SFM4U design kit (logo, colours, fonts, components) + About SFM4U page | Codex | READY (Owner sends logo file + brand colours, and explains the 5% policy) |
+| R8-2 | Module Manager (list, versions, add by ZIP, update, roll back, per-plan/per-shop access) | Codex | READY |
+| R8-3 | Licence + update client inside the plugin (per-domain key, update check) | Codex | READY (after R8-2) |
+| R8-4 | software.sfm4u.com: product page, plans, module store, licence server, downloads | Claude plan, Codex build | WAITING for Owner approval (new subdomain on Hostinger) |

@@ -118,3 +118,4 @@ Per module: build → test (`pass N fail 0`) → connect through ModuleContract 
 | C1..C10 | Core modules (see plan r7) | Codex | READY |
 | D-1 | Dashboard shows only SFM4U modules; Dokan/WooCommerce links hidden behind the "old pages (temporary)" button | Claude | DONE in 0.9.19-dev (not deployed; goes out with the next important release) |
 
+## r8 (Owner 2026-11-22): brand kit, Module Manager, licence/updates, software.sfm4u.com — see plan r8; tasks R8-1..R8-4 (Codex builds R8-1..R8-3 before C1, so every module uses the design kit)
