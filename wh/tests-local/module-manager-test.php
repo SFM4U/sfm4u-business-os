@@ -42,7 +42,7 @@ $ok(strpos($h, 'Module Manager') !== false && strpos($h, 'Upload module ZIP') !=
 // design kit only on our pages
 $ok(BK::isOurs('sfm-bos') && BK::isOurs('sfmwh-rules') && BK::isOurs('sfm4u-counter') && !BK::isOurs('wc-orders') && !BK::isOurs('dokan') && !BK::isOurs(''), 'design kit only on SFM4U pages');
 $_GET = ['page' => 'sfm-bos']; $ok(strpos(BK::bodyClass('x'), 'sfm4u-ui') !== false, 'our page gets the SFM4U look'); ob_start(); BK::bar(); $bar = ob_get_clean();
-$ok(strpos($bar, 'sfm4u-logo-128.png') !== false && strpos($bar, 'Module Manager') !== false, 'brand bar with logo and links');
+$ok(strpos($bar, 'sfm4u-wordmark.png') !== false && strpos($bar, 'sfm4u-logo-128.png') === false && strpos($bar, 'Module Manager') !== false, 'brand bar with logo and links');
 $_GET = ['page' => 'wc-orders']; $ok(BK::bodyClass('x') === 'x', 'WooCommerce page unchanged'); $_GET = [];
 $ok(is_file(WP_PLUGIN_DIR . '/sfm4u-wholesale/assets/sfm4u-ui.css') && is_file(WP_PLUGIN_DIR . '/sfm4u-wholesale/assets/brand/sfm4u-logo-128.png'), 'design kit files shipped');
 // clean up
