@@ -1,8 +1,7 @@
 <?php defined('ABSPATH') || exit;
 // Header copied from the approved sfm4u.com header (Owner 2026-11-22): same menu, search and ⋮ menu; the logo is the SFM4U wordmark (no rotating logo).
 $sfm = 'https://sfm4u.com';
-$nav = [['Home', $sfm . '/'], ['What We Do', $sfm . '/what-we-do/'], ['Jobs', $sfm . '/jobs/'], ['Business', 'https://business.sfm4u.com/'], ['Projects', $sfm . '/projects/'],
-    ['Services', $sfm . '/services/'], ['Marketplace', home_url('/')], ['Real Estate', 'https://realestate.sfm4u.com/'], ['Partnership', 'https://partnership.sfm4u.com/'], ['About', $sfm . '/about/']];
+$nav = sfm4u_mp_nav_items(); // editable in Appearance → Menus
 ?><!doctype html>
 <html <?php language_attributes(); ?>>
 <head>
@@ -25,7 +24,7 @@ $nav = [['Home', $sfm . '/'], ['What We Do', $sfm . '/what-we-do/'], ['Jobs', $s
       </nav></details>
   </div>
   <div class="sfm-nav-frame"><nav class="sfm-nav-strip" aria-label="Primary navigation">
-    <?php foreach ($nav as [$t, $u]) { echo '<a href="' . esc_url($u) . '"' . ($t === 'Marketplace' ? ' class="on" aria-current="page"' : '') . '>' . esc_html($t) . '</a>'; } ?>
+    <?php foreach ($nav as [$t, $u]) { echo '<a href="' . esc_url($u) . '"' . (untrailingslashit($u) === untrailingslashit(home_url('/')) ? ' class="on" aria-current="page"' : '') . '>' . esc_html($t) . '</a>'; } ?>
   </nav></div>
 </header>
 <div class="sfm-header-space" aria-hidden="true"></div>

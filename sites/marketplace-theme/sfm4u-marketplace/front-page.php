@@ -21,10 +21,10 @@ $card = static function (WP_Post $p, bool $ready): string {
 <main>
   <section class="hero">
     <div class="wrap">
-      <p><span class="badge">SFM4U Business Software</span></p>
-      <h1>One software for every business</h1>
-      <p class="lead">From buying stock to the customer's door: shop, products, wholesale and retail prices, POS counter, member cards, khata, stock, delivery, reports and ERP link — in Bangla and English. Take the full software, or only the modules you need.<br><span lang="bn">মাল কেনা থেকে কাস্টমারের বাসা পর্যন্ত — পুরো সফটওয়্যার, অথবা দরকারি মডিউল আলাদা করে।</span></p>
-      <div class="btns"><a class="btn solid" href="#complete">Complete modules</a><a class="btn" href="<?php echo esc_url(home_url('/modules/')); ?>">All modules</a></div>
+      <p><span class="badge"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_badge')); ?></span></p>
+      <h1><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_title')); ?></h1>
+      <p class="lead"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead')); ?><br><span lang="bn"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_lead_bn')); ?></span></p>
+      <div class="btns"><a class="btn solid" href="<?php echo esc_url(home_url('/modules/?status=ready')); ?>"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_btn1')); ?></a><a class="btn" href="<?php echo esc_url(home_url('/modules/')); ?>"><?php echo esc_html(sfm4u_mp_text('sfm_mp_home_btn2')); ?></a></div>
     </div>
   </section>
 

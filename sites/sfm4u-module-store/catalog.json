@@ -1233,7 +1233,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "core",
 "version": "0.9.22"
 },
 {
@@ -1244,7 +1244,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0-dev.96"
 },
 {
@@ -1255,7 +1255,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0-dev.20"
 },
 {
@@ -1266,7 +1266,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0-dev.4"
 },
 {
@@ -1277,7 +1277,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0-dev.3"
 },
 {
@@ -1288,7 +1288,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0-dev.3"
 },
 {
@@ -1299,7 +1299,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "theme",
 "version": "0.1.10"
 },
 {
@@ -1310,7 +1310,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "theme",
 "version": "0.1.2"
 },
 {
@@ -1321,7 +1321,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "theme",
 "version": ""
 },
 {
@@ -1332,7 +1332,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.4.0"
 },
 {
@@ -1343,7 +1343,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.5.2"
 },
 {
@@ -1354,7 +1354,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.33.0"
 },
 {
@@ -1365,7 +1365,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.2"
 },
 {
@@ -1376,7 +1376,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.2.2"
 },
 {
@@ -1387,7 +1387,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.3"
 },
 {
@@ -1398,7 +1398,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.0"
 },
 {
@@ -1409,7 +1409,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.8.1"
 },
 {
@@ -1420,7 +1420,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "2.0.0"
 },
 {
@@ -1431,7 +1431,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "1.2.0"
 },
 {
@@ -1442,7 +1442,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "2.0.0"
 },
 {
@@ -1453,7 +1453,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "1.1.0"
 },
 {
@@ -1464,7 +1464,7 @@
 "p": "P1",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.1.1"
 },
 {
@@ -1475,7 +1475,7 @@
 "p": "P2",
 "status": "BUILT",
 "group": "SFM4U software, themes & builder",
-"type": "product",
+"type": "plugin",
 "version": "0.2.3"
 }
 ]
