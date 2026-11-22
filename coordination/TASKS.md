@@ -116,7 +116,7 @@ Per module: build → test (`pass N fail 0`) → connect through ModuleContract 
 | ID | Task | Owner | Status |
 |---|---|---|---|
 | C1 | stores | Codex | DONE (implementation; commit 26f77b1; synthetic unit pass 9 fail 0, WordPress integration pass 15 fail 0; Claude review/release pending) |
-| C2 | vendorpanel | Codex | READY |
+| C2 | vendorpanel | Codex | IN PROGRESS (Codex, 2026-11-22 UTC) |
 | C3 | orders | Codex | READY |
 | C4 | earnings | Codex | READY |
 | C5 | withdraw | Codex | READY |
