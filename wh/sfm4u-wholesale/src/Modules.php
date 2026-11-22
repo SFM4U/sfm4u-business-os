@@ -20,6 +20,7 @@ final class Modules {
     public const OPT = 'sfm_bos_modules';
     public const GRANTS = 'sfm_bos_grants';
     public const SLUG = 'sfm-bos';
+    public const SYSTEMS = 'sfm-bos-systems';
     public const MU_FILE = 'sfm4u-business-os-pos.php';
 
     /** slug => [English name, Bangla name, what it does, admin page (admin.php?page=…)] */
@@ -168,8 +169,10 @@ final class Modules {
     /* ---------------- admin ---------------- */
 
     public static function menu(): void {
-        add_menu_page(__('SFM4U Business Software', 'sfm4u-wholesale'), __('SFM4U Business Software', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [self::class, 'page'], 'dashicons-store', 55);
-        add_submenu_page(self::SLUG, __('Systems', 'sfm4u-wholesale'), __('Systems', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [self::class, 'page']);
+        // Clicking "SFM4U Business Software" opens the Dashboard (everything in one place); Systems has its own page.
+        add_menu_page(__('SFM4U Business Software', 'sfm4u-wholesale'), __('SFM4U Business Software', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [ControlCenter::class, 'page'], 'dashicons-store', 55);
+        add_submenu_page(self::SLUG, __('Dashboard', 'sfm4u-wholesale'), __('Dashboard / ড্যাশবোর্ড', 'sfm4u-wholesale'), 'manage_options', self::SLUG, [ControlCenter::class, 'page']);
+        add_submenu_page(self::SLUG, __('Systems', 'sfm4u-wholesale'), __('Systems', 'sfm4u-wholesale'), 'manage_options', self::SYSTEMS, [self::class, 'page']);
     }
 
     private static function p(string $k): string {
@@ -177,7 +180,7 @@ final class Modules {
     }
 
     public static function actions(): void {
-        if (($_GET['page'] ?? '') !== self::SLUG || empty($_POST['sfm_bos']) || !current_user_can('manage_options')) { return; }
+        if (($_GET['page'] ?? '') !== self::SYSTEMS || empty($_POST['sfm_bos']) || !current_user_can('manage_options')) { return; }
         check_admin_referer('sfm_bos_modules');
         $k = 'sfm_bos_mod_msg_' . get_current_user_id();
         try {
@@ -206,7 +209,7 @@ final class Modules {
         } catch (DomainException $e) {
             set_transient($k, ['error', $e->getMessage()], 300);
         }
-        wp_safe_redirect(admin_url('admin.php?page=' . self::SLUG));
+        wp_safe_redirect(admin_url('admin.php?page=' . self::SYSTEMS));
         exit;
     }
 
