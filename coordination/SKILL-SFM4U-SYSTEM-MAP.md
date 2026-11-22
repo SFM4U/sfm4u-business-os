@@ -87,3 +87,10 @@ Owner: MD SHALA UDDIN. Last updated by Claude on 2026-11-22. Update this file af
 - Marketplace: the Owner resets his password; WooCommerce sales, admin download and the update client still to build.
 - Decide whether the business-os repo becomes private.
 - 5% policy text, prices and plans.
+
+## 8. Owner rules added 2026-11-22 (late)
+- Every module/plugin/theme goes FIRST to Drive "2. SFM4U Showroom", THEN to marketplace (release store). Sites get the same program from marketplace.
+- Deleting duplicates (standing permission from the Owner): before deleting anything from a site, check that the newest copy exists in (1) the live site list, (2) Factory, (3) Showroom, (4) marketplace release store, (5) skills/records. If the copy is in Showroom AND marketplace, delete the duplicate without asking. Never delete the only copy.
+- thenoakhali.com is a test site only: duplicates removed 2026-11-22 (Noakhali Builder x5, Business Software copies, Account Hub, Link, Smart Serial, Hiring, Services, Work, Golden Club Members). The site still loads.
+- Private release store (all 17 ZIPs): marketplace.sfm4u.com/wp-content/sfm4u-release-store (from private repo SFM4U/sfm4u-ceo-ai branch releases-store; direct access 403). Manifest releases.json (slug, code, version, sha256, size). The older public folder wp-content/sfm4u-releases (core + 2 modules) stays until the store plugin reads the private one.
+- Noakhali Builder (core, Pro, Template Library) is ACTIVE on marketplace; WooCommerce + Marketplace add-ons installed but off (need WooCommerce there). SFM4U Theme 0.1.10 installed (not active).
