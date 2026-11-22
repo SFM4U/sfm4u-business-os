@@ -98,7 +98,7 @@ Every module: own folder, on/off in Modules::all(), own dashboard via `dashboard
 | M-E | Vendor plans & subscription (`vendorplan`): product limit, commission, end date, uses Modules grants | Claude | READY |
 | M-F | One product many sellers (`spmv`) | Claude | READY |
 | M-G | = L-27 bring 4 AlgiBazar plugins inside | Claude | READY |
-| M-H | Returns & warranty (`returns`): requests with photos, exchange/warranty, refund through existing refund rules, never twice | Codex | IN PROGRESS (Codex, 2026-11-22 UTC) |
+| M-H | Returns & warranty (`returns`): requests with photos, exchange/warranty, refund through existing refund rules, never twice | Codex | REVIEW (Codex, abd5b79; local unit pass 10 fail 0, WordPress REST pass 15 fail 0; loader and CI pending; no release ZIP) |
 | M-I | Store support tickets (`support`): customer↔shop, admin view, notices | Codex | READY |
 | M-J | Announcements (`announce`): admin → all/chosen shops, BN/EN, read/unread | Codex | READY |
 | M-K | Report abuse (`abuse`): report product, admin review, hold product | Codex | READY |
@@ -109,4 +109,6 @@ Every module: own folder, on/off in Modules::all(), own dashboard via `dashboard
 | M-P | Shop analytics (`shopstats`): sales, best products, stock value, profit (cost hidden from staff) | Codex | READY |
 | M-Q | Vendor dashboard + app screens for product sheet and every module (was J3) | Codex | after M-H..M-P |
 | M-Z | Join all modules, full regression, one release, test site → algibazar.com, report | Claude | after all |
+
+M-H integration handoff (Claude): load returns/bootstrap.php after ModuleHome.php and before REST hooks. Add wh/tests-local/returns-test.php and modules/returns/tests/outcome.php to the synthetic CI workflow. Returns links an existing WooCommerce refund to the original order line. Retain established POS and payment mutation paths. Review private photo intake and verify Dokan vendor permissions before enabling the module.
 
