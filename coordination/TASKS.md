@@ -115,7 +115,7 @@ Order for Codex: C1 stores → C2 vendorpanel → C3 orders → C4 earnings → 
 Per module: build → test (`pass N fail 0`) → connect through ModuleContract and sfm4u_bos_modules → mark DONE here with the commit and tests. Claude: review each module + M-Z (join, full regression, release).
 | ID | Task | Owner | Status |
 |---|---|---|---|
-| C1 | stores | Codex | IN PROGRESS (Codex, 2026-11-22 UTC) |
+| C1 | stores | Codex | DONE (implementation; commit 26f77b1; synthetic unit pass 9 fail 0, WordPress integration pass 15 fail 0; Claude review/release pending) |
 | C2 | vendorpanel | Codex | READY |
 | C3 | orders | Codex | READY |
 | C4 | earnings | Codex | READY |
@@ -127,3 +127,5 @@ Per module: build → test (`pass N fail 0`) → connect through ModuleContract 
 | C10 | b2b/b2c | Codex | READY |
 | D-1 | Dashboard shows only SFM4U modules; Dokan/WooCommerce links hidden behind the "old pages (temporary)" button | Claude | DONE in 0.9.19-dev (not deployed; goes out with the next important release) |
 
+
+C1 local evidence: `php /fixture/sfm4u-wholesale/modules/stores/tests/profile.php` and `php /setup.php test` (isolated WordPress loading `wh/tests-local/stores-test.php`, MariaDB, synthetic data). Review ZIP SHA-256 `cb24de89c3981804f987f6445ce2348d7801feb3ba50944f0e481cf1dcd8da61`. No live activation or legacy migration.
