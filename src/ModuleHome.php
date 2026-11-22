@@ -58,9 +58,14 @@ final class ModuleHome {
     }
 
     public static function setting(string $slug, string $key, $default = null) {
+        static $busy = [];
         $o = self::settings($slug);
         if (array_key_exists($key, $o)) { return $o[$key]; }
-        foreach ((self::dashboard($slug)['settings'] ?? []) as $f) {
+        // Guard: a module whose dashboard() reads its own settings must not loop forever (found with E04, 2026-11-22).
+        if (!empty($busy[$slug])) { return $default; }
+        $busy[$slug] = true;
+        try { $fields = self::dashboard($slug)['settings'] ?? []; } finally { unset($busy[$slug]); }
+        foreach ($fields as $f) {
             if (($f[0] ?? '') === $key) { return $f[3] ?? $default; }
         }
         return $default;
