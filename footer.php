@@ -3,7 +3,7 @@
   <div class="sfm-footer-pattern">
     <div class="sfm-footer-brand-row">
       <div class="sfm-footer-brand"><img class="wm" src="<?php echo esc_url(get_template_directory_uri() . '/assets/sfm4u-wordmark.png'); ?>" alt="SFM4U" height="44">
-        <div><p class="sfm-footer-description">A connected platform for business, technology and community.</p></div></div>
+        <div><p class="sfm-footer-description"><?php echo esc_html(sfm4u_mp_text('sfm_mp_footer_desc')); ?></p></div></div>
       <div class="sfm-footer-entities">
         <div><p><strong>SFM4U</strong></p><p class="loc">New York, United States</p></div>
         <div><p><strong>SFM4U Bangladesh</strong></p><p class="loc">Noakhali, Bangladesh</p><p class="loc">RJSC application pending</p></div>
