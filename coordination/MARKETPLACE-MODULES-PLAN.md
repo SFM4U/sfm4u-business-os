@@ -101,3 +101,29 @@ Systems that already exist stay as they are and each gets its own dashboard in s
 - The Owner reviews; then we test and improve.
 - Never claim something is tested or deployed without evidence.
 - Never ask the Owner to explain this again: read this file and the Drive product plan.
+
+## r7 correction (Owner, 2026-11-22) — OUR OWN modules, not links to Dokan
+- The Owner does NOT want the Dashboard to open Dokan or WooCommerce pages. Clicking "Shops", "Stores", "Withdraw" and so on must open **our own module page inside SFM4U Business Software**.
+- Every marketplace feature (Dokan Lite + Dokan Pro + the 4 AlgiBazar plugins) becomes **an SFM4U module inside this one plugin**. There are no separate software packages.
+- **Codex (ChatGPT) builds every module.** For each module, one at a time, Codex:
+  1. builds it to the module standard in §2;
+  2. tests it (`pass N fail 0`);
+  3. connects it to the plugin through `ModuleContract` and `sfm4u_bos_modules`.
+- **Claude** reviews each module, joins them, runs the full regression and releases. Deploys happen only for important releases, to save tokens.
+- Until our module is ready, Dokan stays running but is hidden from the Dashboard. When our module passes its tests, the matching Dokan part is switched off. Dokan stays installed and nothing is deleted.
+
+### Core modules (they replace Dokan Lite and the AlgiBazar plugins) — build these first
+| # | slug | What it does (our own pages) |
+|---|---|---|
+| C1 | `stores` | Shops list, approval, store profile (logo, banner, address, hours), owner profile, shop settings, Verified badge. Replaces Dokan Vendors and "AlgiBazar Shop & Owner Profiles". |
+| C2 | `vendorpanel` | The seller dashboard (website and app): products (product sheet A–Z), orders, stock, money, settings. Replaces the Dokan seller dashboard. |
+| C3 | `orders` | Marketplace orders split per shop (sub-orders), status, packing, invoice per shop. |
+| C4 | `earnings` | Commission (per shop, category or plan), the admin's earnings, shop balance and statement. |
+| C5 | `withdraw` | Withdraw requests (bKash, Nagad, bank), approval, schedule, reverse withdrawal. Never pays twice. |
+| C6 | `customerpanel` | Customer dashboard: orders, member card, khata, points, addresses, returns, support. Replaces "AlgiBazar Customer Profile". |
+| C7 | `brands` | Brand and company pages and the brand dashboard (brand's products, stock across shops, offers). |
+| C8 | `pickup` | Store location, pickup points, map. Replaces "AlgiBazar Store Location & Pickup". |
+| C9 | `productpage` | Product page experience (video, details, seller box, delivery). Replaces "AlgiBazar Product Experience". |
+| C10 | `b2b` / `b2c` | Wholesale and customer selling panels that bring together the existing Wholesale, Retail Prices, member price and B2B credit systems in one place. |
+
+### Pro modules (after the core) — the H–P list in §3 plus B–F (verify, shipping, staff, vendorplan, spmv). All built by Codex, one at a time.

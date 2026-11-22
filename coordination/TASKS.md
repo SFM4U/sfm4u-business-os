@@ -110,3 +110,11 @@ Every module: own folder, on/off in Modules::all(), own dashboard via `dashboard
 | M-Q | Vendor dashboard + app screens for product sheet and every module (was J3) | Codex | after M-H..M-P |
 | M-Z | Join all modules, full regression, one release, test site → algibazar.com, report | Claude | after all |
 
+## r7 (Owner correction 2026-11-22): Codex builds EVERY module (own pages, no Dokan links); Claude reviews, joins and releases
+Order for Codex: C1 stores → C2 vendorpanel → C3 orders → C4 earnings → C5 withdraw → C6 customerpanel → C7 brands → C8 pickup → C9 productpage → C10 b2b/b2c → then M-B..M-F and M-H..M-P (verify, shipping, staff, vendorplan, spmv, returns, support, announce, abuse, reviews, shopcoupon, shopstats) → M-Q app screens. M-B..M-G move from Claude to Codex.
+Per module: build → test (`pass N fail 0`) → connect through ModuleContract and sfm4u_bos_modules → mark DONE here with the commit and tests. Claude: review each module + M-Z (join, full regression, release).
+| ID | Task | Owner | Status |
+|---|---|---|---|
+| C1..C10 | Core modules (see plan r7) | Codex | READY |
+| D-1 | Dashboard shows only SFM4U modules; Dokan/WooCommerce links hidden behind the "old pages (temporary)" button | Claude | DONE in 0.9.19-dev (not deployed; goes out with the next important release) |
+
