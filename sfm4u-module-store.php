@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: SFM4U Module Store
+ * Plugin Name: SFM4U Business Software — Marketplace (module store)
  * Description: SFM4U's own module showcase for marketplace.sfm4u.com: every module, business plan and skill with its own page. Visitors can look and send a request; they cannot download or edit. Private items are visible to admins only.
- * Version: 0.1.1
+ * Version: 0.2.0
  * Author: SFM4U
  * Requires PHP: 8.1
  * Text Domain: sfm4u-module-store
@@ -23,7 +23,7 @@ const TYPES = ['module' => 'Module', 'plan' => 'Business plan', 'skill' => 'Skil
 
 function register_types(): void {
     register_post_type(CPT, [
-        'labels' => ['name' => 'Modules', 'singular_name' => 'Module', 'add_new_item' => 'Add module / plan / skill', 'edit_item' => 'Edit module', 'menu_name' => 'SFM4U Modules'],
+        'labels' => ['name' => 'Modules', 'singular_name' => 'Module', 'add_new_item' => 'Add module / plan / skill', 'edit_item' => 'Edit module', 'menu_name' => 'SFM4U Business Software'],
         'public' => true, 'has_archive' => 'modules', 'rewrite' => ['slug' => 'module', 'with_front' => false],
         'menu_icon' => 'dashicons-screenoptions', 'supports' => ['title', 'editor', 'excerpt', 'thumbnail'], 'show_in_rest' => false,
     ]);

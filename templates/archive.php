@@ -15,8 +15,8 @@ $total = array_sum(array_map('count', $byGroup));
 ?>
 <main class="ms">
   <section class="ms-hero"><div class="wrap">
-    <p><span class="badge">SFM4U Module Store</span></p>
-    <h1><?php echo $term ? esc_html($term->name) : 'Every module of SFM4U Business Software'; ?></h1>
+    <p><span class="badge">SFM4U Business Software</span></p>
+    <h1><?php echo $term ? esc_html($term->name) : 'SFM4U Business Software — all modules'; ?></h1>
     <p class="lead">One software, many modules — built in Noakhali. Look at what each module does. To get a module, open it and send a request.<br><span lang="bn">একটি সফটওয়্যার, অনেক মডিউল — প্রতিটি মডিউলের বিস্তারিত দেখুন, নিতে চাইলে অনুরোধ পাঠান।</span></p>
     <form class="ms-find" method="get" action="<?php echo esc_url($term ? get_term_link($term) : $base); ?>">
       <input type="search" name="q" value="<?php echo esc_attr($q); ?>" placeholder="Search modules: POS, wholesale, delivery… / খুঁজুন" aria-label="Search modules">
@@ -24,8 +24,8 @@ $total = array_sum(array_map('count', $byGroup));
     </form>
     <div class="ms-filters">
       <a class="<?php echo $st === '' ? 'on' : ''; ?>" href="<?php echo esc_url(remove_query_arg('status')); ?>">All</a>
-      <a class="<?php echo $st === 'ready' ? 'on' : ''; ?>" href="<?php echo esc_url(add_query_arg('status', 'ready')); ?>">Ready today</a>
-      <a class="<?php echo $st === 'soon' ? 'on' : ''; ?>" href="<?php echo esc_url(add_query_arg('status', 'soon')); ?>">Coming soon</a>
+      <a class="<?php echo $st === 'ready' ? 'on' : ''; ?>" href="<?php echo esc_url(add_query_arg('status', 'ready')); ?>">Complete</a>
+      <a class="<?php echo $st === 'soon' ? 'on' : ''; ?>" href="<?php echo esc_url(add_query_arg('status', 'soon')); ?>">Upcoming</a>
       <?php foreach (get_terms(['taxonomy' => TAX_TYPE, 'hide_empty' => true]) ?: [] as $t) { echo '<a href="' . esc_url(get_term_link($t)) . '">' . esc_html($t->name) . '</a>'; } ?>
     </div>
     <p class="count"><?php echo (int) $total; ?> items</p>

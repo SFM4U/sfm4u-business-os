@@ -11,7 +11,7 @@ $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(w
 ?>
 <main class="ms">
   <section class="ms-hero single"><div class="wrap">
-    <p><a href="<?php echo esc_url(get_post_type_archive_link(CPT)); ?>">← All modules</a>
+    <p><a href="<?php echo esc_url(get_post_type_archive_link(CPT)); ?>">← SFM4U Business Software — all modules</a>
       <?php if ($g && !is_wp_error($g)) { echo ' · <a href="' . esc_url(get_term_link($g[0])) . '">' . esc_html($g[0]->name) . '</a>'; } ?></p>
     <p><span class="badge"><?php echo esc_html(($t && !is_wp_error($t) ? $t[0]->name : 'Module') . ' ' . meta($id, 'code')); ?></span> <span class="chip <?php echo esc_attr($cls); ?>"><?php echo esc_html($label); ?></span>
       <?php if (get_post_status() === 'private') { echo ' <span class="chip soon">Private — only admins see this</span>'; } ?></p>
