@@ -76,6 +76,10 @@ Owner: MD SHALA UDDIN. Written by Claude, 2026-11-22.
 - **Part 2** (marketplace.sfm4u.com as the release host + update client): CODE BUILT and tested locally (CL-2, branch `cl2-update-server`: store plugin 0.5.0 `src/ReleaseServer.php`, core 0.9.24-dev `src/UpdateClient.php`). NOT deployed yet.
   - Needs WooCommerce on marketplace and a protected release folder.
   - Needs an update endpoint in the Module Store and an update client in the Module Manager.
+- **CL-3 sales** (branch `cl3-sales`, store plugin 0.6.0 `src/Sales.php`): CODE BUILT and tested locally (`tests/sales-test.php` pass 80 fail 0; `tests/release-server-test.php` pass 39 fail 0). NOT deployed.
+  - Admin-only "Download ZIP" (edit screen + module list), streamed from the private release store after the sha256 check.
+  - With WooCommerce: "Sell this" box makes a virtual + downloadable product (price empty until the Owner sets it), file URL = our signed `/wp-json/sfm4u-releases/v1/buy/<slug>` endpoint, 5 downloads / 365 days; order completed → licence row; My Account → "SFM4U licences" makes a site key (shown once, HMAC only, 5 per hour) that only sees owned slugs. Owner keys still see everything.
+  - Without WooCommerce: selling is off and the request form stays; admin download still works.
 - **Noakhali Builder on marketplace:** BLOCKED. It needs the deploy key, or the Owner's one-time upload.
 - **sfm4u.com menu "Marketplace" → https://marketplace.sfm4u.com/:** prepared as two search-replace operations. They wait for the Owner's approval in WPVibe.
 

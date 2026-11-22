@@ -37,3 +37,6 @@
 
 .ms-live{display:flex;gap:8px;flex-wrap:wrap}.ms-btn{display:inline-block;background:#00E0B0;color:#012!important;border-radius:10px;padding:10px 14px;font-weight:700}.ms-btn:hover{background:#00F0C0}
 .ms-main .entry h3{margin-top:18px}.ms-main .entry ul{padding-left:20px}
+/* 0.6.0 CL-3: price + Buy in the payment box */
+.ms-box .ms-price{font-size:26px;font-weight:800;color:#F1F3F3;margin:0 0 10px}.ms-box .ms-price del{color:#9fb5ad;font-size:16px;font-weight:400}
+.ms-box .ms-buy{display:block;text-align:center;font-size:16px}.ms-box .ms-small{color:#9fb5ad;font-size:13px;margin:8px 0 0}

@@ -1,5 +1,6 @@
 <?php
 use function SFM4U\ModuleStore\{meta, chip};
+use SFM4U\ModuleStore\Sales;
 use const SFM4U\ModuleStore\{CPT, TAX_GROUP, TAX_TYPE};
 defined('ABSPATH') || exit;
 get_header();
@@ -7,6 +8,7 @@ the_post();
 $id = get_the_ID();
 [$label, $cls] = chip(meta($id, 'status'));
 $g = get_the_terms($id, TAX_GROUP); $t = get_the_terms($id, TAX_TYPE);
+$buy = Sales::buyBox($id); // CL-3: price + Buy only when WooCommerce is active and a priced product is linked
 $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(wp_unslash((string) $_GET['err'])) : '';
 ?>
 <main class="ms">
@@ -27,7 +29,7 @@ $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(w
       <?php $live = json_decode((string) get_post_meta($id, '_sfm_live', true), true) ?: []; $used = json_decode((string) get_post_meta($id, '_sfm_used_on', true), true) ?: []; ?>
       <?php if ($live) { echo '<h2>See it live / লাইভ দেখুন</h2><p class="ms-live">'; foreach ($live as $l) { echo '<a class="ms-btn" target="_blank" rel="noopener" href="' . esc_url((string) $l['url']) . '">' . esc_html((string) $l['label']) . ' ↗</a> '; } echo '</p>'; } ?>
       <?php if ($used) { echo '<h3>Running on / যেখানে চলছে</h3><ul>'; foreach ($used as $u) { echo '<li>' . esc_html((string) $u) . '</li>'; } echo '</ul>'; } ?>
-      <p class="note">Files are not downloadable here. SFM4U installs and updates the software for you after a request or purchase.</p>
+      <p class="note"><?php echo $buy ? 'After you buy, download the file from My Account → Downloads, and make your site key in My Account → SFM4U licences for updates.' : 'Files are not downloadable here. SFM4U installs and updates the software for you after a request or purchase.'; ?></p>
     </article>
     <aside class="ms-side">
       <div class="ms-box">
@@ -36,15 +38,21 @@ $sent = isset($_GET['sent']); $err = isset($_GET['err']) ? sanitize_text_field(w
           <dt>Status</dt><dd><?php echo esc_html($label); ?></dd>
           <dt>Priority</dt><dd><?php echo esc_html(meta($id, 'priority') ?: '—'); ?></dd>
           <dt>Version</dt><dd><?php echo esc_html(meta($id, 'version') ?: '—'); ?></dd>
-          <dt>Price</dt><dd><?php echo esc_html(meta($id, 'price') ?: 'Coming soon'); ?></dd>
+          <dt>Price</dt><dd><?php echo $buy ? wp_kses_post($buy['price_html']) : esc_html(meta($id, 'price') ?: 'Coming soon'); ?></dd>
         </dl>
       </div>
       <div class="ms-box">
         <h3>Payment / পেমেন্ট</h3>
+        <?php if ($buy) : ?>
+          <p class="ms-price"><?php echo wp_kses_post($buy['price_html']); ?></p>
+          <p><a class="ms-btn ms-buy" href="<?php echo esc_url($buy['url']); ?>" rel="nofollow">Buy / কিনুন</a></p>
+          <p class="ms-small">Includes the release ZIP (download from My Account) and a site licence for updates.</p>
+        <?php else : ?>
         <p>Online buying opens soon: PayPal (international) and bKash / Nagad (Bangladesh). Until then, send a request and SFM4U will contact you.</p>
+        <?php endif; ?>
       </div>
       <div class="ms-box" id="request">
-        <h3>Request this module / মডিউলটি চাই</h3>
+        <h3><?php echo $buy ? 'Questions? / প্রশ্ন আছে?' : 'Request this module / মডিউলটি চাই'; ?></h3>
         <?php if ($sent) { echo '<p class="ok">Thank you. Your request was sent to SFM4U. We will contact you. / ধন্যবাদ, আমরা যোগাযোগ করবো।</p>'; } ?>
         <?php if ($err !== '') { echo '<p class="err">' . esc_html($err) . '</p>'; } ?>
         <form method="post" action="<?php echo esc_url(get_permalink()); ?>#request">

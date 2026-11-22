@@ -70,7 +70,7 @@ Owner: MD SHALA UDDIN. Last updated by Claude on 2026-11-22. Update this file af
 
 ## 5. How downloads work
 - **Release files:** `marketplace.sfm4u.com/wp-content/sfm4u-releases/`. Direct access is denied (403, checked 2026-11-22). Never give anyone a raw file link.
-- **The Owner or an admin:** download from marketplace wp-admin (admin-only download button: planned), or take the ZIP from Drive "03 Joined into software".
+- **The Owner or an admin:** download from marketplace wp-admin → SFM4U Business Software → a module → "Download ZIP" (store plugin 0.6.0, branch `cl3-sales`, not deployed yet), or take the ZIP from Drive "03 Joined into software".
 - **A customer** (planned):
   1. They buy on marketplace (WooCommerce downloadable product, Force Downloads, expiring link).
   2. Or they send a Request from the module page. Requests are in wp-admin → SFM4U Business Software → Module requests.
@@ -84,7 +84,7 @@ Owner: MD SHALA UDDIN. Last updated by Claude on 2026-11-22. Update this file af
 
 ## 7. Open items (update when done)
 - Deploy key on SFM4U/sfm4u-ceo-ai (Owner), then: Noakhali Builder and the other SFM4U plugins onto marketplace; rebuild the marketplace pages with Noakhali Builder ("built without Elementor"); switch the builder off on thenoakhali.com.
-- Marketplace: the Owner resets his password; WooCommerce sales, admin download and the update client still to build.
+- Marketplace: the Owner resets his password. WooCommerce sales + admin download + buyer licences BUILT in store plugin 0.6.0 (CL-3, branch `cl3-sales`, local tests only); needs WooCommerce installed on marketplace, prices from the Owner, then deploy.
 - Decide whether the business-os repo becomes private.
 - 5% policy text, prices and plans.
 

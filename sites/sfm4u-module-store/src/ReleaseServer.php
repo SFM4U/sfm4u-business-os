@@ -16,6 +16,8 @@ defined('ABSPATH') || exit;
  *        → {updates:[{slug, version, sha256, size, requires_core, package_url}], new:[{slug, code, name, version}], checked}
  * - GET  /wp-json/sfm4u-releases/v1/download?slug&version&site&expires&sig     signed link, valid 10 minutes, streams the ZIP.
  * - Site keys: wp-admin → SFM4U Business Software → Update sites. A key is shown once; only its HMAC is stored.
+ * - CL-3: a key made by a buyer from a licence (user_id > 0) only sees the slugs that filter
+ *   'sfm4u_releases_site_slugs' returns for it (Sales: active licences bound to that host). Owner keys (user_id 0) see everything.
  */
 final class ReleaseServer {
     public const NS = 'sfm4u-releases/v1';
@@ -92,6 +94,29 @@ final class ReleaseServer {
         return $out;
     }
 
+    /**
+     * One release whose ZIP exists and whose sha256 still matches releases.json; WP_Error otherwise.
+     * Returns the release plus its internal 'path' (never sent out).
+     */
+    public static function verifiedRelease(string $slug, string $version) {
+        foreach (self::releases() as $r) {
+            if ($r['slug'] === $slug && $r['version'] === $version) {
+                $path = self::zipPath($slug, $version);
+                if (!is_file($path) || !hash_equals($r['sha256'], (string) hash_file('sha256', $path))) { break; }
+                return $r + ['path' => $path];
+            }
+        }
+        return new WP_Error('sfm4u_release_missing', 'This release is not available right now.', ['status' => 404]);
+    }
+
+    /** Newest release of a slug, verified as above (CL-3: admin download, buyer download). */
+    public static function latestVerified(string $slug) {
+        if (preg_match(self::SLUG_RE, $slug) !== 1) { return new WP_Error('sfm4u_bad_slug', 'Unknown release.', ['status' => 400]); }
+        $l = self::latest(self::releases());
+        if (!isset($l[$slug])) { return new WP_Error('sfm4u_release_missing', 'This release is not available right now.', ['status' => 404]); }
+        return self::verifiedRelease($slug, $l[$slug]['version']);
+    }
+
     /** Absolute ZIP path of one release (internal only, never sent out). */
     public static function zipPath(string $slug, string $version): string {
         return self::storeDir() . '/' . $slug . '-' . $version . '.zip';
@@ -111,7 +136,7 @@ final class ReleaseServer {
         return preg_match(self::HOST_RE, $h) === 1 ? $h : '';
     }
 
-    /** @return array<string,array{host:string,hash:string,hint:string,created:int,revoked:int}> */
+    /** @return array<string,array{host:string,hash:string,hint:string,created:int,revoked:int,user_id?:int}> */
     public static function sites(): array {
         $s = get_option(self::OPT_SITES, []);
         return is_array($s) ? $s : [];
@@ -122,17 +147,20 @@ final class ReleaseServer {
         update_option(self::OPT_SITES, $s, false);
     }
 
-    /** Add a site; returns [id, key]. The key is returned ONCE and only its HMAC is stored. */
-    public static function addSite(string $host): array {
+    /**
+     * Add a site; returns [id, key]. The key is returned ONCE and only its HMAC is stored.
+     * $userId 0 = Owner/admin key (sees every release); > 0 = buyer key made from a licence (sees owned slugs only).
+     */
+    public static function addSite(string $host, int $userId = 0): array {
         $host = self::normalHost($host);
         if ($host === '') { throw new \DomainException('Write a valid host name, e.g. algibazar.com.'); }
         foreach (self::sites() as $s) {
-            if ($s['host'] === $host && empty($s['revoked'])) { throw new \DomainException('This site already has an active key. Revoke it first to make a new one.'); }
+            if ($s['host'] === $host && empty($s['revoked']) && (int) ($s['user_id'] ?? 0) === $userId) { throw new \DomainException('This site already has an active key. Revoke it first to make a new one.'); }
         }
         $key = 'sfm4u_' . wp_generate_password(40, false, false);
         $id = substr(hash('sha256', $host . microtime() . wp_rand()), 0, 12);
         $sites = self::sites();
-        $sites[$id] = ['host' => $host, 'hash' => self::keyHash($key), 'hint' => substr($key, -4), 'created' => time(), 'revoked' => 0];
+        $sites[$id] = ['host' => $host, 'hash' => self::keyHash($key), 'hint' => substr($key, -4), 'created' => time(), 'revoked' => 0, 'user_id' => max(0, $userId)];
         self::saveSites($sites);
         return [$id, $key];
     }
@@ -154,8 +182,20 @@ final class ReleaseServer {
         return null;
     }
 
-    private static function hostActive(string $host): bool {
-        foreach (self::sites() as $s) { if ($s['host'] === $host && empty($s['revoked'])) { return true; } }
+    /** null = every slug (Owner key); list = only these slugs (buyer key from a licence; none without the filter). */
+    public static function allowedSlugs(array $site): ?array {
+        if ((int) ($site['user_id'] ?? 0) === 0) { return null; }
+        $slugs = apply_filters('sfm4u_releases_site_slugs', [], $site);
+        return array_values(array_filter(is_array($slugs) ? $slugs : [], static fn($x) => is_string($x) && preg_match(self::SLUG_RE, $x) === 1));
+    }
+
+    /** May some active key of this host get this slug? (signed links carry only the host) */
+    private static function hostMaySee(string $host, string $slug): bool {
+        foreach (self::sites() as $id => $s) {
+            if ($s['host'] !== $host || !empty($s['revoked'])) { continue; }
+            $allowed = self::allowedSlugs($s + ['id' => (string) $id]);
+            if ($allowed === null || in_array($slug, $allowed, true)) { return true; }
+        }
         return false;
     }
 
@@ -201,19 +241,10 @@ final class ReleaseServer {
         if ((int) $exp < $now || (int) $exp > $now + self::LINK_TTL + 60) {
             return new WP_Error('sfm4u_link_expired', 'This download link has expired. Check for updates again.', ['status' => 403]);
         }
-        if (!self::hostActive($site)) {
+        if (!self::hostMaySee($site, $slug)) {
             return new WP_Error('sfm4u_site_revoked', 'This site may not download updates.', ['status' => 403]);
         }
-        foreach (self::releases() as $r) {
-            if ($r['slug'] === $slug && $r['version'] === $ver) {
-                $path = self::zipPath($slug, $ver);
-                if (!is_file($path) || !hash_equals($r['sha256'], (string) hash_file('sha256', $path))) {
-                    return new WP_Error('sfm4u_release_missing', 'This release is not available right now.', ['status' => 404]);
-                }
-                return $r + ['path' => $path];
-            }
-        }
-        return new WP_Error('sfm4u_release_missing', 'This release is not available right now.', ['status' => 404]);
+        return self::verifiedRelease($slug, $ver);
     }
 
     /* ---------------- check ---------------- */
@@ -230,11 +261,12 @@ final class ReleaseServer {
         return $out;
     }
 
-    /** Build the /check answer for one site. */
-    public static function answer(array $installed, string $site, ?int $now = null): array {
+    /** Build the /check answer for one site. $allowed null = all slugs, else only these (licence keys). */
+    public static function answer(array $installed, string $site, ?int $now = null, ?array $allowed = null): array {
         $updates = [];
         $new = [];
         foreach (self::latest(self::releases()) as $slug => $r) {
+            if ($allowed !== null && !in_array($slug, $allowed, true)) { continue; }
             if (isset($installed[$slug])) {
                 if (version_compare($r['version'], $installed[$slug], '>')) {
                     $updates[] = ['slug' => $slug, 'version' => $r['version'], 'sha256' => $r['sha256'], 'size' => $r['size'], 'requires_core' => $r['requires_core'], 'package_url' => self::packageUrl($slug, $r['version'], $site, $now)];
@@ -278,12 +310,16 @@ final class ReleaseServer {
         if ($asked !== '' && self::normalHost($asked) !== $site['host']) { return new WP_Error('sfm4u_wrong_site', 'This key belongs to another site.', ['status' => 403]); }
         if (!self::hit($site['id'])) { return new WP_Error('sfm4u_rate_limited', 'Too many update checks. Try again in an hour.', ['status' => 429]); }
         $req->set_param('_sfm_site', $site['host']);
+        $req->set_param('_sfm_site_id', $site['id']);
         return true;
     }
 
     public static function restCheck(WP_REST_Request $req) {
         $host = (string) $req->get_param('_sfm_site');
-        $res = rest_ensure_response(self::answer(self::parseItems((string) $req->get_param('items')), $host));
+        $id = (string) $req->get_param('_sfm_site_id');
+        $sites = self::sites();
+        $allowed = isset($sites[$id]) ? self::allowedSlugs($sites[$id] + ['id' => $id]) : [];
+        $res = rest_ensure_response(self::answer(self::parseItems((string) $req->get_param('items')), $host, null, $allowed));
         $res->header('Cache-Control', 'no-store');
         return $res;
     }
@@ -298,7 +334,7 @@ final class ReleaseServer {
     }
 
     /** Send the ZIP through PHP (never a redirect to the raw file). */
-    private static function stream(string $path, string $name): void {
+    public static function stream(string $path, string $name): void {
         while (ob_get_level() > 0) { ob_end_clean(); }
         nocache_headers();
         header('Content-Type: application/zip');
@@ -342,11 +378,13 @@ final class ReleaseServer {
         }
         $nonce = wp_nonce_field('sfm_rs_sites', '_wpnonce', true, false);
         echo '<h2>Add a site</h2><form method="post">' . $nonce . '<input type="hidden" name="sfm_rs" value="add"><input class="regular-text" name="host" placeholder="algibazar.com" required> <button class="button button-primary">Make key</button></form>';
-        echo '<h2>Sites</h2><table class="widefat striped"><thead><tr><th>Site</th><th>Key ends</th><th>Added</th><th>Status</th><th></th></tr></thead><tbody>';
+        echo '<h2>Sites</h2><table class="widefat striped"><thead><tr><th>Site</th><th>Made by</th><th>Key ends</th><th>Added</th><th>Status</th><th></th></tr></thead><tbody>';
         $sites = self::sites();
-        if (!$sites) { echo '<tr><td colspan="5">No sites yet.</td></tr>'; }
+        if (!$sites) { echo '<tr><td colspan="6">No sites yet.</td></tr>'; }
         foreach ($sites as $id => $s) {
-            echo '<tr><td>' . esc_html($s['host']) . '</td><td>…' . esc_html((string) $s['hint']) . '</td><td>' . esc_html(gmdate('Y-m-d', (int) $s['created'])) . '</td><td>'
+            $uid = (int) ($s['user_id'] ?? 0);
+            $u = $uid > 0 ? get_userdata($uid) : null;
+            echo '<tr><td>' . esc_html($s['host']) . '</td><td>' . esc_html($uid === 0 ? 'Owner (all releases)' : 'Buyer licence: ' . ($u ? $u->user_login : '#' . $uid)) . '</td><td>…' . esc_html((string) $s['hint']) . '</td><td>' . esc_html(gmdate('Y-m-d', (int) $s['created'])) . '</td><td>'
                 . (empty($s['revoked']) ? 'Active' : 'Revoked ' . esc_html(gmdate('Y-m-d', (int) $s['revoked']))) . '</td><td>';
             if (empty($s['revoked'])) {
                 echo '<form method="post" style="display:inline">' . $nonce . '<input type="hidden" name="sfm_rs" value="revoke"><input type="hidden" name="id" value="' . esc_attr((string) $id) . '"><button class="button" onclick="return confirm(\'Revoke this key?\')">Revoke</button></form>';
